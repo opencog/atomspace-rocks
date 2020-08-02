@@ -30,6 +30,7 @@
 #ifndef _ATOMSPACE_ROCKS_STORAGE_H
 #define _ATOMSPACE_ROCKS_STORAGE_H
 
+#include <atomic>
 #include "rocksdb/db.h"
 
 #include <opencog/atomspace/AtomTable.h>
@@ -48,6 +49,10 @@ class RocksStorage : public BackingStore
 		std::string _uri;
 
 		rocksdb::DB* _rfile;
+
+		std::atomic_uint64_t _next_aid;
+		uint64_t strtoaid(const std::string&) const;
+		std::string aidtostr(uint64_t) const;
 
 	public:
 		RocksStorage(std::string uri);

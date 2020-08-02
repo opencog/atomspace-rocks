@@ -33,6 +33,47 @@
 
 using namespace opencog;
 
+/// int to base-62 We use base62 not base64 because we
+/// want to reserve punctuation "just in case" as special chars.
+std::string RocksStorage::aidtostr(uint64_t aid) const
+{
+	std::string s;
+	do
+	{
+		char c = aid % 62;
+		if (c < 10) c += '0';
+		else if (c < 37) c += 'A' - 10;
+		else c += 'a' - 36;
+		s.push_back(c);
+	}
+	while (0 < (aid /= 62));
+
+	return s;
+}
+
+/// base-62 to int
+uint64_t RocksStorage::strtoaid(const std::string& sid) const
+{
+	uint64_t aid = 0;
+
+	int len = sid.size();
+	int i = 0;
+	uint64_t shift = 1;
+	while (i < len)
+	{
+		char c = sid[i];
+		if (c <= '9') c -= '0';
+		else if (c <= 'Z') c -= 'A' - 10;
+		else c -= 'a' - 36;
+
+		aid += shift * c;
+		i++;
+		shift *= 62;
+	}
+
+	return aid;
+}
+
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
 	throw IOException(TRACE_INFO, "Not implemented!");

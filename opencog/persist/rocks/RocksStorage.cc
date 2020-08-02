@@ -69,9 +69,10 @@ void RocksStorage::init(const char * uri)
 	s = _rfile->Put(rocksdb::WriteOptions(), "foo", "bar");
 }
 
-RocksStorage::RocksStorage(std::string uri)
+RocksStorage::RocksStorage(std::string uri) :
+	_rfile(nullptr),
+	_next_aid(0)
 {
-	_rfile = nullptr;
 	init(uri.c_str());
 }
 
