@@ -74,9 +74,33 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 	return aid;
 }
 
+/// Verify that the Atom is in storage.
+/// Return the matching sid.
+std::string RocksStorage::writeAtom(const Handle& h)
+{
+	std::string satom = Sexpr::encode_atom(h);
+
+	std::string sid;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
+	if (not s.ok())
+	{
+		if (h->is_link())
+		{
+			// Store the outgoing set .. just in case someone asks for it.
+			for (const Handle& ho : h->getOutgoingSet())
+				writeAtom(ho);
+		}
+		uint64_t aid = _next_aid.fetch_add(1);
+		sid = aidtostr(aid);
+		_rfile->Put(rocksdb::WriteOptions(), satom, sid);
+	}
+printf("Store sid= >>%s<< for %s\n", sid.c_str(), satom.c_str());
+	return sid;
+}
+
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	std::string sid = writeAtom(h);
 }
 
 void RocksStorage::storeValue(const Handle& h, const Handle& key)

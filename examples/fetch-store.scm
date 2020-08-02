@@ -11,7 +11,7 @@
 (use-modules (opencog persist-rocks))
 
 ; Note three slashes, not two!
-(cogserver-open "rocks:///tmp/foo.rdb")
+(cog-rocks-open "rocks:///tmp/foo.rdb")
 
 ; --------------
 ; Storing and Loading Atoms

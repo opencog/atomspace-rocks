@@ -36,6 +36,8 @@
 
 using namespace opencog;
 
+static const char* aid_key = "*-NextUnusedAID-*";
+
 /* ================================================================ */
 // Constructors
 
@@ -66,7 +68,19 @@ void RocksStorage::init(const char * uri)
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
 
-	s = _rfile->Put(rocksdb::WriteOptions(), "foo", "bar");
+	std::string sid;
+	s = _rfile->Get(rocksdb::ReadOptions(), aid_key, &sid);
+	if (not s.ok())
+	{
+		_next_aid = 1;
+		sid = aidtostr(1);
+		s = _rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+	}
+	else
+		_next_aid = strtoaid(sid);
+
+printf("Rocks: opened=%s\n", file.c_str());
+printf("Rocks: initial aid=%lu\n", _next_aid.load());
 }
 
 RocksStorage::RocksStorage(std::string uri) :
@@ -78,6 +92,9 @@ RocksStorage::RocksStorage(std::string uri) :
 
 RocksStorage::~RocksStorage()
 {
+printf("Rocks: storing final aid=%lu\n", _next_aid.load());
+	std::string sid = aidtostr(_next_aid.load());
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 	delete _rfile;
 }
 

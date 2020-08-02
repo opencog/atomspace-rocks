@@ -50,9 +50,12 @@ class RocksStorage : public BackingStore
 
 		rocksdb::DB* _rfile;
 
+		// unique ID's
 		std::atomic_uint64_t _next_aid;
 		uint64_t strtoaid(const std::string&) const;
 		std::string aidtostr(uint64_t) const;
+
+		std::string writeAtom(const Handle&);
 
 	public:
 		RocksStorage(std::string uri);
