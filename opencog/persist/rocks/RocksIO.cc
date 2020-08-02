@@ -104,26 +104,35 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
 	std::string sid = writeAtom(h);
 
-	// Separator for values
-	sid.push_back(':');
+	// Separator for keys
+	std::string cid = sid + ":";
+
+	// Create a list of all keys...
+	std::string keylist;
 	for (const Handle& key : h->getKeys())
-		storeValue(sid, h, key);
+	{
+		std::string skey = writeAtom(key);
+		keylist += skey + " ";
+
+		ValuePtr vp = h->getValue(key);
+		storeValue(cid + skey, vp);
+	}
+
+	_rfile->Put(rocksdb::WriteOptions(), cid + "keys", keylist);
 }
 
-void RocksStorage::storeValue(const std::string& sid,
-                              const Handle& h,
-                              const Handle& key)
+void RocksStorage::storeValue(const std::string& skid,
+                              const ValuePtr& vp)
 {
-	std::string skey = sid + writeAtom(key);
-	ValuePtr vp = h->getValue(key);
 	std::string sval = Sexpr::encode_value(vp);
-	_rfile->Put(rocksdb::WriteOptions(), skey, sval);
+	_rfile->Put(rocksdb::WriteOptions(), skid, sval);
 }
 
 void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
-	std::string sid = writeAtom(h) + ":";
-	storeValue(sid, h, key);
+	std::string skid = writeAtom(h) + ":" + writeAtom(key);
+	ValuePtr vp = h->getValue(key);
+	storeValue(skid, vp);
 }
 
 void RocksStorage::loadValue(const Handle& h, const Handle& key)
@@ -147,6 +156,22 @@ Handle RocksStorage::getNode(Type t, const char * str)
 		return Handle();
 
 	Handle h = createNode(t, str);
+
+	// Get all of the keys
+	std::string keylist;
+	_rfile->Get(rocksdb::ReadOptions(), sid + ":keys", &keylist);
+
+	std::string cid = sid + ":";
+	size_t nsk = 0;
+	size_t last = keylist.find(' ');
+	while (std::string::npos != last)
+	{
+		std::string skey = cid + keylist.substr(nsk, last-nsk);
+		// loadValue()
+		nsk = last + 1;
+		last = keylist.find(nsk, ' ');
+	}
+
 	return h;
 }
 
