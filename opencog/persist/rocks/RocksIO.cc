@@ -74,7 +74,9 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 	return aid;
 }
 
-/// Verify that the Atom is in storage.
+// ======================================================================
+
+/// Place Atom into storage.
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
@@ -136,8 +138,16 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 
 Handle RocksStorage::getNode(Type t, const char * str)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
-	return Handle();
+	std::string satom =
+		"(" + nameserver().getTypeName(t) + " " + str + ")";
+
+	std::string sid;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
+	if (not s.ok())
+		return Handle();
+
+	Handle h = createNode(t, str);
+	return h;
 }
 
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
