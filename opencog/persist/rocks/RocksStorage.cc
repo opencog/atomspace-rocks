@@ -27,11 +27,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <errno.h>
+
+#include "rocksdb/db.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/options.h"
 
 #include "RocksStorage.h"
 
@@ -51,12 +50,23 @@ void RocksStorage::init(const char * uri)
 	// We expect the URI to be for the form
 	//    rocks://path/to/file
 
-#if 0
-	std::string host(uri + URIX_LEN);
-	size_t slash = host.find_first_of(":/");
-	if (std::string::npos != slash)
-		host = host.substr(0, slash);
-#endif
+	std::string file(uri + URIX_LEN);
+
+	rocksdb::Options options;
+	options.IncreaseParallelism();
+	options.OptimizeLevelStyleCompaction();
+
+	// Create the file if it doesn't exist yet.
+	options.create_if_missing = true;
+
+	// Open the file
+	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
+
+	if (not s.ok())
+		throw IOException(TRACE_INFO, "Can't open file: %s",
+			s.ToString().c_str());
+
+	s = _rfile->Put(rocksdb::WriteOptions(), "foo", "bar");
 }
 
 RocksStorage::RocksStorage(std::string uri)
@@ -66,6 +76,7 @@ RocksStorage::RocksStorage(std::string uri)
 
 RocksStorage::~RocksStorage()
 {
+	delete _rfile;
 }
 
 bool RocksStorage::connected(void)

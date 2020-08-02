@@ -7,7 +7,7 @@
 (use-modules (opencog))
 (use-modules (opencog rocks-config))
 (load-extension
-	(string-append openrocks-ext-path-persist-rocks "libpersist-rocks")
+	(string-append opencog-ext-path-persist-rocks "libpersist-rocks")
 	"opencog_persist_rocks_init")
 
 (export cog-rocks-clear-stats cog-rocks-close cog-rocks-open

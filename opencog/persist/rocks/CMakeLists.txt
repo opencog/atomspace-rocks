@@ -3,18 +3,20 @@
 #
 
 ADD_LIBRARY (persist-rocks SHARED
-   RocksStorage
-   RocksPersistSCM
+	RocksIO
+	RocksStorage
+	RocksPersistSCM
 )
 
 TARGET_LINK_LIBRARIES(persist-rocks
-   ${ATOMSPACE_LIBRARIES}
+	${ATOMSPACE_LIBRARIES}
+	rocksdb
 )
 
 ADD_GUILE_EXTENSION(SCM_CONFIG persist-rocks
-   "opencog-ext-path-persist-rocks")
+	"opencog-ext-path-persist-rocks")
 
 INSTALL (TARGETS persist-rocks EXPORT AtomSpaceTargets
-   DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
+	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
 )
 

@@ -148,7 +148,7 @@ void RocksPersistSCM::do_clear_stats(void)
     _backing->clear_stats();
 }
 
-void opencog_persist_cog_simple_init(void)
+void opencog_persist_rocks_init(void)
 {
     static RocksPersistSCM patty(NULL);
 }
