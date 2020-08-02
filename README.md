@@ -12,7 +12,7 @@ $ guile
 scheme@(guile-user)> (use-modules (opencog))
 scheme@(guile-user)> (use-modules (opencog persist))
 scheme@(guile-user)> (use-modules (opencog persist-rocks))
-scheme@(guile-user)> (cog-rocks-open "rocks://tmp/foo.rdb/")
+scheme@(guile-user)> (cog-rocks-open "rocks:///tmp/foo.rdb/")
 scheme@(guile-user)> (load-atomspace)
 ```
 

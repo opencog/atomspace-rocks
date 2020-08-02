@@ -47,8 +47,8 @@ void RocksStorage::init(const char * uri)
 
 	_uri = uri;
 
-	// We expect the URI to be for the form
-	//    rocks://path/to/file
+	// We expect the URI to be for the form (note: three slashes)
+	//    rocks:///path/to/file
 
 	std::string file(uri + URIX_LEN);
 
@@ -71,6 +71,7 @@ void RocksStorage::init(const char * uri)
 
 RocksStorage::RocksStorage(std::string uri)
 {
+	_rfile = nullptr;
 	init(uri.c_str());
 }
 
@@ -81,7 +82,7 @@ RocksStorage::~RocksStorage()
 
 bool RocksStorage::connected(void)
 {
-	return false;
+	return nullptr != _rfile;
 }
 
 /* ================================================================== */

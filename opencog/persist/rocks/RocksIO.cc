@@ -35,32 +35,39 @@ using namespace opencog;
 
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::loadValue(const Handle& h, const Handle& key)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::removeAtom(const Handle& h, bool recursive)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 Handle RocksStorage::getNode(Type t, const char * str)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 	return Handle();
 }
 
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 	return Handle();
 }
 
 void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
@@ -69,21 +76,26 @@ void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 
 void RocksStorage::loadAtomSpace(AtomTable &table)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::loadType(AtomTable &table, Type t)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::storeAtomSpace(const AtomTable &table)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::kill_data(void)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 void RocksStorage::runQuery(const Handle& query, const Handle& key,
                                 const Handle& meta, bool fresh)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
