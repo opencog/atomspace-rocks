@@ -101,11 +101,27 @@ printf("Store sid= >>%s<< for %s\n", sid.c_str(), satom.c_str());
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
 	std::string sid = writeAtom(h);
+
+	// Separator for values
+	sid.push_back(':');
+	for (const Handle& key : h->getKeys())
+		storeValue(sid, h, key);
+}
+
+void RocksStorage::storeValue(const std::string& sid,
+                              const Handle& h,
+                              const Handle& key)
+{
+	std::string skey = sid + writeAtom(key);
+	ValuePtr vp = h->getValue(key);
+	std::string sval = Sexpr::encode_value(vp);
+	_rfile->Put(rocksdb::WriteOptions(), skey, sval);
 }
 
 void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	std::string sid = writeAtom(h) + ":";
+	storeValue(sid, h, key);
 }
 
 void RocksStorage::loadValue(const Handle& h, const Handle& key)

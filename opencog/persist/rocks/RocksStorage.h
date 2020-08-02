@@ -56,6 +56,8 @@ class RocksStorage : public BackingStore
 		std::string aidtostr(uint64_t) const;
 
 		std::string writeAtom(const Handle&);
+		void storeValue(const std::string& sid,
+		                const Handle&, const Handle& key);
 
 	public:
 		RocksStorage(std::string uri);
