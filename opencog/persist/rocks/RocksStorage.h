@@ -69,6 +69,8 @@ class RocksStorage : public BackingStore
 		void loadAtoms(AtomTable& table, const std::string& pfx);
 		void loadInset(AtomTable& table, const std::string& ist);
 
+		void removeSatom(const std::string&, const std::string&, bool, bool);
+
 	public:
 		RocksStorage(std::string uri);
 		RocksStorage(const RocksStorage&) = delete; // disable copying

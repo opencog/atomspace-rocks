@@ -303,7 +303,7 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	rocksdb::Slice start, end;
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
 
-#else
+#endif
 	// XXX TODO .. This should be atomic!
 
 	// Are we even holding the Atom to be deleted?
@@ -316,7 +316,26 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	// We don't know this atom. Give up.
 	if (0 == sid.size()) return;
 
+	removeSatom(satom, sid, h->is_node(), recursive);
+}
+
+void RocksStorage::removeSatom(const std::string& satom,
+                               const std::string& sid,
+                               bool is_node,
+                               bool recursive)
+{
+	// Is there an incoming set?
+	// If there is, and we are not recursive, then refuse.
+	std::string inset;
+	_rfile->Get(rocksdb::ReadOptions(), "i@" + sid, &inset);
+	if (not recursive and 0 < inset.size()) return;
+
+	if (0 < inset.size())
+	{
+	}
+
 	// Delete the Atom, first.
+	std::string pfx = is_node ? "n@" : "l@";
 	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom);
 	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid);
 
@@ -325,10 +344,6 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
-
-	// Delete the incoming set, too...
-// i@  xxxx TODO
-#endif
 }
 
 /// Load the incoming set based on the key prefix `ist`.
