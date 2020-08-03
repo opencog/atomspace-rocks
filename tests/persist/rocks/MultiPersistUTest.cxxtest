@@ -1,5 +1,5 @@
 /*
- * tests/persist/cog/MultiPersistUTest.cxxtest
+ * tests/persist/rocks/MultiPersistUTest.cxxtest
  *
  * Test multi-threaded persistance.  Assumes PersistUTest is passing.
  * Ported over from original unit test at
@@ -32,8 +32,8 @@
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/persist/cog-storage/CogStorage.h>
-#include <opencog/cogserver/server/CogServer.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 
@@ -45,9 +45,7 @@ class MultiPersistUTest :  public CxxTest::TestSuite
 {
     private:
         AtomSpace *_as;
-        CogServer* srvr = NULL;
-        std::thread * main_loop = NULL;
-        CogStorage *store = NULL;
+        RocksStorage *store = NULL;
 
 #define NTHREADS 6
 #define NHACK 10
@@ -75,12 +73,6 @@ class MultiPersistUTest :  public CxxTest::TestSuite
         MultiPersistUTest(void);
         ~MultiPersistUTest()
         {
-            srvr->stop();
-            main_loop->join();
-            srvr->disableNetworkServer();
-            delete main_loop;
-            delete srvr;
-
             // erase the log file if no assertions failed
             if (!CxxTest::TestTracker::tracker().suiteFailed())
                 std::remove(logger().get_filename().c_str());
@@ -105,14 +97,6 @@ MultiPersistUTest:: MultiPersistUTest(void)
     // logger().set_level(Logger::DEBUG);
     logger().set_level(Logger::INFO);
     logger().set_print_to_stdout_flag(true);
-
-    // Create a single cogserver node that will act as
-    // as the repo for the duration of the test.
-    srvr = &cogserver();
-    srvr->loadModules();
-    srvr->enableNetworkServer(16006);
-    main_loop = new std::thread(&CogServer::serverLoop, srvr);
-    printf("Started CogServer\n");
 
     n_threads = NTHREADS;
 
@@ -139,7 +123,7 @@ void MultiPersistUTest::setUp(void)
 {
     _as = new AtomSpace();
 
-    store = new CogStorage("cog://localhost:16006");
+    store = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
     TS_ASSERT(store->connected())
     store->registerWith(_as);
 }
