@@ -1,5 +1,5 @@
 /*
- * tests/persist/cog/LargeFlatUTest.cxxtest
+ * tests/persist/rocks/LargeFlatUTest.cxxtest
  *
  * Test larger AtomSpace persistance.  Assumes PersistUTest is passing.
  *
@@ -29,8 +29,8 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
-#include <opencog/persist/cog-storage/CogStorage.h>
-#include <opencog/cogserver/server/CogServer.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -40,8 +40,6 @@ class LargeFlatUTest :  public CxxTest::TestSuite
 {
 	private:
 		AtomSpace *_as;
-		CogServer* srvr = NULL;
-		std::thread * main_loop = NULL;
 
 // 75000 * 7 == half-a-million atoms
 // 19000 * 7 == 133K atoms
@@ -85,24 +83,10 @@ LargeFlatUTest::LargeFlatUTest(void)
 	// logger().set_level(Logger::DEBUG);
 	logger().set_level(Logger::INFO);
 	logger().set_print_to_stdout_flag(true);
-
-	// Create a single cogserver node that will act as
-	// as the repo for the duration of the test.
-	srvr = &cogserver();
-	srvr->loadModules();
-	srvr->enableNetworkServer(16008);
-	main_loop = new std::thread(&CogServer::serverLoop, srvr);
-	printf("Started CogServer\n");
 }
 
 LargeFlatUTest::~LargeFlatUTest()
 {
-	srvr->stop();
-	main_loop->join();
-	srvr->disableNetworkServer();
-	delete main_loop;
-	delete srvr;
-
 	// erase the log file if no assertions failed
 	if (!CxxTest::TestTracker::tracker().suiteFailed())
 		std::remove(logger().get_filename().c_str());
@@ -341,7 +325,7 @@ void LargeFlatUTest::test_atomspace(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	CogStorage *store = new CogStorage("cog://localhost:16008");
+	RocksStorage *store = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
 	TS_ASSERT(store->connected())
 	store->registerWith(_as);
 

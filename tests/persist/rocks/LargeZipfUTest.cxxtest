@@ -1,5 +1,5 @@
 /*
- * tests/persist/cog/LargeZipfTest.cxxtest
+ * tests/persist/rocks/LargeZipfTest.cxxtest
  *
  * Emulate word-pair dataset with Zipfian incoming sets.
  * This creates nodes with large incoming sets; database should
@@ -30,9 +30,9 @@
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
+#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/truthvalue/CountTruthValue.h>
-#include <opencog/persist/cog-storage/CogStorage.h>
-#include <opencog/cogserver/server/CogServer.h>
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -42,8 +42,6 @@ class LargeZipfUTest :  public CxxTest::TestSuite
 {
 	private:
 		AtomSpace *_as;
-		CogServer* srvr = NULL;
-		std::thread * main_loop = NULL;
 
 #define NWORDS 5000
 		Handle hword[NWORDS];
@@ -73,25 +71,10 @@ LargeZipfUTest:: LargeZipfUTest(void)
 	// logger().set_level(Logger::DEBUG);
 	logger().set_level(Logger::INFO);
 	logger().set_print_to_stdout_flag(true);
-
-
-	// Create a single cogserver node that will act as
-	// as the repo for the duration of the test.
-	srvr = &cogserver();
-	srvr->loadModules();
-	srvr->enableNetworkServer(16009);
-	main_loop = new std::thread(&CogServer::serverLoop, srvr);
-	printf("Started CogServer\n");
 }
 
 LargeZipfUTest::~LargeZipfUTest()
 {
-	srvr->stop();
-	main_loop->join();
-	srvr->disableNetworkServer();
-	delete main_loop;
-	delete srvr;
-
 	// erase the log file if no assertions failed
 	if (!CxxTest::TestTracker::tracker().suiteFailed())
 		std::remove(logger().get_filename().c_str());
@@ -273,7 +256,7 @@ void LargeZipfUTest::test_atomspace(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	CogStorage *store = new CogStorage("cog://localhost:16009");
+	RocksStorage *store = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
 	TS_ASSERT(store->connected())
 	store->registerWith(_as);
 
