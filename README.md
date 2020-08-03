@@ -24,3 +24,7 @@ AtomSpace!  Of course, loading everything is not generally desirable,
 especially when the file is huge and RAM space is tight.  More granular
 load and store is possible; see the [examples directory](examples) for
 details.
+
+Design
+------
+Currently minimalistic, not tuned.
