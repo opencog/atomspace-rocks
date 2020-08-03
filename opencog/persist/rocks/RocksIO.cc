@@ -131,6 +131,10 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 	// Separator for keys
 	std::string cid = "k@" + sid + ":";
 
+	// Always clobber the TV, set it back to default.
+	// The below will revise as needed.
+	_rfile->Delete(rocksdb::WriteOptions(), "k@" + sid + tv_pred_sid);
+
 	// Store all the keys on the atom ...
 	for (const Handle& key : h->getKeys())
 		storeValue(cid + writeAtom(key), h->getValue(key));

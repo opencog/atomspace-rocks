@@ -32,6 +32,8 @@
 #include "rocksdb/slice.h"
 #include "rocksdb/options.h"
 
+#include <opencog/atoms/base/Node.h>
+
 #include "RocksStorage.h"
 
 using namespace opencog;
@@ -64,13 +66,14 @@ void RocksStorage::init(const char * uri)
 	// Create the file if it doesn't exist yet.
 	options.create_if_missing = true;
 
-	// Open the file
+	// Open the file.
 	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
 
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
 
+	// If the file was created just now, then set the UUID to 1.
 	std::string sid;
 	s = _rfile->Get(rocksdb::ReadOptions(), aid_key, &sid);
 	if (not s.ok())
@@ -84,6 +87,12 @@ void RocksStorage::init(const char * uri)
 
 printf("Rocks: opened=%s\n", file.c_str());
 printf("Rocks: initial aid=%lu\n", _next_aid.load());
+
+	// Set up a SID for the TV predicate key.
+	// This must match what the AtomSpace is using.
+	// Tack on a leading colon, for convenience.
+	Handle h = createNode(PREDICATE_NODE, "*-TruthValueKey-*");
+	tv_pred_sid = ":" + writeAtom(h);
 }
 
 RocksStorage::RocksStorage(std::string uri) :

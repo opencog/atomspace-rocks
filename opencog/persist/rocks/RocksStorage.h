@@ -47,7 +47,6 @@ class RocksStorage : public BackingStore
 	private:
 		void init(const char *);
 		std::string _uri;
-
 		rocksdb::DB* _rfile;
 
 		// unique ID's
@@ -55,6 +54,9 @@ class RocksStorage : public BackingStore
 		uint64_t strtoaid(const std::string&) const;
 		std::string aidtostr(uint64_t) const;
 
+		std::string tv_pred_sid;
+
+		// Assorted helper functions
 		std::string findAtom(const Handle&);
 		std::string writeAtom(const Handle&);
 		void updateInset(const std::string&, Type, const std::string&);
