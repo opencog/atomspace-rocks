@@ -335,10 +335,31 @@ void RocksStorage::remIncoming(const std::string& sid,
                                const std::string& stype,
                                const std::string& osatom)
 {
+	// Oh bother. Is it a Node, or a Link?
+	const std::string& sotype = osatom.substr(1, osatom.find(' ') - 1);
+	Type ot = nameserver().getType(sotype);
+	std::string opf = nameserver().isNode(ot) ? "n@" : "l@";
+
 	// Get the matching osid
 	std::string osid;
-	_rfile->Get(rocksdb::ReadOptions(), osatom, &osid);
-printf("duuude type=%s oset atom=>>%s<<\n", stype.c_str(), osatom.c_str());
+	_rfile->Get(rocksdb::ReadOptions(), opf + osatom, &osid);
+
+	// Get the incoming set. Since we have the type, we can get this
+	// directly, without needing any loops.
+	std::string ist = "i@" + osid + ":" + stype;
+	std::string inlist;
+	_rfile->Get(rocksdb::ReadOptions(), ist, &inlist);
+
+	// Some consistency checks ...
+	if (0 == inlist.size())
+		throw IOException(TRACE_INFO, "Internal Error!");
+
+	size_t pos = inlist.find(sid);
+	if (std::string::npos == pos)
+		throw IOException(TRACE_INFO, "Internal Error!");
+
+	inlist.replace(pos, sid.size() + 1, "");
+printf("duuude after: >>%s<<\n", inlist.c_str());
 }
 
 /// Remove the given Atom from the database.
@@ -394,7 +415,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		if (std::string::npos != pos)
 		{
 			// style is the type of the Link.
-			const std::string& stype = satom.substr(1, pos);
+			const std::string& stype = satom.substr(1, pos-1);
 
 			// Loop over the outgoing set of `satom`.
 			size_t l = pos;
