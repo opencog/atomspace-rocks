@@ -294,9 +294,18 @@ void RocksStorage::storeAtomSpace(const AtomTable &table)
 	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
+/// Kill everything in the database ... everything.
 void RocksStorage::kill_data(void)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+#ifdef HAVE_DELETE_RANGE
+	rocksdb::Slice start, end;
+	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
+
+#else
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(""); it->Valid(); it->Next())
+		_rfile->Delete(rocksdb::WriteOptions(), it->key());
+#endif
 }
 
 void RocksStorage::runQuery(const Handle& query, const Handle& key,
