@@ -88,6 +88,7 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
 // "k@" sid:kid . sval -- find the value for the Atom,Key
+// "i@" sid:stype . sid-list -- finds incoming set of sid
 
 /// Place Atom into storage.
 /// Return the matching sid.
@@ -102,15 +103,22 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	{
 		if (h->is_link())
 		{
+			Type t = h->get_type();
+
 			// Store the outgoing set .. just in case someone asks for it.
 			for (const Handle& ho : h->getOutgoingSet())
-				writeAtom(ho);
+			{
+				std::string soid = writeAtom(ho);
+				updateInset(soid, t, sid);
+			}
 		}
 		uint64_t aid = _next_aid.fetch_add(1);
 		sid = aidtostr(aid);
 		_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 		_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, satom);
 	}
+
+	// logger().debug("Store sid= >>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 printf("Store sid= >>%s<< for >>%s<<\n", sid.c_str(), satom.c_str());
 	return sid;
 }
@@ -143,6 +151,24 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 
 	// First store the value
 	storeValue("k@" + sid + ":" + kid, vp);
+}
+
+/// Add `sid` to the incoming set of `soid`.
+/// That is, `sid` is a Link that contains `soid`.
+/// The Type of `sid` should be `t` (and it should always be a Link).
+void RocksStorage::updateInset(const std::string& soid, Type t,
+                               const std::string& sid)
+{
+	std::string ist = "i@" + soid + ":" + nameserver().getTypeName(t);
+
+	// XXX TODO This update needs to be atomic!!
+	std::string inlist;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), ist, &inlist);
+	if (not s.ok() or std::string::npos == inlist.find(sid))
+	{
+		inlist += sid + " ";
+		_rfile->Put(rocksdb::WriteOptions(), ist, inlist);
+	}
 }
 
 // =========================================================
@@ -246,6 +272,7 @@ void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
 
 void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 {
+	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
 /// Load all the Atoms starting with the prefix.
