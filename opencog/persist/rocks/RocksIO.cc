@@ -272,7 +272,16 @@ void RocksStorage::loadAtomSpace(AtomTable &table)
 
 void RocksStorage::loadType(AtomTable &table, Type t)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
+	std::string typ = pfx + nameserver().getTypeName(t);
+
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
+	{
+		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+		getKeys(it->value().ToString(), h);
+		table.add(h);
+	}
 }
 
 void RocksStorage::storeAtomSpace(const AtomTable &table)
