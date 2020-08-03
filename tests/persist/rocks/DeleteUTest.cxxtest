@@ -1,5 +1,5 @@
 /*
- * tests/persist/cog/DeleteUTest.cxxtest
+ * tests/persist/rocks/DeleteUTest.cxxtest
  *
  * Test deletion from backing store.  Assumes PersistUTest is passing.
  * Ported from tests/persist/sql/multi-driver/DeleteUTest.cxxtest
@@ -32,8 +32,8 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
-#include <opencog/persist/cog-storage/CogStorage.h>
-#include <opencog/cogserver/server/CogServer.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -43,8 +43,7 @@ class DeleteUTest :  public CxxTest::TestSuite
 {
     private:
         AtomSpace* _as;
-        CogServer* srvr = NULL;
-        std::thread * main_loop = NULL;
+        std::string uri;
 
         NodePtr n1[10];
         NodePtr n2[10];
@@ -66,12 +65,6 @@ class DeleteUTest :  public CxxTest::TestSuite
         DeleteUTest(void);
         ~DeleteUTest()
         {
-            srvr->stop();
-            main_loop->join();
-            srvr->disableNetworkServer();
-            delete main_loop;
-            delete srvr;
-
             // erase the log file if no assertions failed
             if (!CxxTest::TestTracker::tracker().suiteFailed())
                 std::remove(logger().get_filename().c_str());
@@ -104,13 +97,7 @@ DeleteUTest:: DeleteUTest(void)
     logger().set_print_to_stdout_flag(true);
     // logger().set_sync_flag(true);
 
-    // Create a single cogserver node that will act as
-    // as the repo for the duration of the test.
-    srvr = &cogserver();
-    srvr->loadModules();
-    srvr->enableNetworkServer(16005);
-    main_loop = new std::thread(&CogServer::serverLoop, srvr);
-    printf("Started CogServer\n");
+    uri = "rocks:///tmp/cog-rocks-unit-test";
 }
 
 /*
@@ -409,7 +396,7 @@ void DeleteUTest::test_remove(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    CogStorage *store = new CogStorage("cog://localhost:16005");
+    RocksStorage *store = new RocksStorage(uri);
     TS_ASSERT(store->connected())
     store->registerWith(_as);
 
@@ -489,7 +476,7 @@ void DeleteUTest::test_recurse(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    CogStorage *store = new CogStorage("cog://localhost:16005");
+    RocksStorage *store = new RocksStorage(uri);
     TS_ASSERT(store->connected())
     store->registerWith(_as);
 
