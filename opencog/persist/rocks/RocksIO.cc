@@ -207,20 +207,9 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
-/// Backend callback - get the Node
-Handle RocksStorage::getNode(Type t, const char * str)
+/// Get all of the keys
+void RocksStorage::getKeys(const std::string& sid, const Handle& h)
 {
-	std::string satom =
-		"(" + nameserver().getTypeName(t) + " \"" + str + "\")";
-
-	std::string sid;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
-	if (not s.ok())
-		return Handle();
-
-	Handle h = createNode(t, str);
-
-	// Get all of the keys
 	std::string keylist = getKeyList(sid);
 
 	std::string cid = sid + ":";
@@ -235,14 +224,44 @@ Handle RocksStorage::getNode(Type t, const char * str)
 		nsk = last + 1;
 		last = keylist.find(' ', nsk);
 	}
+}
+
+/// Backend callback - get the Node
+Handle RocksStorage::getNode(Type t, const char * str)
+{
+	std::string satom =
+		"(" + nameserver().getTypeName(t) + " \"" + str + "\")";
+
+	std::string sid;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
+	if (not s.ok())
+		return Handle();
+
+	Handle h = createNode(t, str);
+	getKeys(sid, h);
 
 	return h;
 }
 
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
-	return Handle();
+	std::string satom =
+		"(" + nameserver().getTypeName(t) + " ";
+
+	for (const Handle& h : hs)
+		satom += Sexpr::encode_atom(h);
+
+	satom += ")";
+
+	std::string sid;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
+	if (not s.ok())
+		return Handle();
+
+	Handle h = createLink(hs, t);
+	getKeys(sid, h);
+
+	return h;
 }
 
 // =========================================================
