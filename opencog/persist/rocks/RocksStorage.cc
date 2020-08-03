@@ -59,7 +59,7 @@ void RocksStorage::init(const char * uri)
 	options.OptimizeLevelStyleCompaction();
 
 	// Prefix for bloom filter -- first 2 chars.
-	options.prefix_extractor.reset(NewFixedPrefixTransform(2));
+	// options.prefix_extractor.reset(rocksdb::NewFixedPrefixTransform(2));
 
 	// Create the file if it doesn't exist yet.
 	options.create_if_missing = true;

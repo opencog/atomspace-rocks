@@ -181,16 +181,17 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 void RocksStorage::getKeys(const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-	auto it = DB::NewIterator(ReadOptions());
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 
-	for (it.Seek(cid); it.Valid() and it.key().starts_with(cid); it.Next())
+	// Iterate over all the keys on the Atom.
+	size_t pos = cid.size();
+	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
-printf("duuude its %s\n", it->ToString().c_str());
-#if 0
-		Handle key = getAtom(kid);
-		ValuePtr vp = getValue(cid + kid);
+		Handle key = getAtom(it->key().ToString().substr(pos));
+
+		size_t junk = 0;
+		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
 		h->setValue(key, vp);
-#endif
 	}
 }
 
