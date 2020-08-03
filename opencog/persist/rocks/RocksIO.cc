@@ -108,8 +108,9 @@ std::string RocksStorage::writeAtom(const Handle& h)
 		uint64_t aid = _next_aid.fetch_add(1);
 		sid = aidtostr(aid);
 		_rfile->Put(rocksdb::WriteOptions(), satom, sid);
+		_rfile->Put(rocksdb::WriteOptions(), sid, satom);
 	}
-printf("Store sid= >>%s<< for %s\n", sid.c_str(), satom.c_str());
+printf("Store sid= >>%s<< for >>%s<<\n", sid.c_str(), satom.c_str());
 	return sid;
 }
 
@@ -186,7 +187,7 @@ ValuePtr RocksStorage::getValue(const std::string& skid)
 Handle RocksStorage::getNode(Type t, const char * str)
 {
 	std::string satom =
-		"(" + nameserver().getTypeName(t) + " " + str + ")";
+		"(" + nameserver().getTypeName(t) + " \"" + str + "\")";
 
 	std::string sid;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
@@ -204,12 +205,12 @@ Handle RocksStorage::getNode(Type t, const char * str)
 	size_t last = keylist.find(' ');
 	while (std::string::npos != last)
 	{
-		std::string skey = cid + keylist.substr(nsk, last-nsk);
-		Handle key = getAtom(skey);
-		ValuePtr vp = getValue(cid + skey);
+		const std::string kid = keylist.substr(nsk, last-nsk);
+		Handle key = getAtom(kid);
+		ValuePtr vp = getValue(cid + kid);
 		h->setValue(key, vp);
 		nsk = last + 1;
-		last = keylist.find(nsk, ' ');
+		last = keylist.find(' ', nsk);
 	}
 
 	return h;
