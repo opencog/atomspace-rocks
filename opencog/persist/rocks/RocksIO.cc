@@ -206,7 +206,9 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 }
 
 /// Get all of the keys for the Atom at `sid`, and attach them to `h`.
-void RocksStorage::getKeys(const std::string& sid, const Handle& h)
+/// Place the keys into the AtomSpace.
+void RocksStorage::getKeys(AtomSpace* as,
+                           const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -216,6 +218,10 @@ void RocksStorage::getKeys(const std::string& sid, const Handle& h)
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 		Handle key = getAtom(it->key().ToString().substr(pos));
+		if (as) key = as->add_atom(key);
+
+		// read-only Atomspaces will refust insertion.
+		if (nullptr == key) continue;
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
@@ -235,7 +241,7 @@ Handle RocksStorage::getNode(Type t, const char * str)
 		return Handle();
 
 	Handle h = createNode(t, str);
-	getKeys(sid, h);
+	getKeys(nullptr, sid, h);
 
 	return h;
 }
@@ -256,7 +262,7 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 		return Handle();
 
 	Handle h = createLink(hs, t);
-	getKeys(sid, h);
+	getKeys(nullptr, sid, h);
 
 	return h;
 }
@@ -282,6 +288,8 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 /// Load the incoming set based on the key prefix `ist`.
 void RocksStorage::loadInset(AtomTable& table, const std::string& ist)
 {
+	AtomSpace* as = table.getAtomSpace();
+
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -295,7 +303,7 @@ void RocksStorage::loadInset(AtomTable& table, const std::string& ist)
 			const std::string sid = inlist.substr(nsk, last-nsk);
 
 			Handle hi = getAtom(sid);
-			getKeys(sid, hi);
+			getKeys(as, sid, hi);
 			table.add(hi);
 			nsk = last + 1;
 			last = inlist.find(' ', nsk);
@@ -324,11 +332,13 @@ void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 /// Currently, the prfix must be "n@ " for Nodes or "l@" for Links.
 void RocksStorage::loadAtoms(AtomTable &table, const std::string& pfx)
 {
+	AtomSpace* as = table.getAtomSpace();
+
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		getKeys(it->value().ToString(), h);
+		getKeys(as, it->value().ToString(), h);
 		table.add(h);
 	}
 }
@@ -344,6 +354,8 @@ void RocksStorage::loadAtomSpace(AtomTable &table)
 
 void RocksStorage::loadType(AtomTable &table, Type t)
 {
+	AtomSpace* as = table.getAtomSpace();
+
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
 	std::string typ = pfx + nameserver().getTypeName(t);
 
@@ -351,7 +363,7 @@ void RocksStorage::loadType(AtomTable &table, Type t)
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		getKeys(it->value().ToString(), h);
+		getKeys(as, it->value().ToString(), h);
 		table.add(h);
 	}
 }
