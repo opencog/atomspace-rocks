@@ -104,7 +104,7 @@ RocksStorage::RocksStorage(std::string uri) :
 
 RocksStorage::~RocksStorage()
 {
-printf("Rocks: storing final aid=%lu\n", _next_aid.load());
+	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
 	std::string sid = aidtostr(_next_aid.load());
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 	delete _rfile;

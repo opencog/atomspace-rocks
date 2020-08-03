@@ -103,6 +103,12 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	{
 		uint64_t aid = _next_aid.fetch_add(1);
 		sid = aidtostr(aid);
+		// Update immediately, in case of a future crash or something...
+		// XXX FIXME, this is wrong, it needs to be atomic, since
+		// other threads may already have a newer aid than us!
+		// So this is racey ... Luckily, the dtor writes the final value,
+		// so if no one crashed, then, in the end, everything is OK ...
+		_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
 		if (h->is_link())
 		{
