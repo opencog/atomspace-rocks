@@ -350,15 +350,13 @@ void RocksStorage::removeSatom(const std::string& satom,
 		size_t last = inset.find(' ');
 		while (std::string::npos != last)
 		{
+			// isid is the sid of an atom in the incoming set.
+			// Get the matching atom.
 			const std::string& isid = inset.substr(nsk, last-nsk);
 			std::string isatom;
 			_rfile->Get(rocksdb::ReadOptions(), "a@" + isid, &isatom);
 
-			// Oh bother. Is it a node, or a link?
-			const std::string stype = isatom.substr(1, isatom.find(' ') - 1);
-			Type t = nameserver().getType(stype);
-			bool ino = nameserver().isNode(t);
-			removeSatom(isatom, isid, ino, recursive);
+			removeSatom(isatom, isid, false, recursive);
 
 			nsk = last + 1;
 			last = inset.find(' ', nsk);
