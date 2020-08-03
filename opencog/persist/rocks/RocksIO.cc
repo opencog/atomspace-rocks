@@ -142,21 +142,39 @@ void RocksStorage::storeValue(const std::string& skid,
 	_rfile->Put(rocksdb::WriteOptions(), skid, sval);
 }
 
+/// Backing-store API.
 void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
-	std::string skid = writeAtom(h) + ":" + writeAtom(key);
+	std::string sid = writeAtom(h);
+	std::string kid = writeAtom(key);
 	ValuePtr vp = h->getValue(key);
-	storeValue(skid, vp);
+
+	// First store the value
+	storeValue(sid + ":" + kid, vp);
+
+	// Now, make sure the key-list has the key in it.
+	std::string keylist = getKeyList(sid);
+	size_t pos = keylist.find(kid);
+	if (std::string::npos == pos)
+	{
+		keylist += kid + " ";
+		setKeyList(sid, keylist);
+	}
 }
 
-void RocksStorage::loadValue(const Handle& h, const Handle& key)
+// =========================================================
+
+std::string RocksStorage::getKeyList(const std::string& sid)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	std::string keylist;
+	_rfile->Get(rocksdb::ReadOptions(), sid + "@keys", &keylist);
+	return keylist;
 }
 
-void RocksStorage::removeAtom(const Handle& h, bool recursive)
+void RocksStorage::setKeyList(const std::string& sid,
+                              const std::string& keylist)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	_rfile->Put(rocksdb::WriteOptions(), sid + "@keys", keylist);
 }
 
 /// Return the Atom located at sid.
@@ -183,6 +201,12 @@ ValuePtr RocksStorage::getValue(const std::string& skid)
 	return Sexpr::decode_value(sval, pos);
 }
 
+/// Backend callback
+void RocksStorage::loadValue(const Handle& h, const Handle& key)
+{
+	throw IOException(TRACE_INFO, "Not implemented!");
+}
+
 /// Backend callback - get the Node
 Handle RocksStorage::getNode(Type t, const char * str)
 {
@@ -197,8 +221,7 @@ Handle RocksStorage::getNode(Type t, const char * str)
 	Handle h = createNode(t, str);
 
 	// Get all of the keys
-	std::string keylist;
-	_rfile->Get(rocksdb::ReadOptions(), sid + "@keys", &keylist);
+	std::string keylist = getKeyList(sid);
 
 	std::string cid = sid + ":";
 	size_t nsk = 0;
@@ -222,6 +245,12 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 	return Handle();
 }
 
+// =========================================================
+
+void RocksStorage::removeAtom(const Handle& h, bool recursive)
+{
+	throw IOException(TRACE_INFO, "Not implemented!");
+}
 void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
 {
 	throw IOException(TRACE_INFO, "Not implemented!");
