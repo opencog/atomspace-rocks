@@ -324,14 +324,40 @@ void RocksStorage::removeSatom(const std::string& satom,
                                bool is_node,
                                bool recursive)
 {
-	// Is there an incoming set?
-	// If there is, and we are not recursive, then refuse.
-	std::string inset;
-	_rfile->Get(rocksdb::ReadOptions(), "i@" + sid, &inset);
-	if (not recursive and 0 < inset.size()) return;
-
-	if (0 < inset.size())
+	// So first, iterate up to the top, chopping away the incoming set.
+	// It's stored with prefixes according to type, so this is a loop...
+	std::string ist = "i@" + sid;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
+		// If there is an incoming set, but were are not recursive,
+		// then refuse to do anything more.
+		if (not recursive) return;
+
+		// The list of sids of incoming Atoms.
+		std::string inset = it->value().ToString();
+
+		// Loop over the incoming set.
+		size_t nsk = 0;
+		size_t last = inset.find(' ');
+		while (std::string::npos != last)
+		{
+			const std::string& isid = inset.substr(nsk, last-nsk);
+			std::string isatom;
+			_rfile->Get(rocksdb::ReadOptions(), "a@" + isid, &isatom);
+
+			// Oh bother. Is it a node, or a link?
+			const std::string stype = isatom.substr(1, isatom.find(' ') - 1);
+			Type t = nameserver().getType(stype);
+			bool ino = nameserver().isNode(t);
+			removeSatom(isatom, isid, ino, recursive);
+
+			nsk = last + 1;
+			last = inset.find(' ', nsk);
+		}
+
+		// Finally, delete the inset itself.
+		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	}
 
 	// Delete the Atom, first.
@@ -341,7 +367,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 
 	// Delete all values hanging on the atom ...
 	pfx = "k@" + sid;
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 }
@@ -361,7 +387,7 @@ void RocksStorage::loadInset(AtomTable& table, const std::string& ist)
 		size_t last = inlist.find(' ');
 		while (std::string::npos != last)
 		{
-			const std::string sid = inlist.substr(nsk, last-nsk);
+			const std::string& sid = inlist.substr(nsk, last-nsk);
 
 			Handle hi = getAtom(sid);
 			getKeys(as, sid, hi);
@@ -449,6 +475,17 @@ void RocksStorage::kill_data(void)
 	for (it->Seek(""); it->Valid(); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 #endif
+}
+
+/// Dump database contents to stdout.
+void RocksStorage::print_all(void)
+{
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(""); it->Valid(); it->Next())
+	{
+		printf("rkey: >>%s<<    rval: >>%s<<\n",
+			it->key().ToString().c_str(), it->value().ToString().c_str());
+	}
 }
 
 void RocksStorage::runQuery(const Handle& query, const Handle& key,

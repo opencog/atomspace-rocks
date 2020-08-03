@@ -146,7 +146,8 @@ void RocksStorage::clear_stats(void)
 void RocksStorage::print_stats(void)
 {
 	printf("Connected to %s\n", _uri.c_str());
-	printf("no stats yet\n");
+	printf("Database contents:\n");
+	print_all();
 }
 
 /* ============================= END OF FILE ================= */

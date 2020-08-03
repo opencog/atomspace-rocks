@@ -71,6 +71,8 @@ class RocksStorage : public BackingStore
 
 		void removeSatom(const std::string&, const std::string&, bool, bool);
 
+		void print_all(void);
+
 	public:
 		RocksStorage(std::string uri);
 		RocksStorage(const RocksStorage&) = delete; // disable copying
