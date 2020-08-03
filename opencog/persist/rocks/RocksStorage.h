@@ -62,6 +62,7 @@ class RocksStorage : public BackingStore
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
 		void getKeys(const std::string&, const Handle&);
+		void loadAtoms(AtomTable &table, const std::string& pfx);
 
 	public:
 		RocksStorage(std::string uri);

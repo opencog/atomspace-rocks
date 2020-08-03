@@ -248,9 +248,26 @@ void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 {
 }
 
+/// Load all the Atoms starting with the prefix.
+/// Currently, the prfix must be "n@ " for Nodes or "l@" for Links.
+void RocksStorage::loadAtoms(AtomTable &table, const std::string& pfx)
+{
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+	{
+		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+		getKeys(it->value().ToString(), h);
+		table.add(h);
+	}
+}
+
+/// Backing API - load the entire AtomSpace.
 void RocksStorage::loadAtomSpace(AtomTable &table)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	// First, load all the nodes ... then the links.
+	// XXX TODO - maybe load links depth-order...
+	loadAtoms(table, "n@");
+	loadAtoms(table, "l@");
 }
 
 void RocksStorage::loadType(AtomTable &table, Type t)

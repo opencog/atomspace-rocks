@@ -1,6 +1,6 @@
 # AtomSpace RocksDB Backend
 
-Version 0.0.2 -- Something works.
+Version 0.1.0 -- Some unit tests pass.
 
 
 Example Usage
