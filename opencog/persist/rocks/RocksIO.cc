@@ -327,6 +327,25 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 
+/// Remove `sid` from the incoming set of `osatom`.
+/// Assumes that `sid` references an Atom that has `osatom`
+/// in it's outgoing set.   Assumes that `stype` is the type
+/// of `sid`.
+void RocksStorage::remIncoming(const std::string& sid,
+                               const std::string& stype,
+                               const std::string& osatom)
+{
+	// Get the matching osid
+	std::string osid;
+	_rfile->Get(rocksdb::ReadOptions(), osatom, &osid);
+printf("duuude type=%s oset atom=>>%s<<\n", stype.c_str(), osatom.c_str());
+}
+
+/// Remove the given Atom from the database.
+/// The Atom is encoded both as `satom` (the s-expression)
+/// and also as `sid` (the matching Atom ID).
+/// The flag `is_node` should be true, if the Atom is a Node.
+/// The flag `recursive` should be set to perform recursive deletes.
 void RocksStorage::removeSatom(const std::string& satom,
                                const std::string& sid,
                                bool is_node,
@@ -366,7 +385,37 @@ void RocksStorage::removeSatom(const std::string& satom,
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	}
 
-	// Delete the Atom, first.
+	// If the atom to be deleted is a link, we need to loop over
+	// it's outgoing set, and patch up the incoming sets of those
+	// atoms.
+	if (not is_node)
+	{
+		size_t pos = satom.find(' ');
+		if (std::string::npos != pos)
+		{
+			// style is the type of the Link.
+			const std::string& stype = satom.substr(1, pos);
+
+			// Loop over the outgoing set of `satom`.
+			size_t l = pos;
+			size_t e = satom.size() - 1;
+			while (l < e)
+			{
+				size_t r = e;
+				int pcnt = Sexpr::get_next_expr(satom, l, r, 0);
+				if (0 < pcnt or l == r) break;
+				r++;
+
+				// osatom is an atom in the outgoing set of satom
+				const std::string& osatom = satom.substr(l, r-l);
+				remIncoming(sid, stype, osatom);
+
+				l = r;
+			}
+		}
+	}
+
+	// Delete the Atom, next.
 	std::string pfx = is_node ? "n@" : "l@";
 	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom);
 	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid);

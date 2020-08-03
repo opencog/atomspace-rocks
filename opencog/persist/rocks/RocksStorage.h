@@ -70,6 +70,8 @@ class RocksStorage : public BackingStore
 		void loadInset(AtomTable& table, const std::string& ist);
 
 		void removeSatom(const std::string&, const std::string&, bool, bool);
+		void remIncoming(const std::string&, const std::string&,
+		                 const std::string&);
 
 		void print_all(void);
 
