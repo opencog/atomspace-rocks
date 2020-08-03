@@ -1,5 +1,5 @@
 /*
- * tests/persist/cog/BasicSaveUTest.cxxtest
+ * tests/persist/rocks/BasicSaveUTest.cxxtest
  *
  * Most basic, simplest sniff test, saves and restores a few atoms.
  * Copied from tests/persist/sql/BasicSaveUTest.cxxtest and
@@ -33,8 +33,7 @@
 #include <opencog/atoms/atom_types/atom_types.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/cogserver/server/CogServer.h>
-#include <opencog/persist/cog-storage/CogStorage.h>
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -67,25 +66,11 @@ class BasicSaveUTest :  public CxxTest::TestSuite
             // logger().set_level(Logger::DEBUG);
             logger().set_print_to_stdout_flag(true);
 
-            uri = "cog://localhost:16001";
-
-            // Create a single cogserver node that will act as
-            // as the repo for the duration of the test.
-            srvr = &cogserver();
-            srvr->loadModules();
-            srvr->enableNetworkServer(16001);
-            main_loop = new std::thread(&CogServer::serverLoop, srvr);
-            printf("Started CogServer\n");
+            uri = "rocks:///tmp/cog-rocks-unit-test";
         }
 
         ~BasicSaveUTest()
         {
-            srvr->stop();
-            main_loop->join();
-            srvr->disableNetworkServer();
-            delete main_loop;
-            delete srvr;
-
             // erase the log file if no assertions failed
             if (!CxxTest::TestTracker::tracker().suiteFailed())
                 std::remove(logger().get_filename().c_str());
@@ -178,10 +163,10 @@ static void atomCompare(AtomPtr a, AtomPtr b, const char* where)
  */
 void BasicSaveUTest::single_atom_save_restore(std::string id)
 {
-    CogStorage *store = new CogStorage(uri);
+    RocksStorage *store = new RocksStorage(uri);
     if (!store->connected())
     {
-        logger().debug("single_atom_save_restore: cannot connect to sotrage");
+        logger().debug("single_atom_save_restore: cannot connect to storage");
         TSM_ASSERT("cannot connect to storage", false);
         return;
     }
@@ -326,7 +311,7 @@ void BasicSaveUTest::test_fresh_atom(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    CogStorage *store = new CogStorage(uri);
+    RocksStorage *store = new RocksStorage(uri);
     if (!store->connected())
     {
         logger().debug("single_atom_save_restore: cannot connect to db");
@@ -368,7 +353,7 @@ void BasicSaveUTest::test_table()
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    CogStorage *store = new CogStorage(uri);
+    RocksStorage *store = new RocksStorage(uri);
     if (!store->connected())
     {
         logger().debug("test_table: cannot connect to db");
@@ -401,7 +386,7 @@ void BasicSaveUTest::test_table()
     printf("Done storing table; size=%lu\n", num_stored);
 
     // Reopen connection, and load the atom table.
-    store = new CogStorage(uri);
+    store = new RocksStorage(uri);
     TSM_ASSERT("Not connected to database", store->connected());
 
     AtomSpace *as2 = new AtomSpace();
