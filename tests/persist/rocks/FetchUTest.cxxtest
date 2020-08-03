@@ -33,6 +33,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/guile/SchemeEval.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -59,7 +60,6 @@ class FetchUTest :  public CxxTest::TestSuite
 
 		void setUp(void);
 		void tearDown(void);
-		void kill_data(void);
 
 		void atomCompare(AtomPtr, AtomPtr, std::string);
 		void test_stuff(void);
@@ -73,8 +73,12 @@ FetchUTest::FetchUTest(void)
 	logger().set_print_to_stdout_flag(true);
 
 	uri = "rocks:///tmp/cog-rocks-unit-test";
-
 	srv_open = "(cog-rocks-open \"" + uri + "\")\n";
+
+	// Other unit tests leave junk laying around...
+	RocksStorage *store = new RocksStorage(uri);
+	store->kill_data();
+	delete store;
 }
 
 /*
