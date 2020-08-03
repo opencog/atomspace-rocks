@@ -1,5 +1,5 @@
 /*
- * tests/persist/cog/FetchUTest.cxxtest
+ * tests/persist/rocks/FetchUTest.cxxtest
  *
  * Test atom fetch semantics.  Assumes PersistUTest is passing.
  * Ported over from original unit test at
@@ -32,9 +32,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/guile/SchemeEval.h>
-#include <opencog/persist/cog-storage/CogStorage.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
-#include <opencog/cogserver/server/CogServer.h>
 
 #include <opencog/util/Logger.h>
 
@@ -48,20 +46,12 @@ class FetchUTest :  public CxxTest::TestSuite
 
 		AtomSpace* _as;
 		SchemeEval* eval;
-		CogServer* srvr = NULL;
-		std::thread * main_loop = NULL;
 
 	public:
 
 		FetchUTest(void);
 		~FetchUTest()
 		{
-			srvr->stop();
-			main_loop->join();
-			srvr->disableNetworkServer();
-			delete main_loop;
-			delete srvr;
-
 			// erase the log file if no assertions failed
 			if (!CxxTest::TestTracker::tracker().suiteFailed())
 				std::remove(logger().get_filename().c_str());
@@ -82,17 +72,9 @@ FetchUTest::FetchUTest(void)
 	// logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
 
-	uri = "cog://localhost:16004";
+	uri = "rocks:///tmp/cog-rocks-unit-test";
 
-	srv_open = "(cogserver-open \"" + uri + "\")\n";
-
-	// Create a single cogserver node that will act as
-	// as the repo for the duration of the test.
-	srvr = &cogserver();
-	srvr->loadModules();
-	srvr->enableNetworkServer(16004);
-	main_loop = new std::thread(&CogServer::serverLoop, srvr);
-	printf("Started CogServer\n");
+	srv_open = "(cog-rocks-open \"" + uri + "\")\n";
 }
 
 /*
@@ -172,7 +154,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.1 0.11)))");
 	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
 	eval->eval("(store-atomspace)");
-	eval->eval("(cogserver-close)");
+	eval->eval("(cog-rocks-close)");
 
 	delete _as;
 	_as = new AtomSpace();
@@ -203,7 +185,7 @@ void FetchUTest::test_stuff(void)
 	// Saving everything should not crash.  It should, however,
 	// change the TV on (Concept "BBB") back to DEFAULT_TV.
 	eval->eval("(store-atomspace)");
-	eval->eval("(cogserver-close)");
+	eval->eval("(cog-rocks-close)");
 
 	delete _as;
 	_as = new AtomSpace();
@@ -227,7 +209,7 @@ void FetchUTest::test_stuff(void)
 	printf("Expecting %s\n", dtv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
 
-	eval->eval("(cogserver-close)");
+	eval->eval("(cog-rocks-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
@@ -244,7 +226,7 @@ void FetchUTest::test_readonly(void)
 	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
 	eval->eval(R"((List (Concept "AAA") (Concept "BBB")))");
 	eval->eval("(store-atomspace)");
-	eval->eval("(cogserver-close)");
+	eval->eval("(cog-rocks-close)");
 
 	delete _as;
 	_as = new AtomSpace();
