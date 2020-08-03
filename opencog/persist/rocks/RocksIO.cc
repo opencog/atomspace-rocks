@@ -175,6 +175,7 @@ void RocksStorage::updateInset(const std::string& soid, Type t,
 // =========================================================
 
 /// Return the Atom located at sid.
+/// This only gets the Atom, it does NOT get any Values for it.
 Handle RocksStorage::getAtom(const std::string& sid)
 {
 	std::string satom;
@@ -204,7 +205,7 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
-/// Get all of the keys
+/// Get all of the keys for the Atom at `sid`, and attach them to `h`.
 void RocksStorage::getKeys(const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
@@ -278,14 +279,9 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
-/// Backing API - get the incoming set.
-void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
+/// Load the incoming set based on the key prefix `ist`.
+void RocksStorage::loadInset(AtomTable& table, const std::string& ist)
 {
-	std::string sid = findAtom(h);
-	if (0 == sid.size()) return;
-
-	std::string ist = "i@" + sid + ":";
-
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -298,18 +294,30 @@ void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
 		{
 			const std::string sid = inlist.substr(nsk, last-nsk);
 
-printf("duuuude %s has inco >>%s<<\n", h->to_string().c_str(),
-sid.c_str());
-			// table.add(h);
+			Handle hi = getAtom(sid);
+			getKeys(sid, hi);
+			table.add(hi);
 			nsk = last + 1;
 			last = inlist.find(' ', nsk);
 		}
 	}
 }
 
+/// Backing API - get the incoming set.
+void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
+{
+	std::string sid = findAtom(h);
+	if (0 == sid.size()) return;
+	std::string ist = "i@" + sid + ":";
+	loadInset(table, ist);
+}
+
 void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	std::string sid = findAtom(h);
+	if (0 == sid.size()) return;
+	std::string ist = "i@" + sid + ":" + nameserver().getTypeName(t);
+	loadInset(table, ist);
 }
 
 /// Load all the Atoms starting with the prefix.
