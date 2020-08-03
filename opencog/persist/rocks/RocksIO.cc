@@ -291,7 +291,10 @@ void RocksStorage::loadType(AtomTable &table, Type t)
 
 void RocksStorage::storeAtomSpace(const AtomTable &table)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	HandleSet all_atoms;
+	table.getHandleSetByType(all_atoms, ATOM, true);
+	for (const Handle& h : all_atoms)
+		storeAtom(h);
 }
 
 /// Kill everything in the database ... everything.
