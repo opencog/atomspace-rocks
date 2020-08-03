@@ -44,7 +44,6 @@ class BasicSaveUTest :  public CxxTest::TestSuite
     private:
         AtomSpace *as;
         std::string uri;
-        CogServer* srvr = NULL;
         std::thread * main_loop = NULL;
 
         Handle n1[10];
