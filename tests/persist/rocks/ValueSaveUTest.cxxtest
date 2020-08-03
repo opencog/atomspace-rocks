@@ -1,5 +1,5 @@
 /*
- * tests/persist/cog/ValueSaveUTest.cxxtest
+ * tests/persist/rocks/ValueSaveUTest.cxxtest
  *
  * Test of save and restore of generic values.
  * Ported from tests/persist/sql/multi-driver/ValueSaveUTest.cxxtest
@@ -37,10 +37,8 @@
 #include <opencog/atoms/value/StringValue.h>
 #include <opencog/atoms/base/Valuation.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
-#include <opencog/cogserver/server/CogServer.h>
 
-#include <opencog/persist/cog-storage/CogStorage.h>
-
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -50,7 +48,6 @@ class ValueSaveUTest :  public CxxTest::TestSuite
 {
 	private:
 		std::string uri;
-		CogServer* srvr = NULL;
 		std::thread * main_loop = NULL;
 
 	public:
@@ -61,25 +58,11 @@ class ValueSaveUTest :  public CxxTest::TestSuite
 			// logger().set_level(Logger::DEBUG);
 			logger().set_print_to_stdout_flag(true);
 
-			uri = "cog://localhost:16002";
-
-			// Create a single cogserver node that will act as
-			// as the repo for the duration of the test.
-			srvr = &cogserver();
-			srvr->loadModules();
-			srvr->enableNetworkServer(16002);
-			main_loop = new std::thread(&CogServer::serverLoop, srvr);
-			printf("Started CogServer\n");
+			uri = "rocks:///tmp/cog-rocks-unit-test";
 		}
 
 		~ValueSaveUTest()
 		{
-			srvr->stop();
-			main_loop->join();
-			srvr->disableNetworkServer();
-			delete main_loop;
-			delete srvr;
-
 			// erase the log file if no assertions failed
 			if (!CxxTest::TestTracker::tracker().suiteFailed())
 				std::remove(logger().get_filename().c_str());
@@ -114,7 +97,7 @@ void ValueSaveUTest::test_single_atom_save()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
-	CogStorage *store = new CogStorage(uri);
+	RocksStorage *store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	AtomSpace* as = new AtomSpace();
@@ -181,7 +164,7 @@ void ValueSaveUTest::check_one(ValuePtr pap, bool fetchkey)
 
 	// ------
 	// First, save the value
-	CogStorage *store = new CogStorage(uri);
+	RocksStorage *store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	AtomSpace* as = new AtomSpace();
@@ -204,7 +187,7 @@ void ValueSaveUTest::check_one(ValuePtr pap, bool fetchkey)
 
 	// ---------------------------------
 	// Now, fetch the value and compare.
-	store = new CogStorage(uri);
+	store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	as = new AtomSpace();
@@ -230,7 +213,7 @@ void ValueSaveUTest::test_save_restore(bool fkey)
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
-	CogStorage *store = new CogStorage(uri);
+	RocksStorage *store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	AtomSpace* as = new AtomSpace();
@@ -287,7 +270,7 @@ void ValueSaveUTest::test_load_by_type()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
-	CogStorage *store = new CogStorage(uri);
+	RocksStorage *store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	AtomSpace* as = new AtomSpace();
@@ -349,7 +332,7 @@ void ValueSaveUTest::test_load_by_type()
 	// --------------------
 	// Start it up again.
 
-	store = new CogStorage(uri);
+	store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	as = new AtomSpace();
@@ -416,7 +399,7 @@ void ValueSaveUTest::test_link_by_type()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
-	CogStorage *store = new CogStorage(uri);
+	RocksStorage *store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	AtomSpace* as = new AtomSpace();
@@ -504,7 +487,7 @@ void ValueSaveUTest::test_link_by_type()
 	// --------------------
 	// Start it up again.
 
-	store = new CogStorage(uri);
+	store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	as = new AtomSpace();
@@ -625,7 +608,7 @@ void ValueSaveUTest::test_incoming()
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
-	CogStorage *store = new CogStorage(uri);
+	RocksStorage *store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	AtomSpace* as = new AtomSpace();
@@ -713,7 +696,7 @@ void ValueSaveUTest::test_incoming()
 	// --------------------
 	// Start it up again.
 
-	store = new CogStorage(uri);
+	store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 
 	as = new AtomSpace();
