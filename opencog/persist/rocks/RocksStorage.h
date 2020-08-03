@@ -59,6 +59,9 @@ class RocksStorage : public BackingStore
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
 
+		ValuePtr getValue(const std::string&);
+		Handle getAtom(const std::string&);
+
 	public:
 		RocksStorage(std::string uri);
 		RocksStorage(const RocksStorage&) = delete; // disable copying

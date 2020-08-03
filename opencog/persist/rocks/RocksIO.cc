@@ -75,6 +75,19 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 }
 
 // ======================================================================
+// Common abbreviations:
+// satom == string s-expression for an Atom.
+// sval == string s-expression for a Value.
+// aid == uint-64 atom ID.
+// sid == aid as ASCII string.
+// kid == sid for a key
+// skid == sid:kid pair of id's
+
+// associative pairs in the Rocks DB are:
+// sid . satom -- finds the satom associated with sid
+// satom . sid -- finds the sid associated with the satom
+// sid@keys . key-list -- find the list of all Keys on Atom
+// sid:kid . sval -- find the value for the Atom,Key
 
 /// Place Atom into storage.
 /// Return the matching sid.
@@ -118,7 +131,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		storeValue(cid + skey, vp);
 	}
 
-	_rfile->Put(rocksdb::WriteOptions(), cid + "keys", keylist);
+	_rfile->Put(rocksdb::WriteOptions(), sid + "@keys", keylist);
 }
 
 void RocksStorage::storeValue(const std::string& skid,
@@ -145,6 +158,31 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	throw IOException(TRACE_INFO, "Not implemented!");
 }
 
+/// Return the Atom located at sid.
+Handle RocksStorage::getAtom(const std::string& sid)
+{
+	std::string satom;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), sid, &satom);
+	if (not s.ok())
+		throw IOException(TRACE_INFO, "Internal Error!");
+
+	size_t pos = 0;
+	return Sexpr::decode_atom(satom, pos);
+}
+
+/// Return the Value located at skid.
+ValuePtr RocksStorage::getValue(const std::string& skid)
+{
+	std::string sval;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), skid, &sval);
+	if (not s.ok())
+		throw IOException(TRACE_INFO, "Internal Error!");
+
+	size_t pos = 0;
+	return Sexpr::decode_value(sval, pos);
+}
+
+/// Backend callback - get the Node
 Handle RocksStorage::getNode(Type t, const char * str)
 {
 	std::string satom =
@@ -159,7 +197,7 @@ Handle RocksStorage::getNode(Type t, const char * str)
 
 	// Get all of the keys
 	std::string keylist;
-	_rfile->Get(rocksdb::ReadOptions(), sid + ":keys", &keylist);
+	_rfile->Get(rocksdb::ReadOptions(), sid + "@keys", &keylist);
 
 	std::string cid = sid + ":";
 	size_t nsk = 0;
@@ -167,7 +205,9 @@ Handle RocksStorage::getNode(Type t, const char * str)
 	while (std::string::npos != last)
 	{
 		std::string skey = cid + keylist.substr(nsk, last-nsk);
-		// loadValue()
+		Handle key = getAtom(skey);
+		ValuePtr vp = getValue(cid + skey);
+		h->setValue(key, vp);
 		nsk = last + 1;
 		last = keylist.find(nsk, ' ');
 	}
