@@ -74,6 +74,8 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 	return aid;
 }
 
+static const char* aid_key = "*-NextUnusedAID-*";
+
 // ======================================================================
 // Common abbreviations:
 // satom == string s-expression for an Atom.
