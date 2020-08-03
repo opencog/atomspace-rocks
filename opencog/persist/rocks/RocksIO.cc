@@ -42,7 +42,7 @@ std::string RocksStorage::aidtostr(uint64_t aid) const
 	{
 		char c = aid % 62;
 		if (c < 10) c += '0';
-		else if (c < 37) c += 'A' - 10;
+		else if (c < 36) c += 'A' - 10;
 		else c += 'a' - 36;
 		s.push_back(c);
 	}
