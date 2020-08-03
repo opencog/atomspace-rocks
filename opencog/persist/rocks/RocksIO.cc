@@ -224,8 +224,21 @@ void RocksStorage::getKeys(AtomSpace* as,
 		Handle key = getAtom(it->key().ToString().substr(pos));
 		if (as) key = as->add_atom(key);
 
-		// read-only Atomspaces will refust insertion.
-		if (nullptr == key) continue;
+		// read-only Atomspaces will refuse insertion of keys.
+		// However, we have to special-case the truth values.
+		// Mostly because (PredicateNode "*-TruthValueKey-*")
+		// is not in the AtomSpace. Argh! That's an old design flaw.
+		if (nullptr == key)
+		{
+			if (0 == tv_pred_sid.compare(1, tv_pred_sid.size(),
+				it->key().ToString().substr(pos)))
+			{
+				size_t junk = 0;
+				ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
+				h->setTruthValue(TruthValueCast(vp));
+			}
+			continue;
+		}
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
