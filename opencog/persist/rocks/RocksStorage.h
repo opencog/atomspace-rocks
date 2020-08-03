@@ -59,9 +59,6 @@ class RocksStorage : public BackingStore
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
 
-		std::string getKeyList(const std::string&);
-		void setKeyList(const std::string&, const std::string&);
-
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
 		void getKeys(const std::string&, const Handle&);

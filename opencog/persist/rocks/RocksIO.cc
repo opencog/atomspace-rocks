@@ -83,20 +83,21 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // kid == sid for a key
 // skid == sid:kid pair of id's
 
-// associative pairs in the Rocks DB are:
-// sid . satom -- finds the satom associated with sid
-// satom . sid -- finds the sid associated with the satom
-// sid@keys . key-list -- find the list of all Keys on Atom
-// sid:kid . sval -- find the value for the Atom,Key
+// prefixes and associative pairs in the Rocks DB are:
+// "a@" sid . satom -- finds the satom associated with sid
+// "l@" satom . sid -- finds the sid associated with the Link
+// "n@" satom . sid -- finds the sid associated with the Node
+// "k@" sid:kid . sval -- find the value for the Atom,Key
 
 /// Place Atom into storage.
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
 	std::string satom = Sexpr::encode_atom(h);
+	std::string pfx = h->is_node() ? "n@" : "l@";
 
 	std::string sid;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
 	if (not s.ok())
 	{
 		if (h->is_link())
@@ -107,8 +108,8 @@ std::string RocksStorage::writeAtom(const Handle& h)
 		}
 		uint64_t aid = _next_aid.fetch_add(1);
 		sid = aidtostr(aid);
-		_rfile->Put(rocksdb::WriteOptions(), satom, sid);
-		_rfile->Put(rocksdb::WriteOptions(), sid, satom);
+		_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
+		_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, satom);
 	}
 printf("Store sid= >>%s<< for >>%s<<\n", sid.c_str(), satom.c_str());
 	return sid;
@@ -119,20 +120,11 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 	std::string sid = writeAtom(h);
 
 	// Separator for keys
-	std::string cid = sid + ":";
+	std::string cid = "k@" + sid + ":";
 
-	// Create a list of all keys...
-	std::string keylist;
+	// Store all the keys on the atom ...
 	for (const Handle& key : h->getKeys())
-	{
-		std::string skey = writeAtom(key);
-		keylist += skey + " ";
-
-		ValuePtr vp = h->getValue(key);
-		storeValue(cid + skey, vp);
-	}
-
-	_rfile->Put(rocksdb::WriteOptions(), sid + "@keys", keylist);
+		storeValue(cid + writeAtom(key), h->getValue(key));
 }
 
 void RocksStorage::storeValue(const std::string& skid,
@@ -150,38 +142,16 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 	ValuePtr vp = h->getValue(key);
 
 	// First store the value
-	storeValue(sid + ":" + kid, vp);
-
-	// Now, make sure the key-list has the key in it.
-	std::string keylist = getKeyList(sid);
-	size_t pos = keylist.find(kid);
-	if (std::string::npos == pos)
-	{
-		keylist += kid + " ";
-		setKeyList(sid, keylist);
-	}
+	storeValue("k@" + sid + ":" + kid, vp);
 }
 
 // =========================================================
-
-std::string RocksStorage::getKeyList(const std::string& sid)
-{
-	std::string keylist;
-	_rfile->Get(rocksdb::ReadOptions(), sid + "@keys", &keylist);
-	return keylist;
-}
-
-void RocksStorage::setKeyList(const std::string& sid,
-                              const std::string& keylist)
-{
-	_rfile->Put(rocksdb::WriteOptions(), sid + "@keys", keylist);
-}
 
 /// Return the Atom located at sid.
 Handle RocksStorage::getAtom(const std::string& sid)
 {
 	std::string satom;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), sid, &satom);
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), "a@" + sid, &satom);
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Internal Error!");
 
@@ -210,19 +180,17 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 /// Get all of the keys
 void RocksStorage::getKeys(const std::string& sid, const Handle& h)
 {
-	std::string keylist = getKeyList(sid);
+	std::string cid = "k@" + sid + ":";
+	auto it = DB::NewIterator(ReadOptions());
 
-	std::string cid = sid + ":";
-	size_t nsk = 0;
-	size_t last = keylist.find(' ');
-	while (std::string::npos != last)
+	for (it.Seek(cid); it.Valid() and it.key().starts_with(cid); it.Next())
 	{
-		const std::string kid = keylist.substr(nsk, last-nsk);
+printf("duuude its %s\n", it->ToString().c_str());
+#if 0
 		Handle key = getAtom(kid);
 		ValuePtr vp = getValue(cid + kid);
 		h->setValue(key, vp);
-		nsk = last + 1;
-		last = keylist.find(' ', nsk);
+#endif
 	}
 }
 
@@ -230,7 +198,7 @@ void RocksStorage::getKeys(const std::string& sid, const Handle& h)
 Handle RocksStorage::getNode(Type t, const char * str)
 {
 	std::string satom =
-		"(" + nameserver().getTypeName(t) + " \"" + str + "\")";
+		"n@(" + nameserver().getTypeName(t) + " \"" + str + "\")";
 
 	std::string sid;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
@@ -246,7 +214,7 @@ Handle RocksStorage::getNode(Type t, const char * str)
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 {
 	std::string satom =
-		"(" + nameserver().getTypeName(t) + " ";
+		"l@(" + nameserver().getTypeName(t) + " ";
 
 	for (const Handle& h : hs)
 		satom += Sexpr::encode_atom(h);
