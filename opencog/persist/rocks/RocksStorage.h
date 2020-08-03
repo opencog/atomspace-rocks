@@ -55,6 +55,7 @@ class RocksStorage : public BackingStore
 		uint64_t strtoaid(const std::string&) const;
 		std::string aidtostr(uint64_t) const;
 
+		std::string findAtom(const Handle&);
 		std::string writeAtom(const Handle&);
 		void updateInset(const std::string&, Type, const std::string&);
 		void storeValue(const std::string& skid,

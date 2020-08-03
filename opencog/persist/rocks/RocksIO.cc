@@ -101,6 +101,9 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
 	if (not s.ok())
 	{
+		uint64_t aid = _next_aid.fetch_add(1);
+		sid = aidtostr(aid);
+
 		if (h->is_link())
 		{
 			Type t = h->get_type();
@@ -112,8 +115,6 @@ std::string RocksStorage::writeAtom(const Handle& h)
 				updateInset(soid, t, sid);
 			}
 		}
-		uint64_t aid = _next_aid.fetch_add(1);
-		sid = aidtostr(aid);
 		_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 		_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, satom);
 	}
@@ -261,13 +262,49 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 
 // =========================================================
 
+/// Find the sid of Atom. Return empty string if its not there.
+std::string RocksStorage::findAtom(const Handle& h)
+{
+	std::string satom = Sexpr::encode_atom(h);
+	std::string pfx = h->is_node() ? "n@" : "l@";
+
+	std::string sid;
+	_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+	return sid;
+}
+
 void RocksStorage::removeAtom(const Handle& h, bool recursive)
 {
 	throw IOException(TRACE_INFO, "Not implemented!");
 }
+
+/// Backing API - get the incoming set.
 void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	std::string sid = findAtom(h);
+	if (0 == sid.size()) return;
+
+	std::string ist = "i@" + sid + ":";
+
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
+	{
+		// The list of sids of incoming Atoms.
+		std::string inlist = it->value().ToString();
+
+		size_t nsk = 0;
+		size_t last = inlist.find(' ');
+		while (std::string::npos != last)
+		{
+			const std::string sid = inlist.substr(nsk, last-nsk);
+
+printf("duuuude %s has inco >>%s<<\n", h->to_string().c_str(),
+sid.c_str());
+			// table.add(h);
+			nsk = last + 1;
+			last = inlist.find(' ', nsk);
+		}
+	}
 }
 
 void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
