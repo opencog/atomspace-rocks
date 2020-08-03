@@ -358,8 +358,13 @@ void RocksStorage::remIncoming(const std::string& sid,
 	if (std::string::npos == pos)
 		throw IOException(TRACE_INFO, "Internal Error!");
 
+	// That's it. Now edit the inlist string, remove the sid
+	// from it, and store it as the new inlist. Unless its empty...
 	inlist.replace(pos, sid.size() + 1, "");
-printf("duuude after: >>%s<<\n", inlist.c_str());
+	if (0 == inlist.size())
+		_rfile->Delete(rocksdb::WriteOptions(), ist);
+	else
+		_rfile->Put(rocksdb::WriteOptions(), ist, inlist);
 }
 
 /// Remove the given Atom from the database.
