@@ -299,7 +299,36 @@ std::string RocksStorage::findAtom(const Handle& h)
 
 void RocksStorage::removeAtom(const Handle& h, bool recursive)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+#ifdef HAVE_DELETE_RANGE
+	rocksdb::Slice start, end;
+	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
+
+#else
+	// XXX TODO .. This should be atomic!
+
+	// Are we even holding the Atom to be deleted?
+	std::string satom = Sexpr::encode_atom(h);
+	std::string pfx = h->is_node() ? "n@" : "l@";
+
+	std::string sid;
+	_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+
+	// We don't know this atom. Give up.
+	if (0 == sid.size()) return;
+
+	// Delete the Atom, first.
+	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom);
+	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid);
+
+	// Delete all values hanging on the atom ...
+	pfx = "k@" + sid;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+		_rfile->Delete(rocksdb::WriteOptions(), it->key());
+
+	// Delete the incoming set, too...
+// i@  xxxx TODO
+#endif
 }
 
 /// Load the incoming set based on the key prefix `ist`.
