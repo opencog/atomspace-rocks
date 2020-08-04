@@ -577,8 +577,4 @@ void RocksStorage::print_all(void)
 	}
 }
 
-void RocksStorage::runQuery(const Handle& query, const Handle& key,
-                                const Handle& meta, bool fresh)
-{
-	throw IOException(TRACE_INFO, "Not implemented!");
-}
+// ======================== THE END ======================
