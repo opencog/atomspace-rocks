@@ -27,14 +27,38 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/query/Satisfier.h>
 #include <opencog/persist/sexpr/Sexpr.h>
 
 #include "RocksStorage.h"
 
 using namespace opencog;
 
+class RocksSatisfyingSet : public SatisfyingSet
+{
+	public:
+		RocksSatisfyingSet(AtomSpace* as) : SatisfyingSet(as) {}
+		virtual ~RocksSatisfyingSet() {}
+		virtual IncomingSet get_incoming_set(const Handle&, Type);
+};
+
+IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
+{
+	return h->getIncomingSetByType(t, _as);
+}
+
 void RocksStorage::runQuery(const Handle& query, const Handle& key,
                             const Handle& meta, bool fresh)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	Type qt = query->get_type();
+	if (not nameserver().isA(qt, MEET_LINK))
+		throw IOException(TRACE_INFO, "Only MeetLink is supported!");
+
+	AtomSpace* as = query->getAtomSpace();
+	RocksSatisfyingSet sater(as);
+	sater.satisfy(PatternLinkCast(query));
+
+	QueueValuePtr qv = sater.get_result_queue();
+
+printf("yoo got %s\n", qv->to_string().c_str());
 }
