@@ -23,6 +23,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <time.h>
+
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/base/Link.h>
@@ -32,20 +34,26 @@
 
 #include "RocksStorage.h"
 
-using namespace opencog;
+namespace opencog
+{
 
 class RocksSatisfyingSet : public SatisfyingSet
 {
+		RocksStorage* _store;
 	public:
-		RocksSatisfyingSet(AtomSpace* as) : SatisfyingSet(as) {}
+		RocksSatisfyingSet(RocksStorage* sto, AtomSpace* as) :
+			SatisfyingSet(as), _store(sto) {}
 		virtual ~RocksSatisfyingSet() {}
 		virtual IncomingSet get_incoming_set(const Handle&, Type);
 };
 
+} // namespace opencog
+
+using namespace opencog;
+
 IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
 {
-	// _store->getIncomingByType(_as, h, t);
-printf("need the inco of %s\n", h->to_string().c_str());
+	_store->getIncomingByType(_as, h, t);
 	return h->getIncomingSetByType(t, _as);
 }
 
@@ -57,10 +65,21 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 		throw IOException(TRACE_INFO, "Only MeetLink is supported!");
 
 	AtomSpace* as = query->getAtomSpace();
-	RocksSatisfyingSet sater(as);
+	RocksSatisfyingSet sater(this, as);
 	sater.satisfy(PatternLinkCast(query));
 
 	QueueValuePtr qv = sater.get_result_queue();
+	query->setValue(key, qv);
 
-printf("yoo got %s\n", qv->to_string().c_str());
+	// If there's a meta-info key, then attach a timestamp. For now,
+	// that's teh only meta info we attach, and we try to be compatible
+	// with what the code in `cog-execute-cache!` does. See
+	// https://github.com/opencog/atomspace/tree/master/opencog/scm/opencog/exec.scm
+   // somewhere around lines 16-50.
+
+	if (nullptr == meta) return;
+
+	time_t now = time(0);
+	double dnow = now;
+	query->setValue(meta, createFloatValue(dnow));
 }

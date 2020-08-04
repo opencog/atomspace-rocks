@@ -43,8 +43,11 @@ namespace opencog
  *  @{
  */
 
+class RocksSatisfyingSet;
+
 class RocksStorage : public BackingStore
 {
+	friend class RocksSatisfyingSet;
 	private:
 		void init(const char *);
 		std::string _uri;
