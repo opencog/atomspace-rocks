@@ -72,12 +72,13 @@ class RocksStorage : public BackingStore
 		Handle getAtom(const std::string&);
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
 		void loadAtoms(AtomTable& table, const std::string& pfx);
-		void loadInset(AtomTable& table, const std::string& ist);
+		void loadInset(AtomSpace*, const std::string& ist);
 
 		void removeSatom(const std::string&, const std::string&, bool, bool);
 		void remIncoming(const std::string&, const std::string&,
 		                 const std::string&);
 
+		void getIncomingByType(AtomSpace*, const Handle&, Type t);
 		void print_all(void);
 
 	public:

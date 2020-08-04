@@ -462,10 +462,8 @@ void RocksStorage::removeSatom(const std::string& satom,
 // =========================================================
 
 /// Load the incoming set based on the key prefix `ist`.
-void RocksStorage::loadInset(AtomTable& table, const std::string& ist)
+void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 {
-	AtomSpace* as = table.getAtomSpace();
-
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -480,7 +478,7 @@ void RocksStorage::loadInset(AtomTable& table, const std::string& ist)
 
 			Handle hi = getAtom(sid);
 			getKeys(as, sid, hi);
-			table.add(hi);
+			as->add_atom(hi);
 			nsk = last + 1;
 			last = inlist.find(' ', nsk);
 		}
@@ -493,15 +491,20 @@ void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":";
-	loadInset(table, ist);
+	loadInset(table.getAtomSpace(), ist);
 }
 
-void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
+void RocksStorage::getIncomingByType(AtomSpace* as, const Handle& h, Type t)
 {
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":" + nameserver().getTypeName(t);
-	loadInset(table, ist);
+	loadInset(as, ist);
+}
+
+void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
+{
+	getIncomingByType(table.getAtomSpace(), h, t);
 }
 
 /// Load all the Atoms starting with the prefix.

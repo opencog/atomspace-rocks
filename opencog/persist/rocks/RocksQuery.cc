@@ -44,6 +44,8 @@ class RocksSatisfyingSet : public SatisfyingSet
 
 IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
 {
+	// _store->getIncomingByType(_as, h, t);
+printf("need the inco of %s\n", h->to_string().c_str());
 	return h->getIncomingSetByType(t, _as);
 }
 

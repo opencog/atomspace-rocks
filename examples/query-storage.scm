@@ -1,5 +1,5 @@
 ;
-; remote-query.scm
+; query-storage.scm
 ;
 ; Demo of using queries to obtain sharply-defined sets of Atoms
 ; from the remote server. These queries generalize the idea of
@@ -28,28 +28,24 @@
 ; Basic initialization and set-up
 ;
 (use-modules (opencog) (opencog persist))
-(use-modules (opencog persist-cog))
-(cogserver-open "cog://localhost")
-
-; Or, instead, for the simple client, say
-; (use-modules (opencog persist-cog-simple))
-; (cog-simple-open "cog://localhost")
+(use-modules (opencog persist-rocks))
+(cog-rocks-open "rocks:///tmp/foo.rdb")
 
 ; -----------------------
 ; Populate the Atomspace.
 ;
-; The demo needs to have some Atoms over at the remote server
-; so that they can be fetched. Set that up here.
+; The demo needs to have some Atoms in the database,
+; so that they can be searched-over. Set that up here.
 (List (Concept "A") (Concept "B"))
 (Set (Concept "A") (Concept "B"))
 (Set (Concept "A") (Concept "B") (Concept "C"))
 (Evaluation (Predicate "foo")
 	(List (Concept "B") (Concept "C") (Concept "oh boy!")))
 
-; Push the entire atomspace out to the remote server.
+; Push the entire atomspace out to disk.
 (store-atomspace)
 
-; Clear the local AtomSpace.
+; Clear the local AtomSpace (the Atoms remain on disk, just not in RAM).
 (cog-atomspace-clear)
 
 ; Verify that the current AtomSpace is indeed empty.
