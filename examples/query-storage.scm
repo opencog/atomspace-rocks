@@ -114,7 +114,9 @@
 ;
 ; query-cache metadata is currently a highly-experimental, and subject to
 ; change. The format of the meta-data in particular is not yet fixed.
-; Don't be surprised if this part of the demo works strangely.
+; Don't be surprised if this part of the demo works strangely. If things
+; seem strange, please discuss on the mailing list and/or open a bug
+; report.
 ;
 ; Let's repeat some of the above.
 (List (Concept "A") (Concept "G"))

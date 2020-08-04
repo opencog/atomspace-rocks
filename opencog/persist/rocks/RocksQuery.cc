@@ -80,8 +80,9 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
                             const Handle& meta, bool fresh)
 {
 	Type qt = query->get_type();
-	if (not nameserver().isA(qt, MEET_LINK))
-		throw IOException(TRACE_INFO, "Only MeetLink is supported!");
+	if (not nameserver().isA(qt, MEET_LINK) and
+	    not nameserver().isA(qt, JOIN_LINK))
+		throw IOException(TRACE_INFO, "Only MeetLink/JoinLink are supported!");
 
 	if (not fresh)
 	{
@@ -99,10 +100,30 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 
 	// Still no luck. Bummer. Perform the query.
 	AtomSpace* as = query->getAtomSpace();
-	RocksSatisfyingSet sater(this, as);
-	sater.satisfy(PatternLinkCast(query));
 
-	QueueValuePtr qv = sater.get_result_queue();
+	QueueValuePtr qv;
+	if (nameserver().isA(qt, QUERY_LINK))
+	{
+		throw IOException(TRACE_INFO,
+			"QueryLink/BindLink not yet implemeneted!");
+	}
+	else if (nameserver().isA(qt, MEET_LINK))
+	{
+		RocksSatisfyingSet sater(this, as);
+		sater.satisfy(PatternLinkCast(query));
+
+		QueueValuePtr qv = sater.get_result_queue();
+	}
+	else if (nameserver().isA(qt, JOIN_LINK))
+	{
+		throw IOException(TRACE_INFO,
+			"JoinLink not yet implemeneted!");
+	}
+	else
+	{
+		throw IOException(TRACE_INFO, "Unsupported query type %s",
+			nameserver().getTypeName(qt).c_str());
+	}
 	query->setValue(key, qv);
 
 	// And cache it in the file, as well! This caching is compatible
