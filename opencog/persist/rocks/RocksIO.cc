@@ -174,7 +174,10 @@ void RocksStorage::updateInset(const std::string& soid, Type t,
 {
 	std::string ist = "i@" + soid + ":" + nameserver().getTypeName(t);
 
-	// XXX TODO This update needs to be atomic!!
+	// The-read-modify-write of the inset has to be protected
+	// from other callers, as well as from the deletion code.
+	std::lock_guard<std::mutex> lck(_mtx);
+
 	std::string inlist;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), ist, &inlist);
 	if (not s.ok() or std::string::npos == inlist.find(sid))
@@ -290,8 +293,6 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
 
 #endif
-	// XXX TODO .. This should be atomic!
-
 	// Are we even holding the Atom to be deleted?
 	std::string satom = Sexpr::encode_atom(h);
 	std::string pfx = h->is_node() ? "n@" : "l@";
@@ -302,6 +303,10 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	// We don't know this atom. Give up.
 	if (0 == sid.size()) return;
 
+	// Removal needs to be atomic, and not race with other
+	// removals, nor with other manipulations of the incoming
+	// set. A plain-old lock is the easiest way to get this.
+	std::lock_guard<std::mutex> lck(_mtx);
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 

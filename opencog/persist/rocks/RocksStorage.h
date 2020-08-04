@@ -31,6 +31,7 @@
 #define _ATOMSPACE_ROCKS_STORAGE_H
 
 #include <atomic>
+#include <mutex>
 #include "rocksdb/db.h"
 
 #include <opencog/atomspace/AtomTable.h>
@@ -54,7 +55,11 @@ class RocksStorage : public BackingStore
 		uint64_t strtoaid(const std::string&) const;
 		std::string aidtostr(uint64_t) const;
 
+		// Special case (PredicateNode "*-TruthValueKey-*")
 		std::string tv_pred_sid;
+
+		// Several operations really need to be exclusive.
+		std::mutex _mtx;
 
 		// Assorted helper functions
 		std::string findAtom(const Handle&);
