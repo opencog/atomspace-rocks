@@ -35,10 +35,12 @@ several advantages to doing this:
 * RocksDB is a "real" database, and so enables the storage of datasets
   that might not otherwise fit into RAM. This back-end does not try
   to guess what your working set is; it is up to you to load, work with
-  and save those Atoms that are important for you.
+  and save those Atoms that are important for you. The [examples](examples)
+  demonstrate exactly how that can be done.
 
-This backend, together with the CogServer-based network AtomSpace
-server backend provides a building-block out of which more complex
+This backend, together with the CogServer-based
+[network AtomSpace](https://github.com/opencog/atomspace-cog)
+backend provides a building-block out of which more complex
 distributed and/or decentralized AtomSpaces can be built.
 
 
