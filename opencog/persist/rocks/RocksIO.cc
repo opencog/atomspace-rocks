@@ -262,42 +262,12 @@ void RocksStorage::getKeys(AtomSpace* as,
 	}
 }
 
-/// Backend callback - get the Node
-Handle RocksStorage::getNode(Type t, const char * str)
+/// Backend callback - get the Atom
+void RocksStorage::getAtom(const Handle& h)
 {
-	std::string satom =
-		"n@(" + nameserver().getTypeName(t) + " \"" + str + "\")";
-
-	std::string sid;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
-	if (not s.ok())
-		return Handle();
-
-	Handle h = createNode(t, str);
-	getKeys(nullptr, sid, h);
-
-	return h;
-}
-
-Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
-{
-	std::string satom =
-		"l@(" + nameserver().getTypeName(t) + " ";
-
-	for (const Handle& h : hs)
-		satom += Sexpr::encode_atom(h);
-
-	satom += ")";
-
-	std::string sid;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), satom, &sid);
-	if (not s.ok())
-		return Handle();
-
-	Handle h = createLink(hs, t);
-	getKeys(nullptr, sid, h);
-
-	return h;
+	std::string sid = findAtom(h);
+	if (0 == sid.size()) return;
+	getKeys(h->getAtomSpace(), sid, h);
 }
 
 // =========================================================
