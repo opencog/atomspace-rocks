@@ -71,6 +71,11 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	QueueValuePtr qv = sater.get_result_queue();
 	query->setValue(key, qv);
 
+	// And cache it in the file, as well! This caching is compatible
+	// with what `cog-execute-cache!` does. It allows the cached
+	// value to be retreived later, without re-performing the search.
+	storeValue(query, key);
+
 	// If there's a meta-info key, then attach a timestamp. For now,
 	// that's teh only meta info we attach, and we try to be compatible
 	// with what the code in `cog-execute-cache!` does. See
@@ -82,4 +87,5 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	time_t now = time(0);
 	double dnow = now;
 	query->setValue(meta, createFloatValue(dnow));
+	storeValue(query, meta);
 }

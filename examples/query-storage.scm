@@ -73,10 +73,9 @@
 ; -------------
 ; Query caching
 ;
-; By default, the results of the query are cached at the server end.
-; This is because queries can be CPU-intensive, and it's pointless to
-; keep running them over and over. Of course, this can result in stale
-; data. Try it ...
+; By default, the results of the query are cached. This is because
+; queries can be CPU-intensive, and it's pointless to keep running
+; them over and over. Of course, this can result in stale data. Try it ...
 ;
 ; Add some more data, push it out to the server, and delete it locally.
 (List (Concept "A") (Concept "F"))
