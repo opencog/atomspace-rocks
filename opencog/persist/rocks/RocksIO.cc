@@ -214,7 +214,12 @@ ValuePtr RocksStorage::getValue(const std::string& skid)
 /// Backend callback
 void RocksStorage::loadValue(const Handle& h, const Handle& key)
 {
-	throw IOException(TRACE_INFO, "Not implemented!");
+	std::string sid = findAtom(h);
+	if (0 == sid.size()) return;
+	std::string kid = findAtom(key);
+	if (0 == kid.size()) return;
+	ValuePtr vp = getValue("k@" + sid + ":" + kid);
+	h->setValue(key, vp);
 }
 
 /// Get all of the keys for the Atom at `sid`, and attach them to `h`.
