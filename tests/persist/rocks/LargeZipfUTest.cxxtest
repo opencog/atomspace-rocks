@@ -43,9 +43,9 @@ class LargeZipfUTest :  public CxxTest::TestSuite
 	private:
 		AtomSpace *_as;
 
-#define NWORDS 5000
+#define NWORDS 35000
 		Handle hword[NWORDS];
-#define NPAIRS 45000
+#define NPAIRS 257000
 		Handle hpair[NPAIRS];
 		int npairs; // actual number of pairs created.
 
@@ -56,6 +56,7 @@ class LargeZipfUTest :  public CxxTest::TestSuite
 
 		void setUp(void);
 		void tearDown(void);
+		void kill_data(void);
 
 		int filler_up(AtomSpace *);
 		void fetch_space(AtomSpace *);
@@ -91,6 +92,25 @@ void LargeZipfUTest::setUp(void)
 void LargeZipfUTest::tearDown(void)
 {
 	delete _as;
+	kill_data();
+}
+
+// ============================================================
+
+void LargeZipfUTest::kill_data(void)
+{
+	RocksStorage *astore = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
+	if (!astore->connected())
+	{
+		logger().info("setUp: RocksStorage cannot connect to database");
+		exit(1);
+	}
+
+	// Trash the contents of the database.
+	astore->kill_data();
+
+	// Destructor also logs out of database
+	delete astore;
 }
 
 // ============================================================

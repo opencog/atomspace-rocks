@@ -44,7 +44,7 @@ class LargeFlatUTest :  public CxxTest::TestSuite
 // 75000 * 7 == half-a-million atoms
 // 19000 * 7 == 133K atoms
 // 5000 * 7 == 35K atoms
-#define NCOPIES 5000
+#define NCOPIES 37000
 		NodePtr n1[NCOPIES];
 		NodePtr n2[NCOPIES];
 		NodePtr n3[NCOPIES];
@@ -67,6 +67,7 @@ class LargeFlatUTest :  public CxxTest::TestSuite
 
 		void setUp(void);
 		void tearDown(void);
+		void kill_data(void);
 
 		int filler_up(AtomSpace *);
 		void add_to_space(int, AtomSpace *, std::string id);
@@ -103,6 +104,25 @@ void LargeFlatUTest::setUp(void)
 void LargeFlatUTest::tearDown(void)
 {
 	delete _as;
+	kill_data();
+}
+
+// ============================================================
+
+void LargeFlatUTest::kill_data(void)
+{
+	RocksStorage *astore = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
+	if (!astore->connected())
+	{
+		logger().info("setUp: RocksStorage cannot connect to database");
+		exit(1);
+	}
+
+	// Trash the contents of the database.
+	astore->kill_data();
+
+	// Destructor also logs out of database
+	delete astore;
 }
 
 // ============================================================
