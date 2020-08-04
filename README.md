@@ -44,8 +44,9 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is **Version 0.5.1**.  All unit tests pass. Two minor issues remain
-unpatched.
+This is **Version 0.8.0**.  All unit tests pass. All known issues
+have been fixed. This could effectively be version 1.0; waiting on
+user feedback.
 
 
 Example Usage
