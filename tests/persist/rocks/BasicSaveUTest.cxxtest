@@ -207,7 +207,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     store->barrier();
     printf("Done storing single link\n");
 
-    Handle hl(createLink(LIST_LINK, a->get_handle(), b->get_handle()));
+    Handle hl(createLink(LIST_LINK, a->get_handle(), a2->get_handle()));
     store->getAtom(hl);
     atomCompare(l, hl, "Single link save-restore");
     printf("Done fetching single link\n");
