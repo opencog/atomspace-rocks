@@ -371,6 +371,7 @@ void LargeFlatUTest::test_atomspace(void)
 	/* Verify that the atoms can still be fetched from storage. */
 	for (i=0; i<idx; i++) {
 		fetch_space(i, _as);
+		_as->barrier();
 		check_space(i, _as, "verify-fetch");
 	}
 
@@ -381,6 +382,7 @@ void LargeFlatUTest::test_atomspace(void)
 	/* Verify that the atoms can still be fetched from storage. */
 	for (i=0; i<idx; i++) {
 		fetch_space(i, _as);
+		_as->barrier();
 		check_space(i, _as, "ver-again");
 	}
 
