@@ -25,3 +25,13 @@ how to do this. These are:
 
 * [fetch-store.scm](fetch-store.scm) -- Basic fetch and store of single atoms
 * [load-dump.scm](load-dump.scm) -- Loading and saving entire AtomSpaces.
+
+The next demo is more curious. It allows queries to be run so that only
+a specific portion of the database is loaded into the AtomSpace. The
+query will run correctly, in that it will behave as if the entire
+AtomSpace had been loaded into RAM. However, it does not actually
+require that everything be loaded; Atoms are fectched from the filestore
+in an as-needed basis.  This is currently a bit experimental; the API
+is subject to change without notice, and there may be bugs.
+
+* [query-storage.scm](query-storage.scm) -- Run queries out of the database.
