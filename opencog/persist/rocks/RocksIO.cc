@@ -92,6 +92,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "k@" sid:kid . sval -- find the value for the Atom,Key
 // "i@" sid:stype . sid-list -- finds incoming set of sid
 
+// ======================================================================
 /// Place Atom into storage.
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
@@ -128,7 +129,6 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	}
 
 	// logger().debug("Store sid= >>%s<< for >>%s<<", sid.c_str(), satom.c_str());
-printf("Store sid= >>%s<< for >>%s<<\n", sid.c_str(), satom.c_str());
 	return sid;
 }
 
@@ -435,6 +435,8 @@ void RocksStorage::removeSatom(const std::string& satom,
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 }
+
+// =========================================================
 
 /// Load the incoming set based on the key prefix `ist`.
 void RocksStorage::loadInset(AtomTable& table, const std::string& ist)
