@@ -83,16 +83,19 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	if (not nameserver().isA(qt, MEET_LINK))
 		throw IOException(TRACE_INFO, "Only MeetLink is supported!");
 
-	// Return cached value, by default.
-	ValuePtr vp = query->getValue(key);
-	if (vp != nullptr) return;
+	if (not fresh)
+	{
+		// Return cached value, by default.
+		ValuePtr vp = query->getValue(key);
+		if (vp != nullptr) return;
 
-	// Oh no! Go fetch it!
-	loadValue(query, key);
-	if (meta) loadValue(query, meta);
-	barrier();
-	ValuePtr lvp = query->getValue(key);
-	if (lvp != nullptr) return;
+		// Oh no! Go fetch it!
+		loadValue(query, key);
+		if (meta) loadValue(query, meta);
+		barrier();
+		ValuePtr lvp = query->getValue(key);
+		if (lvp != nullptr) return;
+	}
 
 	// Still no luck. Bummer. Perform the query.
 	AtomSpace* as = query->getAtomSpace();
