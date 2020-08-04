@@ -25,6 +25,7 @@ several advantages to doing this:
 
 * RocksDB is file-based, and so it is straight-forward to make backup
   copies of datasets, as well as to share these copies with others.
+  (You don't need to be a DB Admin to do this!)
 * RocksDB runs locally, and so the overhead of pushing bytes through
   the network is eliminated. The remaining inefficiencies/bottlenecks
   have to do with converting between the AtomSpace's natural in-RAM
