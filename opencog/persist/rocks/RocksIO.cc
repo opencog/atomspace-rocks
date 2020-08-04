@@ -80,17 +80,40 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // Common abbreviations:
 // satom == string s-expression for an Atom.
 // sval == string s-expression for a Value.
-// aid == uint-64 atom ID.
+// stype == string name of Atomese Type. e.g. "ConceptNode".
+// aid == uint-64 ID. Every Atom gets one.
 // sid == aid as ASCII string.
-// kid == sid for a key
+// kid == sid for an Atomese key (i.e. an Atom)
 // skid == sid:kid pair of id's
 
 // prefixes and associative pairs in the Rocks DB are:
 // "a@" sid . satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
-// "k@" sid:kid . sval -- find the value for the Atom,Key
-// "i@" sid:stype . sid-list -- finds incoming set of sid
+// "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
+// "i@" sid:stype . sid-list -- finds IncomingSet of sid
+
+// ======================================================================
+// Some notes about threading and locking.
+//
+// The current implementation is minimalist, and uses only one mutex
+// to ensure the safety of the one obviously-racey section, where
+// multiple threads might be editing the IncomingSet of the same
+// Atom.  (We use only one lock to protect *all* incoming sets.)
+//
+// Note that, even without this lock, the current multi-threading
+// test i.e. MultiPersistUTest passes just fine. Maybe the test is
+// too short, or too small, or doesn't do anything dangerous...
+//
+// Besides the above, there may be other racey usages that are not
+// anticipated. For example, if one thread is getting the same Atom
+// that another thread is deleting, it might be possible to arrive at
+// some weird state, possibly with a crash(??) or a malfunctioning
+// get(??). This code has NOT been audited for this situation.
+// The degree of safety here for production usage is unknown.
+// (That's why it's version 0.8 right now, as of 4 August 2020.)
+// The good news: this file is really pretty small, as such things go,
+// so auditing should not be that hard.
 
 // ======================================================================
 /// Place Atom into storage.
