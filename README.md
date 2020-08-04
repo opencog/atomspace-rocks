@@ -1,9 +1,51 @@
-# AtomSpace RocksDB Backend
+AtomSpace RocksDB Backend
+=========================
+
+Save and restore AtomSpace contents to a RocksDB database. The RocksDB
+database is a single-user, local-host-only file-backed database. That
+means that only one AtomSpace can connect to it at any given moment.
+
+In ASCII-art:
+
+```
+ +-------------+
+ |  AtomSpace  |
+ |             |
+ +---- API-----+
+ |             |
+ |   RocksDB   |
+ |    files    |
+ +-------------+
+```
+
+RocksDB (see https://rocksdb.org/) is an "embeddable persistent key-value
+store for fast storage." The goal of layering the AtomSpace on top of it
+is to provide fast persistent storage for the AtomSpace.  There are
+several advantages to doing this:
+
+* RocksDB is file-based, and so it is straight-forward to make backup
+  copies of datasets, as well as to share these copies with others.
+* RocksDB runs locally, and so the overhead of pushing bytes through
+  the network is eliminated. The remaining inefficiencies/bottlenecks
+  have to do with converting between the AtomSpace's natural in-RAM
+  format, and the position-independent format that all databases need.
+  (Here, we say "position-independent" in that the DB format does not
+  contain any C/C++ pointers; all references are managed with local
+  unique ID's.)
+* RocksDB is a "real" database, and so enables the storage of datasets
+  that might not otherwise fit into RAM. This back-end doees not try
+  to guess what your working set is; it is up to you to load, work with
+  and save those Atoms that are important for you.
+
+This backend, together with the CogServer-based network AtomSpace
+server backend provides a building-block out of which more complex
+distributed and/or decentralized AtomSpaces can be built.
 
 
 Status
 ------
-This is **Version 0.1.0**. -- Some unit tests pass.
+This is **Version 0.5.0**.  All unit tests pass. Two minor issues remain
+unpatched.
 
 
 Example Usage
@@ -27,4 +69,6 @@ details.
 
 Design
 ------
-Currently minimalistic, not tuned.
+This is a minimalistic implementation. There has been no performance
+tuning. There's only just enough code to make everything work; that's
+it.
