@@ -1,4 +1,4 @@
-AtomSapce RocksDB Backend Usage Examples
+AtomSpace RocksDB Backend Usage Examples
 ----------------------------------------
 Save and restore AtomSpace contents to a RocksDB database. The RocksDB
 database is a single-user, local-host-only file-backed database. That
@@ -18,7 +18,7 @@ In ASCII-art:
 ```
 
 RocksDB is a "real" database, and so datasets too big to fit into RAM
-can be stored in it.  This back-end doees not try to guess what your
+can be stored in it.  This back-end does not try to guess what your
 working set is; it is up to you to load, work with and save those Atoms
 that are important for you. The goal of the examples is to show exactly
 how to do this. These are:

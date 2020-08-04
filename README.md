@@ -33,7 +33,7 @@ several advantages to doing this:
   contain any C/C++ pointers; all references are managed with local
   unique ID's.)
 * RocksDB is a "real" database, and so enables the storage of datasets
-  that might not otherwise fit into RAM. This back-end doees not try
+  that might not otherwise fit into RAM. This back-end does not try
   to guess what your working set is; it is up to you to load, work with
   and save those Atoms that are important for you.
 
