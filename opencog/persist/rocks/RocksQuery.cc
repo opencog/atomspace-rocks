@@ -57,6 +57,22 @@ IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
 	return h->getIncomingSetByType(t, _as);
 }
 
+/// Attention: The design of this thing is subject to change.
+/// This is the current experimental API.
+///
+/// The thing I don't like about this is the caching... so, we
+/// performed the query straight out of disk starage (with the
+/// incoming-set trick above), but then we are wasting CPU cycles
+/// writing results back to disk, and maybe the user didn't need
+/// that.
+///
+/// This should be compared to the client-server variant of this,
+/// where the caching comes "for free" (because the search result is
+/// already on the srever; it would take more effort to send it to the
+/// client, delete it from the server, only to have the client turn
+/// around and send it back to the server for caching.
+///
+/// Maybe we need two versions of this: a cached and a non-cached API...
 void RocksStorage::runQuery(const Handle& query, const Handle& key,
                             const Handle& meta, bool fresh)
 {
@@ -64,6 +80,18 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	if (not nameserver().isA(qt, MEET_LINK))
 		throw IOException(TRACE_INFO, "Only MeetLink is supported!");
 
+	// Return cached value, by default.
+	ValuePtr vp = query->getValue(key);
+	if (vp != nullptr) return;
+
+	// Oh no! Go fetch it!
+	loadValue(query, key);
+	loadValue(query, meta);
+	barrier();
+	ValuePtr vp = query->getValue(key);
+	if (vp != nullptr) return;
+
+	// Still no luck. Bummer. Perform the query.
 	AtomSpace* as = query->getAtomSpace();
 	RocksSatisfyingSet sater(this, as);
 	sater.satisfy(PatternLinkCast(query));
