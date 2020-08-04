@@ -51,6 +51,9 @@ class RocksSatisfyingSet : public SatisfyingSet
 
 using namespace opencog;
 
+// XXX TODO ?? Maybe not everything in the incoming set is needed. To
+// keep the atomspace slim, we should kill this ... or we should run in
+// a temp atomspace ...
 IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
 {
 	_store->getIncomingByType(_as, h, t);
@@ -86,10 +89,10 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 
 	// Oh no! Go fetch it!
 	loadValue(query, key);
-	loadValue(query, meta);
+	if (meta) loadValue(query, meta);
 	barrier();
-	ValuePtr vp = query->getValue(key);
-	if (vp != nullptr) return;
+	ValuePtr lvp = query->getValue(key);
+	if (lvp != nullptr) return;
 
 	// Still no luck. Bummer. Perform the query.
 	AtomSpace* as = query->getAtomSpace();

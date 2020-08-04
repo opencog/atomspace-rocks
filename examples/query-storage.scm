@@ -1,12 +1,12 @@
 ;
 ; query-storage.scm
 ;
-; Demo of using queries to obtain sharply-defined sets of Atoms
-; from the remote server. These queries generalize the idea of
-; fetching the incoming set, or fetching the subset of Atoms of
-; some given type, by allowing a highly-detailed search pattern
-; to be sent to the remote server, to get exactly those atoms that
-; you want.
+; Demo of using queries to obtain sharply-defined sets of Atoms from
+; storage, without having to load the entire AtomSpace up front.
+;
+; These queries generalize the idea of fetching the incoming set, or
+; fetching the subset of Atoms of some given type, by allowing a
+; highly-detailed search pattern to run and load only the needed atoms.
 ;
 ; There are three generic types of queries: MeetLinks, JoinLinks
 ; and QueryLinks.
@@ -22,7 +22,7 @@
 ;   take those results to create some new structure.
 ;
 ; Each of these query types can be used to fetch Atoms from the
-; remote server.
+; database.
 ;
 ; -------------------------------
 ; Basic initialization and set-up

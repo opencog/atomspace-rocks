@@ -246,7 +246,7 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	if (0 == kid.size()) return;
 	ValuePtr vp = getValue("k@" + sid + ":" + kid);
 	AtomSpace* as = h->getAtomSpace();
-	if (as) vp = Sexpr::add_atoms(as, vp);
+	if (as and vp) vp = as->add_atoms(vp);
 	h->setValue(key, vp);
 }
 
@@ -283,7 +283,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-		vp = Sexpr::add_atoms(as, vp);
+		if (vp) vp = as->add_atoms(vp);
 		h->setValue(key, vp);
 	}
 }
