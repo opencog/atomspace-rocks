@@ -135,8 +135,11 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	}
 	else if (nameserver().isA(qt, JOIN_LINK))
 	{
-		throw IOException(TRACE_INFO,
-			"JoinLink not yet implemeneted!");
+		AtomSpace* tas = grab_transient_atomspace(as);
+		RocksJoinCallback rjcb(this, tas);
+
+		qv = JoinLinkCast(query)->execute_cb(tas, &rjcb);
+		release_transient_atomspace(tas);
 	}
 	else
 	{
