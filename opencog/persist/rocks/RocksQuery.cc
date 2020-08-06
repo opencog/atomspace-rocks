@@ -31,6 +31,8 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atomspace/Transient.h>
 #include <opencog/atoms/container/JoinLink.h>
+#include <opencog/atoms/pattern/QueryLink.h>
+#include <opencog/query/Implicator.h>
 #include <opencog/query/Satisfier.h>
 #include <opencog/persist/sexpr/Sexpr.h>
 
@@ -121,8 +123,15 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	ValuePtr qv;
 	if (nameserver().isA(qt, QUERY_LINK))
 	{
-		throw IOException(TRACE_INFO,
-			"QueryLink/BindLink not yet implemeneted!");
+		QueryLinkPtr qlp(QueryLinkCast(query));
+
+		AtomSpace* tas = grab_transient_atomspace(as);
+		Implicator impl(tas);
+		impl.implicand = qlp->get_implicand();
+		impl.satisfy(qlp);
+
+		qv = impl.get_result_queue();
+		release_transient_atomspace(tas);
 	}
 	else if (nameserver().isA(qt, MEET_LINK))
 	{
