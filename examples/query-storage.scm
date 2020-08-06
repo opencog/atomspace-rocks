@@ -177,7 +177,8 @@
 ; Graph rewriting
 ;
 ; Atomese graph re-writes are just a special case of Meets.
-; They work as well.
+; They work just as the above do. Here's an explicit demo.
+;
 (define tail-by-tail (Query
 	; Variable declaration, as usual
 	(TypedVariable (Variable "tail") (Type 'Concept))
