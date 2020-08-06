@@ -119,8 +119,12 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 {
 	Type qt = query->get_type();
 	if (not nameserver().isA(qt, MEET_LINK) and
+	    not nameserver().isA(qt, QUERY_LINK) and
 	    not nameserver().isA(qt, JOIN_LINK))
-		throw IOException(TRACE_INFO, "Only MeetLink/JoinLink are supported!");
+	{
+		throw IOException(TRACE_INFO,
+			"For now, only Meet, Join and Query are supported!");
+	}
 
 	if (not fresh)
 	{

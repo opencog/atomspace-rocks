@@ -70,6 +70,15 @@
 ; Take a look at what was found.
 (cog-value get-tail results-key)
 
+; Take a look at the AtomSpace. Note that although the Meet had a
+; ListLink in it, and that grounding it required locating the
+; (List (Concept "A") (Concept "B")) that was in file storage,
+; only the answer (Concept "B") was brought into the AtomSpace.
+; The ListLink was NOT brought into the AtomSpace! This will
+; continue to be true for the rest of the demo; it's worth checking
+; up on this.
+(cog-get-all-roots)
+
 ; -------------
 ; Query caching
 ;
@@ -163,6 +172,23 @@
 
 ; Verify that everything landed in the AtomSpace.
 (cog-get-all-roots)
+
+; ------------------------
+; Graph rewriting
+;
+; Atomese graph re-writes are just a special case of Meets.
+; They work as well.
+(define tail-by-tail (Query
+	; Variable declaration, as usual
+	(TypedVariable (Variable "tail") (Type 'Concept))
+	; The pattern to search for
+	(Present (List (Concept "A") (Variable "tail")))
+	; What to create, if the pattern is found.
+	(OrderedLink (Variable "tail") (Concept "by") (Variable "tail"))
+))
+
+(fetch-query tail-by-tail results-key)
+(cog-value tail-by-tail results-key)
 
 ; That's all! Thanks for paying attention!
 ; ----------------------------------------
