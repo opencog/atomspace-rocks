@@ -47,6 +47,7 @@ class RocksSatisfyingSet;
 
 class RocksStorage : public BackingStore
 {
+	friend class RocksImplicator;
 	friend class RocksSatisfyingSet;
 	friend class RocksJoinCallback;
 	private:

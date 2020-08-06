@@ -41,6 +41,18 @@
 namespace opencog
 {
 
+// Callback for QueryLinks
+class RocksImplicator : public Implicator
+{
+		RocksStorage* _store;
+		AtomSpace* _ras;
+	public:
+		RocksImplicator(RocksStorage* sto, AtomSpace* as) :
+			Implicator(as), _store(sto), _ras(as) {}
+		virtual ~RocksImplicator() {}
+		virtual IncomingSet get_incoming_set(const Handle&, Type);
+};
+
 // Callback for MeetLinks
 class RocksSatisfyingSet : public SatisfyingSet
 {
@@ -52,6 +64,7 @@ class RocksSatisfyingSet : public SatisfyingSet
 		virtual IncomingSet get_incoming_set(const Handle&, Type);
 };
 
+// Callback for JoinLinks
 class RocksJoinCallback : public JoinCallback
 {
 		RocksStorage* _store;
@@ -66,6 +79,12 @@ class RocksJoinCallback : public JoinCallback
 } // namespace opencog
 
 using namespace opencog;
+
+IncomingSet RocksImplicator::get_incoming_set(const Handle& h, Type t)
+{
+	_store->getIncomingByType(_ras, h, t);
+	return h->getIncomingSetByType(t, _ras);
+}
 
 IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
 {
@@ -126,7 +145,7 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 		QueryLinkPtr qlp(QueryLinkCast(query));
 
 		AtomSpace* tas = grab_transient_atomspace(as);
-		Implicator impl(tas);
+		RocksImplicator impl(this, tas);
 		impl.implicand = qlp->get_implicand();
 		impl.satisfy(qlp);
 
