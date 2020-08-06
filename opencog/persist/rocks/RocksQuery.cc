@@ -30,6 +30,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atomspace/Transient.h>
+#include <opencog/atoms/container/JoinLink.h>
 #include <opencog/query/Satisfier.h>
 #include <opencog/persist/sexpr/Sexpr.h>
 
@@ -38,6 +39,7 @@
 namespace opencog
 {
 
+// Callback for MeetLinks
 class RocksSatisfyingSet : public SatisfyingSet
 {
 		RocksStorage* _store;
@@ -48,17 +50,31 @@ class RocksSatisfyingSet : public SatisfyingSet
 		virtual IncomingSet get_incoming_set(const Handle&, Type);
 };
 
+class RocksJoinCallback : public JoinCallback
+{
+		RocksStorage* _store;
+		AtomSpace* _as;
+	public:
+		RocksJoinCallback(RocksStorage* sto, AtomSpace* as)
+			: _store(sto), _as(as) {}
+		virtual ~RocksJoinCallback() {}
+		virtual IncomingSet get_incoming_set(const Handle&);
+};
+
 } // namespace opencog
 
 using namespace opencog;
 
-// XXX TODO ?? Maybe not everything in the incoming set is needed. To
-// keep the atomspace slim, we should kill this ... or we should run in
-// a temp atomspace ...
 IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
 {
 	_store->getIncomingByType(_as, h, t);
 	return h->getIncomingSetByType(t, _as);
+}
+
+IncomingSet RocksJoinCallback::get_incoming_set(const Handle& h)
+{
+	_store->getIncomingSet(_as, h);
+	return h->getIncomingSet(_as);
 }
 
 /// Attention: The design of this thing is subject to change.

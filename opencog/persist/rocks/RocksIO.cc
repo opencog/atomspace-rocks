@@ -486,12 +486,12 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 }
 
 /// Backing API - get the incoming set.
-void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
+void RocksStorage::getIncomingSet(AtomSpace* as, const Handle& h)
 {
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":";
-	loadInset(table.getAtomSpace(), ist);
+	loadInset(as, ist);
 }
 
 void RocksStorage::getIncomingByType(AtomSpace* as, const Handle& h, Type t)
@@ -500,6 +500,11 @@ void RocksStorage::getIncomingByType(AtomSpace* as, const Handle& h, Type t)
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":" + nameserver().getTypeName(t);
 	loadInset(as, ist);
+}
+
+void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
+{
+	getIncomingSet(table.getAtomSpace(), h);
 }
 
 void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)

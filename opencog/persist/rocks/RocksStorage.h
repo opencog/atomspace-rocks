@@ -48,6 +48,7 @@ class RocksSatisfyingSet;
 class RocksStorage : public BackingStore
 {
 	friend class RocksSatisfyingSet;
+	friend class RocksJoinCallback;
 	private:
 		void init(const char *);
 		std::string _uri;
@@ -81,6 +82,7 @@ class RocksStorage : public BackingStore
 		void remIncoming(const std::string&, const std::string&,
 		                 const std::string&);
 
+		void getIncomingSet(AtomSpace*, const Handle&);
 		void getIncomingByType(AtomSpace*, const Handle&, Type t);
 		void print_all(void);
 
