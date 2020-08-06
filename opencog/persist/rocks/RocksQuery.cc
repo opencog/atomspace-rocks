@@ -29,6 +29,7 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/atomspace/Transient.h>
 #include <opencog/query/Satisfier.h>
 #include <opencog/persist/sexpr/Sexpr.h>
 
@@ -101,7 +102,7 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	// Still no luck. Bummer. Perform the query.
 	AtomSpace* as = query->getAtomSpace();
 
-	QueueValuePtr qv;
+	ValuePtr qv;
 	if (nameserver().isA(qt, QUERY_LINK))
 	{
 		throw IOException(TRACE_INFO,
@@ -109,10 +110,12 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 	}
 	else if (nameserver().isA(qt, MEET_LINK))
 	{
-		RocksSatisfyingSet sater(this, as);
+		AtomSpace* tas = grab_transient_atomspace(as);
+		RocksSatisfyingSet sater(this, tas);
 		sater.satisfy(PatternLinkCast(query));
 
-		QueueValuePtr qv = sater.get_result_queue();
+		qv = sater.get_result_queue();
+		release_transient_atomspace(tas);
 	}
 	else if (nameserver().isA(qt, JOIN_LINK))
 	{
@@ -124,6 +127,9 @@ void RocksStorage::runQuery(const Handle& query, const Handle& key,
 		throw IOException(TRACE_INFO, "Unsupported query type %s",
 			nameserver().getTypeName(qt).c_str());
 	}
+
+	// Copy Atoms out of the transient AtomSpace.
+	if (qv) qv = as->add_atoms(qv);
 	query->setValue(key, qv);
 
 	// And cache it in the file, as well! This caching is compatible
