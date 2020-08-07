@@ -35,14 +35,13 @@
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
+#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
-#include <opencog/persist/sql/multi-driver/SQLAtomStorage.h>
-#include <opencog/persist/sql/multi-driver/SQLPersistSCM.h>
+#include <opencog/atoms/value/LinkValue.h>
+#include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
 #include <opencog/util/Config.h>
-
-#include "mkuri.h"
 
 using namespace opencog;
 
@@ -75,6 +74,8 @@ QueryPersistUTest:: QueryPersistUTest(void)
 {
 	logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
+
+	uri = "rocks:///tmp/cog-rocks-unit-test";
 }
 
 /*
@@ -94,26 +95,17 @@ void QueryPersistUTest::tearDown(void)
 
 void QueryPersistUTest::kill_data(void)
 {
-#if HAVE_ODBC_STORAGE
-	if ("" == uri) uri = mkuri("odbc", dbname, username, passwd);
-#endif
-#if HAVE_PGSQL_STORAGE
-	if ("" == uri) uri = mkuri("postgres", dbname, username, passwd);
-#endif
-	SQLAtomStorage* astore = new SQLAtomStorage();
-	astore->open(uri);
+	RocksStorage *astore = new RocksStorage(uri);
 	if (!astore->connected())
 	{
-		logger().info("setUp: SQLAtomStorage cannot connect to database");
-		friendlyFailMessage();
+		logger().info("setUp: RocksStorage cannot connect to database");
 		exit(1);
 	}
-	logger().info("Delete data in \"%s\" as \"%s\" passwd \"%s\"", dbname, username, passwd);
 
 	// Trash the contents of the database.
 	astore->kill_data();
 
-	// Destructor also logs out of database (avoid warning in DB log file)
+	// Destructor also logs out of database
 	delete astore;
 }
 
@@ -128,18 +120,10 @@ void QueryPersistUTest::setup_data(void)
 	kill_data();
 
 	_as = new AtomSpace();
-	SQLPersistSCM* _pm = new SQLPersistSCM(_as);
-	TSM_ASSERT("Persist Module not loaded", _pm);
 
-	try {
-		_pm->do_open(uri);
-	}
-	catch (RuntimeException &e)
-	{
-		logger().info("setUp: SQLPersistSCM cannot connect to database");
-		friendlyFailMessage();
-		exit(1);
-	};
+	RocksStorage *store = new RocksStorage(uri);
+	TS_ASSERT(store->connected())
+	store->registerWith(_as);
 
 	/* Populate the Storage with stuff that we will later query. */
 	al(EVALUATION_LINK, an(PREDICATE_NODE, "is-a"),
@@ -175,8 +159,8 @@ void QueryPersistUTest::setup_data(void)
 	_as->store_atomspace();
 	_as->barrier();
 
-	_pm->do_close();
-	delete _pm;
+	store->unregisterWith(_as);
+	delete store;
 	delete _as;
 }
 
@@ -187,18 +171,10 @@ void QueryPersistUTest::test_meet(void)
 	setup_data();
 
 	_as = new AtomSpace();
-	SQLPersistSCM* _pm = new SQLPersistSCM(_as);
-	TSM_ASSERT("Persist Module not loaded", _pm);
 
-	try {
-		_pm->do_open(uri);
-	}
-	catch (RuntimeException &e)
-	{
-		logger().info("setUp: SQLPersistSCM cannot connect to database");
-		friendlyFailMessage();
-		exit(1);
-	};
+	RocksStorage *store = new RocksStorage(uri);
+	TS_ASSERT(store->connected())
+	store->registerWith(_as);
 
 	// Create a query to find all things that have wheels.
 	// We expect cars and bicycles, only.
@@ -243,8 +219,8 @@ void QueryPersistUTest::test_meet(void)
 	printf("Re-got: %s\n", rtoo->to_string().c_str());
 	TSM_ASSERT("Expect same results as before", *results == *rtoo);
 
-	_pm->do_close();
-	delete _pm;
+	store->unregisterWith(_as);
+	delete store;
 	delete _as;
 	logger().info("END TEST: %s", __FUNCTION__);
 }
@@ -256,18 +232,10 @@ void QueryPersistUTest::test_join(void)
 	setup_data();
 
 	_as = new AtomSpace();
-	SQLPersistSCM* _pm = new SQLPersistSCM(_as);
-	TSM_ASSERT("Persist Module not loaded", _pm);
 
-	try {
-		_pm->do_open(uri);
-	}
-	catch (RuntimeException &e)
-	{
-		logger().info("setUp: SQLPersistSCM cannot connect to database");
-		friendlyFailMessage();
-		exit(1);
-	};
+	RocksStorage *store = new RocksStorage(uri);
+	TS_ASSERT(store->connected())
+	store->registerWith(_as);
 
 	// Create a join to find all vehicles.
 	Handle join =
@@ -303,8 +271,8 @@ void QueryPersistUTest::test_join(void)
 
 	TSM_ASSERT_EQUALS("Expecting airplane, bicycle and car", hset, expect);
 
-	_pm->do_close();
-	delete _pm;
+	store->unregisterWith(_as);
+	delete store;
 	delete _as;
 	logger().info("END TEST: %s", __FUNCTION__);
 }
