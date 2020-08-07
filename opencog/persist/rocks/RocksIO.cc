@@ -588,6 +588,9 @@ void RocksStorage::kill_data(void)
 	for (it->Seek(""); it->Valid(); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 #endif
+
+	// Reset. Will be stored on close.
+	_next_aid = 1;
 }
 
 /// Dump database contents to stdout.
