@@ -4,7 +4,6 @@
 
 ADD_LIBRARY (persist-rocks SHARED
 	RocksIO
-	RocksQuery
 	RocksStorage
 	RocksPersistSCM
 )
