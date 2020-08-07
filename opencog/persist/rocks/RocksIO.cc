@@ -296,6 +296,22 @@ void RocksStorage::getAtom(const Handle& h)
 	getKeys(h->getAtomSpace(), sid, h);
 }
 
+/// Backend callback - find the Link
+Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
+{
+	std::string satom = "l@(" + nameserver().getTypeName(t) + " ";
+	for (const Handle& ho: hs)
+		satom += Sexpr::encode_atom(ho);
+
+	std::string sid;
+	_rfile->Get(rocksdb::ReadOptions(), satom, &sid);
+	if (0 == sid.size()) return Handle::UNDEFINED;
+
+	Handle h = createLink(hs, t);
+	getKeys(nullptr, sid, h);
+	return h;
+}
+
 // =========================================================
 
 /// Find the sid of Atom. Return empty string if its not there.

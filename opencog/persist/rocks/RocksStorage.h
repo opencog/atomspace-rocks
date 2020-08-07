@@ -101,6 +101,7 @@ class RocksStorage : public BackingStore
 
 		// AtomStorage interface
 		void getAtom(const Handle&);
+		Handle getLink(Type, const HandleSeq&);
 		void getIncomingSet(AtomTable&, const Handle&);
 		void getIncomingByType(AtomTable&, const Handle&, Type t);
 		void storeAtom(const Handle&, bool synchronous = false);
