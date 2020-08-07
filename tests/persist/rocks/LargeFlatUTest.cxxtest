@@ -1,7 +1,7 @@
 /*
  * tests/persist/rocks/LargeFlatUTest.cxxtest
  *
- * Test larger AtomSpace persistance.  Assumes PersistUTest is passing.
+ * Test larger AtomSpace persistence.  Assumes PersistUTest is passing.
  *
  * Copyright (C) 2008, 2009, 2013, 2019 Linas Vepstas <linasvepstas@gmail.com>
  * SPDX-License-Identifier: AGPL-3.0-or-later

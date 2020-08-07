@@ -1,7 +1,7 @@
 /*
  * tests/persist/rocks/MultiPersistUTest.cxxtest
  *
- * Test multi-threaded persistance.  Assumes PersistUTest is passing.
+ * Test multi-threaded persistence.  Assumes PersistUTest is passing.
  * Ported over from original unit test at
  * tests/persist/sql/multi-driver/MultiPersistUTest.cxxtest
  *
