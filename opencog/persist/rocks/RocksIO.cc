@@ -302,6 +302,7 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 	std::string satom = "l@(" + nameserver().getTypeName(t) + " ";
 	for (const Handle& ho: hs)
 		satom += Sexpr::encode_atom(ho);
+	satom += ")";
 
 	std::string sid;
 	_rfile->Get(rocksdb::ReadOptions(), satom, &sid);
