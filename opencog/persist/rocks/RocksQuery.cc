@@ -51,6 +51,7 @@ class RocksImplicator : public Implicator
 			Implicator(as), _store(sto), _ras(as) {}
 		virtual ~RocksImplicator() {}
 		virtual IncomingSet get_incoming_set(const Handle&, Type);
+		virtual Handle get_link(const Handle&, Type, HandleSeq&&);
 };
 
 // Callback for MeetLinks
@@ -62,6 +63,7 @@ class RocksSatisfyingSet : public SatisfyingSet
 			SatisfyingSet(as), _store(sto) {}
 		virtual ~RocksSatisfyingSet() {}
 		virtual IncomingSet get_incoming_set(const Handle&, Type);
+		virtual Handle get_link(const Handle&, Type, HandleSeq&&);
 };
 
 // Callback for JoinLinks
@@ -86,10 +88,26 @@ IncomingSet RocksImplicator::get_incoming_set(const Handle& h, Type t)
 	return h->getIncomingSetByType(t, _ras);
 }
 
+Handle RocksImplicator::get_link(const Handle& hg,
+                                 Type t, HandleSeq&& oset)
+{
+	Handle h = _store->getLink(t, oset);
+	if (nullptr == h) return h;
+	return _ras->add_atom(h);
+}
+
 IncomingSet RocksSatisfyingSet::get_incoming_set(const Handle& h, Type t)
 {
 	_store->getIncomingByType(_as, h, t);
 	return h->getIncomingSetByType(t, _as);
+}
+
+Handle RocksSatisfyingSet::get_link(const Handle& hg,
+                                    Type t, HandleSeq&& oset)
+{
+	Handle h = _store->getLink(t, oset);
+	if (nullptr == h) return h;
+	return _as->add_atom(h);
 }
 
 IncomingSet RocksJoinCallback::get_incoming_set(const Handle& h)
