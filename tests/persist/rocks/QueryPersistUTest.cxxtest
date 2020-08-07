@@ -4,12 +4,6 @@
  * Test persistance queries.  Assumes PerisistUTest and ValueSaveUTest
  * are passing.
  *
- * If this test is failing for you, then be sure to read the README in
- * this directory, and also ../../opencong/persist/README, and then
- * create and configure the SQL database as described there. Next,
- * edit ../../lib/test-opencog.conf to add the database credentials
- * (the username and passwd).
- *
  * Copyright (C) 2008, 2009, 2013, 2020 Linas Vepstas <linasvepstas@gmail.com>
  * All Rights Reserved
  *
@@ -155,7 +149,7 @@ void QueryPersistUTest::setup_data(void)
 	an(CONCEPT, "car") ->
 		setTruthValue(SimpleTruthValue::createTV(0.33, 300));
 
-	/* Push all atoms out to the SQL DB */
+	/* Push all atoms out to the database */
 	_as->store_atomspace();
 	_as->barrier();
 
