@@ -47,9 +47,10 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is **Version 0.8.2**.  All unit tests pass. All known issues
-have been fixed. This could effectively be version 1.0; waiting on
-user feedback.
+This is **Version 0.8.2**.  All unit tests pass. There is one known
+maybe-issue; see https://github.com/opencog/atomspace-rocks/issues/1
+After adressing that issue, this could effectively be version 1.0;
+waiting on user feedback.
 
 
 Example Usage
@@ -77,10 +78,3 @@ This is a minimalistic implementation. There has been no performance
 tuning. There's only just enough code to make everything work; that's
 it. This does nothing at all fancy/sophisticated with RocksDB, and it
 might be possible to improve performance and squeeze out some air.
-
-TODO
-----
-Explore and maybe use:
-* [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)
-  and the corresponding RocksDB plugin:
-  [tikv/titan](https://github.com/tikv/titan)
