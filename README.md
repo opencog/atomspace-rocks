@@ -77,3 +77,10 @@ This is a minimalistic implementation. There has been no performance
 tuning. There's only just enough code to make everything work; that's
 it. This does nothing at all fancy/sophisticated with RocksDB, and it
 might be possible to improve performance and squeeze out some air.
+
+TODO
+----
+Explore and maybe use:
+* [WiscKey](https://www.usenix.org/system/files/conference/fast16/fast16-papers-lu.pdf)
+  and the corresponding RocksDB plugin:
+  [tikv/titan](https://github.com/tikv/titan)
