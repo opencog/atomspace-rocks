@@ -1,0 +1,169 @@
+/*
+ * tests/persist/rocks/AlphaEquivUTest.cxxtest
+ *
+ * Test persistance queries.  Assumes PerisistUTest and ValueSaveUTest
+ * are passing.
+ *
+ * Copyright (C) 2008, 2009, 2013, 2020 Linas Vepstas <linasvepstas@gmail.com>
+ * All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <cstdio>
+
+#include <opencog/atoms/atom_types/atom_types.h>
+#include <opencog/atoms/base/Atom.h>
+#include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/base/Node.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/FloatValue.h>
+#include <opencog/persist/rocks/RocksStorage.h>
+
+#include <opencog/util/Logger.h>
+#include <opencog/util/Config.h>
+
+using namespace opencog;
+
+class AlphaEquivUTest :  public CxxTest::TestSuite
+{
+	private:
+		AtomSpace* _as;
+		std::string uri;
+
+	public:
+
+		AlphaEquivUTest(void);
+		~AlphaEquivUTest()
+		{
+			// erase the log file if no assertions failed
+			if (!CxxTest::TestTracker::tracker().suiteFailed())
+				std::remove(logger().get_filename().c_str());
+		}
+
+		void setUp(void);
+		void tearDown(void);
+		void kill_data(void);
+
+		void test_alpha(void);
+};
+
+AlphaEquivUTest:: AlphaEquivUTest(void)
+{
+	logger().set_level(Logger::DEBUG);
+	logger().set_print_to_stdout_flag(true);
+
+	uri = "rocks:///tmp/cog-rocks-unit-test";
+}
+
+/*
+ * This is called once before each test, for each test (!!)
+ */
+void AlphaEquivUTest::setUp(void)
+{
+	_as = nullptr;
+}
+
+void AlphaEquivUTest::tearDown(void)
+{
+	kill_data();
+}
+
+// ============================================================
+
+void AlphaEquivUTest::kill_data(void)
+{
+	RocksStorage *astore = new RocksStorage(uri);
+	if (!astore->connected())
+	{
+		logger().info("setUp: RocksStorage cannot connect to database");
+		exit(1);
+	}
+
+	// Trash the contents of the database.
+	astore->kill_data();
+
+	// Destructor also logs out of database
+	delete astore;
+}
+
+// ============================================================
+#define an _as->add_node
+#define al _as->add_link
+#define CONCEPT CONCEPT_NODE
+#define PREDICATE PREDICATE_NODE
+#define VARIABLE VARIABLE_NODE
+
+void AlphaEquivUTest::test_alpha(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	kill_data();
+
+	_as = new AtomSpace();
+
+	RocksStorage *store = new RocksStorage(uri);
+	TS_ASSERT(store->connected())
+	store->registerWith(_as);
+
+	/* Populate the Storage with stuff that we will later query. */
+	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
+	lx->setTruthValue(SimpleTruthValue::createTV(0.11, 100));
+	lx->setValue(an(PREDICATE, "foo"),
+		createFloatValue(std::vector<double>{1, 2, 3}));
+
+	/* Push all atoms out to the database */
+	_as->store_atomspace();
+	_as->barrier();
+
+	store->unregisterWith(_as);
+	delete store;
+	delete _as;
+
+	// Now query ....
+	_as = new AtomSpace();
+
+	store = new RocksStorage(uri);
+	TS_ASSERT(store->connected())
+	store->registerWith(_as);
+
+	// Fetch an alpha-equivalent lambda link.
+	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
+
+	ly = _as->fetch_atom(ly);
+
+	// Verify that the correct TV was fetched.
+	TruthValuePtr tvp = ly->getTruthValue();
+	printf("Got TV: %s\n", tvp->to_string().c_str());
+
+	// Verify that other values are there too.
+	ValuePtr fu = ly->getValue(an(PREDICATE, "foo"));
+	printf("Got Vaue: %s\n", fu->to_string().c_str());
+
+	TSM_ASSERT("Expecting a LinkValue",
+		nameserver().isA(fu->get_type(), FLOAT_VALUE));
+
+	FloatValuePtr fvp = FloatValueCast(ly);
+	TSM_ASSERT_EQUALS("Expecting three floats", fvp->size(), 3);
+
+	store->unregisterWith(_as);
+	delete store;
+	delete _as;
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+/* ============================= END OF FILE ================= */

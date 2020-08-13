@@ -18,6 +18,7 @@ TARGET_LINK_LIBRARIES(FetchUTest execution)
 ADD_CXXTEST(DeleteUTest)
 ADD_CXXTEST(MultiPersistUTest)
 ADD_CXXTEST(QueryPersistUTest)
+ADD_CXXTEST(AlphaEquivUTest)
 #
 ADD_CXXTEST(LargeFlatUTest)
 ADD_CXXTEST(LargeZipfUTest)
