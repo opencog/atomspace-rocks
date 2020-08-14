@@ -87,13 +87,72 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // skid == sid:kid pair of id's
 // shash == 64-bit hash of the Atom (as provided by Atom::get_hash())
 
-// prefixes and associative pairs in the Rocks DB are:
+// Prefixes and associative pairs in the Rocks DB are:
 // "a@" sid . [shash]satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
 // "i@" sid:stype . sid-list -- finds IncomingSet of sid
 // "h@" shash . sid-list -- finds all sids having a given hash
+
+// General design:
+// The basic representation for an Atom is its s-expression.
+// Because this is verbose, each s-expression is associated with a
+// unique integer, the "aid" or "atom id". Since Rocks works with
+// strings, the aid is converted to a base-62 string, the "sid".
+// Base-62 is used because its fairly compact but still leaves
+// punctuation symbols free for other uses.
+//
+// The main lookups involve converting s-expressions aka "satoms"
+// to sids, and back again. This is done with the `a@`, `n@` and `l@`
+// prefixes. These are "prefixes" because RocksDB stores keys in
+// lexical order, so one can quickly find all keys starting with `n@`,
+// which is useful for rapid load of entire AtomSpaces. Similarly,
+// all ConceptNodes wiill have the prefix `n@(Concept` and likewise
+// can be rapidly traversed by RocksDB.
+//
+// Value lookups (e.g. TruthValue) is also handled with this prefix
+// trick, so that, for example, all Values on a given Atom will be
+// next to each-other in the Rocks DB, because all of them will appear
+// next to each-other, in order, under the prefix `k@sid:`. If only
+// one value is needed, it can be found at `k@sid:key`.
+//
+// The same trick is applied for incoming-sets. So all the entire
+// incoming set for an atom appears under the prefix `i@sid:` and
+// the incoming set of a given type is under `i@sid:stype`.  The
+// incoming set itself is stored as a space-separated list of sids.
+// This works, but has the minor disadvantage that this list has to
+// be edited every time an atom is added or removed.
+//
+// That's pretty much it ... except that there's one last little tricky
+// bit, forced on us by alpha-equivalence and alpha-conversion.
+//
+// Two different atoms will *always* have different s-expressions.
+// The converse is not true: two different s-expressions might be
+// alpha-equivalent. For example,
+//    (Lambda (Variable "X") (Concept "A"))
+// and
+//    (Lambda (Variable "Y") (Concept "A"))
+// are alpha-equivalent. The problem here is that Rocks mmight be
+// holding the first satom, while the user is asking for the second,
+// and we have to find the first, whenever the user asks for the second.
+// This is handled by using the Atom hashes.  The C++ method
+// `Atom::get_hash()` will *always* return the same hash for two alpha-
+// equivalent atoms. Unfortunately, there might be hash collisions:
+// two different atoms can have the same hash. These are disambiguated
+// with the `h@` prefix, which holds a list of sids with the same hash.
+// When the user asks for an alpha-convertible atom, then, if we have
+// it, it is guaranteed to show up in this list. We just have to walk
+// the list, and find the one that is alpha-convertible. This works
+// well, because the `Atom::get_hash()` method generates relatively few
+// hash collisions; the list will almost always have only one entry in
+// it (or it will be empty, if we don't hold a convertible atom).
+// That solves the alpha-convertible lookup problem. Like dominoes,
+// however, this creates a problem with Atom deletion. This is solved
+// by pre-pending the satom string with the hash, whenever the hash is
+// being used. At this time, hashes are used only to track the alpha-
+// convertible atoms. Although every atom has a hash, we don't need it
+// for the "ordinary" case, and so don't use it.
 
 // ======================================================================
 // Some notes about threading and locking.
