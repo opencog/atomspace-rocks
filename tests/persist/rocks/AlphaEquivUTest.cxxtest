@@ -154,6 +154,7 @@ void AlphaEquivUTest::test_fetch(void)
 	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
 
 	ly = _as->fetch_atom(ly);
+	_as->barrier();
 
 	// Verify that the correct TV was fetched.
 	TruthValuePtr tvp = ly->getTruthValue();
@@ -203,6 +204,7 @@ void AlphaEquivUTest::test_remove(void)
 	// Can we still find the original?
 	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
 	lx = _as->fetch_atom(lx);
+	_as->barrier();
 
 	TruthValuePtr tvp = lx->getTruthValue();
 	printf("Got TV: %s\n", tvp->to_string().c_str());
@@ -242,6 +244,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	// What happens if we look for the original?
 	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
 	lx = _as->fetch_atom(lx);
+	_as->barrier();
 
 	TruthValuePtr tvp = lx->getTruthValue();
 	printf("Got TV: %s\n", tvp->to_string().c_str());
