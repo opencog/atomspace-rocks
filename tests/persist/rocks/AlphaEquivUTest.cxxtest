@@ -150,14 +150,18 @@ void AlphaEquivUTest::test_alpha(void)
 	TruthValuePtr tvp = ly->getTruthValue();
 	printf("Got TV: %s\n", tvp->to_string().c_str());
 
+	TSM_ASSERT("Expecting (stv 0.11 100)",
+		0.1 < tvp->get_mean() and tvp->get_mean() < 0.12 and
+		99 < tvp->get_confidence() and tvp->get_confidence() < 101);
+
 	// Verify that other values are there too.
 	ValuePtr fu = ly->getValue(an(PREDICATE, "foo"));
-	printf("Got Vaue: %s\n", fu->to_string().c_str());
+	printf("Got Value: %s\n", fu->to_string().c_str());
 
 	TSM_ASSERT("Expecting a LinkValue",
 		nameserver().isA(fu->get_type(), FLOAT_VALUE));
 
-	FloatValuePtr fvp = FloatValueCast(ly);
+	FloatValuePtr fvp = FloatValueCast(fu);
 	TSM_ASSERT_EQUALS("Expecting three floats", fvp->size(), 3);
 
 	store->unregisterWith(_as);
