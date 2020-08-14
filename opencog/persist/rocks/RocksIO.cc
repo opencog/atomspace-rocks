@@ -108,7 +108,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // prefixes. These are "prefixes" because RocksDB stores keys in
 // lexical order, so one can quickly find all keys starting with `n@`,
 // which is useful for rapid load of entire AtomSpaces. Similarly,
-// all ConceptNodes wiill have the prefix `n@(Concept` and likewise
+// all ConceptNodes will have the prefix `n@(Concept` and likewise
 // can be rapidly traversed by RocksDB.
 //
 // Value lookups (e.g. TruthValue) is also handled with this prefix
@@ -117,12 +117,12 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // next to each-other, in order, under the prefix `k@sid:`. If only
 // one value is needed, it can be found at `k@sid:key`.
 //
-// The same trick is applied for incoming-sets. So all the entire
+// The same trick is applied for incoming-sets. So, the entire
 // incoming set for an atom appears under the prefix `i@sid:` and
 // the incoming set of a given type is under `i@sid:stype`.  The
 // incoming set itself is stored as a space-separated list of sids.
-// This works, but has the minor disadvantage that this list has to
-// be edited every time an atom is added or removed.
+// This works, but has the (minor!?) disadvantage that this list has
+// to be edited every time an atom is added or removed.
 //
 // That's pretty much it ... except that there's one last little tricky
 // bit, forced on us by alpha-equivalence and alpha-conversion.
@@ -133,7 +133,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //    (Lambda (Variable "X") (Concept "A"))
 // and
 //    (Lambda (Variable "Y") (Concept "A"))
-// are alpha-equivalent. The problem here is that Rocks mmight be
+// are alpha-equivalent. The problem here is that Rocks might be
 // holding the first satom, while the user is asking for the second,
 // and we have to find the first, whenever the user asks for the second.
 // This is handled by using the Atom hashes.  The C++ method
