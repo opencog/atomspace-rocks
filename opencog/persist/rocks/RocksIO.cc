@@ -341,6 +341,16 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 /// Find the sid of Atom. Return empty string if its not there.
 std::string RocksStorage::findAtom(const Handle& h)
 {
+	// If it's alpha-convertible, maybe we already know about
+	// an alpha-equivalent form...
+	if (nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK))
+	{
+		std::string shash = "h@" + aidtostr(h->get_hash());
+		std::string sid;
+		findAlpha(h, shash, sid);
+		return sid;
+	}
+
 	std::string satom = Sexpr::encode_atom(h);
 	std::string pfx = h->is_node() ? "n@" : "l@";
 
