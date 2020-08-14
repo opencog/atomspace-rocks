@@ -85,6 +85,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // sid == aid as ASCII string.
 // kid == sid for an Atomese key (i.e. an Atom)
 // skid == sid:kid pair of id's
+// shash == 64-bit hash of the Atom (as provided by Atom::get_hash())
 
 // prefixes and associative pairs in the Rocks DB are:
 // "a@" sid . satom -- finds the satom associated with sid
@@ -92,6 +93,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "n@" satom . sid -- finds the sid associated with the Node
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
 // "i@" sid:stype . sid-list -- finds IncomingSet of sid
+// "h@" shash . sid-list -- finds all sids having a given hash
 
 // ======================================================================
 // Some notes about threading and locking.
@@ -325,6 +327,36 @@ std::string RocksStorage::findAtom(const Handle& h)
 	_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
 	return sid;
 }
+
+/// If an Atom is an ALPHA_CONVERTIBLE_LINK, then we have to look
+/// for it's hash, and figure out if we already know it in a different
+/// but alpha-equivalent form. Return the sid of that form, if found.
+Handle RocksStorage::findAlpha(const Handle& h)
+{
+	std::string shash = "h@" + aidtostr(h->get_hash());
+
+	// Get a list of all atoms with the same hash...
+	std::string alfali;
+	_rfile->Get(rocksdb::ReadOptions(), shash, &alfali);
+	if (0 == alfali.size()) return Handle::UNDEFINED;
+
+	// Loop over these atoms...
+	size_t nsk = 0;
+	size_t last = alfali.find(' ');
+	while (std::string::npos != last)
+	{
+		const std::string& sid = alfali.substr(nsk, last-nsk);
+		Handle ha = getAtom(sid);
+
+		// If content compares, then we got it.
+		if (*ha == *h) return ha;
+	}
+
+	return Handle::UNDEFINED;
+}
+
+// =========================================================
+// Remove-related stuff...
 
 void RocksStorage::removeAtom(const Handle& h, bool recursive)
 {
