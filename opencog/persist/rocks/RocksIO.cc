@@ -610,11 +610,11 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// atoms.
 	if (not is_node)
 	{
-		size_t pos = satom.find(paren, ' ');
+		size_t pos = satom.find(' ', paren);
 		if (std::string::npos != pos)
 		{
-			// style is the type of the Link.
-			const std::string& stype = satom.substr(paren+1, pos-1);
+			// stype is the string-type of the Link.
+			const std::string& stype = satom.substr(paren+1, pos-paren-1);
 
 			// Loop over the outgoing set of `satom`.
 			size_t l = pos;
