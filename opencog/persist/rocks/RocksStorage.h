@@ -69,7 +69,8 @@ class RocksStorage : public BackingStore
 		// Assorted helper functions
 		std::string findAtom(const Handle&);
 		std::string writeAtom(const Handle&);
-		void updateSidList(const std::string&, const std::string&);
+		void appendToSidList(const std::string&, const std::string&);
+		void remFromSidList(const std::string&, const std::string&);
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
 

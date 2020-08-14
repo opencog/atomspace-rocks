@@ -168,7 +168,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 		for (const Handle& ho : h->getOutgoingSet())
 		{
 			std::string ist = "i@" + writeAtom(ho) + stype;
-			updateSidList(ist, sid);
+			appendToSidList(ist, sid);
 		}
 	}
 
@@ -178,7 +178,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 
 	if (not convertible) return sid;
 
-	updateSidList(shash, sid);
+	appendToSidList(shash, sid);
 
 	return sid;
 }
@@ -219,8 +219,8 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 
 /// Append to incoming set.
 /// Add `sid` to the list of other sids stored at key `klist`.
-void RocksStorage::updateSidList(const std::string& klist,
-                                 const std::string& sid)
+void RocksStorage::appendToSidList(const std::string& klist,
+                                   const std::string& sid)
 {
 	// The-read-modify-write of the list has to be protected
 	// from other callers, as well as from the deletion code.
@@ -415,9 +415,10 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
 	std::string sid;
 	std::string satom;
+	std::string shash;
 	if (convertible)
 	{
-		std::string shash = "h@" + aidtostr(h->get_hash());
+		shash = "h@" + aidtostr(h->get_hash());
 		findAlpha(h, shash, sid);
 		if (0 == sid.size()) return;
 
@@ -440,6 +441,9 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	// removals, nor with other manipulations of the incoming
 	// set. A plain-old lock is the easiest way to get this.
 	std::lock_guard<std::mutex> lck(_mtx);
+	if (convertible)
+		remFromSidList(shash, sid);
+
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 
@@ -463,24 +467,30 @@ void RocksStorage::remIncoming(const std::string& sid,
 	// Get the incoming set. Since we have the type, we can get this
 	// directly, without needing any loops.
 	std::string ist = "i@" + osid + ":" + stype;
-	std::string inlist;
-	_rfile->Get(rocksdb::ReadOptions(), ist, &inlist);
+	remFromSidList(ist, sid);
+}
+
+void RocksStorage::remFromSidList(const std::string& klist,
+                                  const std::string& sid)
+{
+	std::string sidlist;
+	_rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
 
 	// Some consistency checks ...
-	if (0 == inlist.size())
+	if (0 == sidlist.size())
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	size_t pos = inlist.find(sid);
+	size_t pos = sidlist.find(sid);
 	if (std::string::npos == pos)
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	// That's it. Now edit the inlist string, remove the sid
-	// from it, and store it as the new inlist. Unless its empty...
-	inlist.replace(pos, sid.size() + 1, "");
-	if (0 == inlist.size())
-		_rfile->Delete(rocksdb::WriteOptions(), ist);
+	// That's it. Now edit the sidlist string, remove the sid
+	// from it, and store it as the new sidlist. Unless its empty...
+	sidlist.replace(pos, sid.size() + 1, "");
+	if (0 == sidlist.size())
+		_rfile->Delete(rocksdb::WriteOptions(), klist);
 	else
-		_rfile->Put(rocksdb::WriteOptions(), ist, inlist);
+		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 }
 
 /// Remove the given Atom from the database.
