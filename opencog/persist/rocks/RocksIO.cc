@@ -324,6 +324,19 @@ void RocksStorage::getAtom(const Handle& h)
 /// Backend callback - find the Link
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 {
+	// If it's alpha-convertible, then look for equivalents.
+	bool convertible = nameserver().isA(t, ALPHA_CONVERTIBLE_LINK);
+	if (convertible)
+	{
+		Handle h = createLink(hs, t);
+		std::string shash = "h@" + aidtostr(h->get_hash());
+		std::string sid;
+		h = findAlpha(h, shash, sid);
+		if (nullptr == h) return h;
+		getKeys(nullptr, sid, h);
+		return h;
+	}
+
 	std::string satom = "l@(" + nameserver().getTypeName(t) + " ";
 	for (const Handle& ho: hs)
 		satom += Sexpr::encode_atom(ho);
