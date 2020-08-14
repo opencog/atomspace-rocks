@@ -47,10 +47,8 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is **Version 0.8.2**.  All unit tests pass. There is one known
-maybe-issue; see https://github.com/opencog/atomspace-rocks/issues/1
-After adressing that issue, this could effectively be version 1.0;
-waiting on user feedback.
+This is **Version 0.9.0**.  All unit tests pass.  This is effectively
+version 1.0; waiting on user feedback.
 
 
 Example Usage
