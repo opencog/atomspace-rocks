@@ -410,15 +410,31 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
 
 #endif
+
 	// Are we even holding the Atom to be deleted?
-	std::string satom = Sexpr::encode_atom(h);
-	std::string pfx = h->is_node() ? "n@" : "l@";
-
+	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
 	std::string sid;
-	_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+	std::string satom;
+	if (convertible)
+	{
+		std::string shash = "h@" + aidtostr(h->get_hash());
+		findAlpha(h, shash, sid);
+		if (0 == sid.size()) return;
 
-	// We don't know this atom. Give up.
-	if (0 == sid.size()) return;
+		// Get the matching satom string.
+		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), "a@" + sid, &satom);
+		if (not s.ok())
+			throw IOException(TRACE_INFO, "Internal Error!");
+	}
+	else
+	{
+		satom = Sexpr::encode_atom(h);
+		std::string pfx = h->is_node() ? "n@" : "l@";
+
+		_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+		// We don't know this atom. Give up.
+		if (0 == sid.size()) return;
+	}
 
 	// Removal needs to be atomic, and not race with other
 	// removals, nor with other manipulations of the incoming
