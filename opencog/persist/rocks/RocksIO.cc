@@ -85,13 +85,74 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // sid == aid as ASCII string.
 // kid == sid for an Atomese key (i.e. an Atom)
 // skid == sid:kid pair of id's
+// shash == 64-bit hash of the Atom (as provided by Atom::get_hash())
 
-// prefixes and associative pairs in the Rocks DB are:
-// "a@" sid . satom -- finds the satom associated with sid
+// Prefixes and associative pairs in the Rocks DB are:
+// "a@" sid . [shash]satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
 // "i@" sid:stype . sid-list -- finds IncomingSet of sid
+// "h@" shash . sid-list -- finds all sids having a given hash
+
+// General design:
+// The basic representation for an Atom is its s-expression.
+// Because this is verbose, each s-expression is associated with a
+// unique integer, the "aid" or "atom id". Since Rocks works with
+// strings, the aid is converted to a base-62 string, the "sid".
+// Base-62 is used because its fairly compact but still leaves
+// punctuation symbols free for other uses.
+//
+// The main lookups involve converting s-expressions aka "satoms"
+// to sids, and back again. This is done with the `a@`, `n@` and `l@`
+// prefixes. These are "prefixes" because RocksDB stores keys in
+// lexical order, so one can quickly find all keys starting with `n@`,
+// which is useful for rapid load of entire AtomSpaces. Similarly,
+// all ConceptNodes wiill have the prefix `n@(Concept` and likewise
+// can be rapidly traversed by RocksDB.
+//
+// Value lookups (e.g. TruthValue) is also handled with this prefix
+// trick, so that, for example, all Values on a given Atom will be
+// next to each-other in the Rocks DB, because all of them will appear
+// next to each-other, in order, under the prefix `k@sid:`. If only
+// one value is needed, it can be found at `k@sid:key`.
+//
+// The same trick is applied for incoming-sets. So all the entire
+// incoming set for an atom appears under the prefix `i@sid:` and
+// the incoming set of a given type is under `i@sid:stype`.  The
+// incoming set itself is stored as a space-separated list of sids.
+// This works, but has the minor disadvantage that this list has to
+// be edited every time an atom is added or removed.
+//
+// That's pretty much it ... except that there's one last little tricky
+// bit, forced on us by alpha-equivalence and alpha-conversion.
+//
+// Two different atoms will *always* have different s-expressions.
+// The converse is not true: two different s-expressions might be
+// alpha-equivalent. For example,
+//    (Lambda (Variable "X") (Concept "A"))
+// and
+//    (Lambda (Variable "Y") (Concept "A"))
+// are alpha-equivalent. The problem here is that Rocks mmight be
+// holding the first satom, while the user is asking for the second,
+// and we have to find the first, whenever the user asks for the second.
+// This is handled by using the Atom hashes.  The C++ method
+// `Atom::get_hash()` will *always* return the same hash for two alpha-
+// equivalent atoms. Unfortunately, there might be hash collisions:
+// two different atoms can have the same hash. These are disambiguated
+// with the `h@` prefix, which holds a list of sids with the same hash.
+// When the user asks for an alpha-convertible atom, then, if we have
+// it, it is guaranteed to show up in this list. We just have to walk
+// the list, and find the one that is alpha-convertible. This works
+// well, because the `Atom::get_hash()` method generates relatively few
+// hash collisions; the list will almost always have only one entry in
+// it (or it will be empty, if we don't hold a convertible atom).
+// That solves the alpha-convertible lookup problem. Like dominoes,
+// however, this creates a problem with Atom deletion. This is solved
+// by pre-pending the satom string with the hash, whenever the hash is
+// being used. At this time, hashes are used only to track the alpha-
+// convertible atoms. Although every atom has a hash, we don't need it
+// for the "ordinary" case, and so don't use it.
 
 // ======================================================================
 // Some notes about threading and locking.
@@ -120,38 +181,64 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
+	// If it's alpha-convertible, then look for equivalents.
+	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
+	std::string shash;
+	std::string sid;
+	if (convertible)
+	{
+		shash = "h@" + aidtostr(h->get_hash());
+		findAlpha(h, shash, sid);
+		if (0 < sid.size()) return sid;
+	}
+
 	std::string satom = Sexpr::encode_atom(h);
 	std::string pfx = h->is_node() ? "n@" : "l@";
 
-	std::string sid;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
-	if (not s.ok())
+	if (not convertible)
 	{
-		uint64_t aid = _next_aid.fetch_add(1);
-		sid = aidtostr(aid);
-		// Update immediately, in case of a future crash or something...
-		// XXX FIXME, this is wrong, it needs to be atomic, since
-		// other threads may already have a newer aid than us!
-		// So this is racey ... Luckily, the dtor writes the final value,
-		// so if no one crashed, then, in the end, everything is OK ...
-		_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
-
-		if (h->is_link())
-		{
-			Type t = h->get_type();
-
-			// Store the outgoing set .. just in case someone asks for it.
-			for (const Handle& ho : h->getOutgoingSet())
-			{
-				std::string soid = writeAtom(ho);
-				updateInset(soid, t, sid);
-			}
-		}
-		_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
-		_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, satom);
+		_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+		if (0 < sid.size()) return sid;
 	}
 
-	// logger().debug("Store sid= >>%s<< for >>%s<<", sid.c_str(), satom.c_str());
+	uint64_t aid = _next_aid.fetch_add(1);
+	sid = aidtostr(aid);
+
+	// Update immediately, in case of a future crash or something...
+	// Notes: (1) this isn't "really" necessary, because the dtor
+	// updates this value. But we want to update anyway, just in case
+	// someone crashes before the dtor. (2) this is racey, in that
+	// other threads may already have a newer aid than us (and so
+	// we are clobbering a newer aid with an older one). But the
+	// raciness doesn't matter because (3) next time someone writes
+	// an atom, or if the dtor runs, then the correct aid will be
+	// stored. So ... if no one crashes, then everything is OK. If
+	// someone crashes, then this is racey.
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+
+	if (h->is_link())
+	{
+		Type t = h->get_type();
+		std::string stype = ":" + nameserver().getTypeName(t);
+
+		// Store the outgoing set ... just in case someone asks for it.
+		// The key is in the format `i@sid:type` and the type is used
+		// for get-incoming-by-type searches.
+		for (const Handle& ho : h->getOutgoingSet())
+		{
+			std::string ist = "i@" + writeAtom(ho) + stype;
+			appendToSidList(ist, sid);
+		}
+	}
+
+	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
+	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
+	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
+
+	if (not convertible) return sid;
+
+	appendToSidList(shash, sid);
+
 	return sid;
 }
 
@@ -189,24 +276,21 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 	storeValue("k@" + sid + ":" + kid, vp);
 }
 
-/// Add `sid` to the incoming set of `soid`.
-/// That is, `sid` is a Link that contains `soid`.
-/// The Type of `sid` should be `t` (and it should always be a Link).
-void RocksStorage::updateInset(const std::string& soid, Type t,
-                               const std::string& sid)
+/// Append to incoming set.
+/// Add `sid` to the list of other sids stored at key `klist`.
+void RocksStorage::appendToSidList(const std::string& klist,
+                                   const std::string& sid)
 {
-	std::string ist = "i@" + soid + ":" + nameserver().getTypeName(t);
-
-	// The-read-modify-write of the inset has to be protected
+	// The-read-modify-write of the list has to be protected
 	// from other callers, as well as from the deletion code.
 	std::lock_guard<std::mutex> lck(_mtx);
 
-	std::string inlist;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), ist, &inlist);
-	if (not s.ok() or std::string::npos == inlist.find(sid))
+	std::string sidlist;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
+	if (not s.ok() or std::string::npos == sidlist.find(sid))
 	{
-		inlist += sid + " ";
-		_rfile->Put(rocksdb::WriteOptions(), ist, inlist);
+		sidlist += sid + " ";
+		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 	}
 }
 
@@ -221,7 +305,7 @@ Handle RocksStorage::getAtom(const std::string& sid)
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	size_t pos = 0;
+	size_t pos = satom.find('('); // skip over hash, if present
 	return Sexpr::decode_atom(satom, pos);
 }
 
@@ -299,6 +383,19 @@ void RocksStorage::getAtom(const Handle& h)
 /// Backend callback - find the Link
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 {
+	// If it's alpha-convertible, then look for equivalents.
+	bool convertible = nameserver().isA(t, ALPHA_CONVERTIBLE_LINK);
+	if (convertible)
+	{
+		Handle h = createLink(hs, t);
+		std::string shash = "h@" + aidtostr(h->get_hash());
+		std::string sid;
+		h = findAlpha(h, shash, sid);
+		if (nullptr == h) return h;
+		getKeys(nullptr, sid, h);
+		return h;
+	}
+
 	std::string satom = "l@(" + nameserver().getTypeName(t) + " ";
 	for (const Handle& ho: hs)
 		satom += Sexpr::encode_atom(ho);
@@ -318,6 +415,16 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 /// Find the sid of Atom. Return empty string if its not there.
 std::string RocksStorage::findAtom(const Handle& h)
 {
+	// If it's alpha-convertible, maybe we already know about
+	// an alpha-equivalent form...
+	if (nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK))
+	{
+		std::string shash = "h@" + aidtostr(h->get_hash());
+		std::string sid;
+		findAlpha(h, shash, sid);
+		return sid;
+	}
+
 	std::string satom = Sexpr::encode_atom(h);
 	std::string pfx = h->is_node() ? "n@" : "l@";
 
@@ -326,6 +433,35 @@ std::string RocksStorage::findAtom(const Handle& h)
 	return sid;
 }
 
+/// If an Atom is an ALPHA_CONVERTIBLE_LINK, then we have to look
+/// for it's hash, and figure out if we already know it in a different
+/// but alpha-equivalent form. Return the sid of that form, if found.
+Handle RocksStorage::findAlpha(const Handle& h, const std::string& shash,
+                               std::string& sid)
+{
+	// Get a list of all atoms with the same hash...
+	std::string alfali;
+	_rfile->Get(rocksdb::ReadOptions(), shash, &alfali);
+	if (0 == alfali.size()) return Handle::UNDEFINED;
+
+	// Loop over these atoms...
+	size_t nsk = 0;
+	size_t last = alfali.find(' ');
+	while (std::string::npos != last)
+	{
+		const std::string& cid = alfali.substr(nsk, last-nsk);
+		Handle ha = getAtom(cid);
+
+		// If content compares, then we got it.
+		if (*ha == *h) { sid = cid; return ha; }
+	}
+
+	return Handle::UNDEFINED;
+}
+
+// =========================================================
+// Remove-related stuff...
+
 void RocksStorage::removeAtom(const Handle& h, bool recursive)
 {
 #ifdef HAVE_DELETE_RANGE
@@ -333,15 +469,32 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
 
 #endif
+
 	// Are we even holding the Atom to be deleted?
-	std::string satom = Sexpr::encode_atom(h);
-	std::string pfx = h->is_node() ? "n@" : "l@";
-
+	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
 	std::string sid;
-	_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+	std::string satom;
+	std::string shash;
+	if (convertible)
+	{
+		shash = "h@" + aidtostr(h->get_hash());
+		findAlpha(h, shash, sid);
+		if (0 == sid.size()) return;
 
-	// We don't know this atom. Give up.
-	if (0 == sid.size()) return;
+		// Get the matching satom string.
+		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), "a@" + sid, &satom);
+		if (not s.ok())
+			throw IOException(TRACE_INFO, "Internal Error!");
+	}
+	else
+	{
+		satom = Sexpr::encode_atom(h);
+		std::string pfx = h->is_node() ? "n@" : "l@";
+
+		_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+		// We don't know this atom. Give up.
+		if (0 == sid.size()) return;
+	}
 
 	// Removal needs to be atomic, and not race with other
 	// removals, nor with other manipulations of the incoming
@@ -359,35 +512,43 @@ void RocksStorage::remIncoming(const std::string& sid,
                                const std::string& osatom)
 {
 	// Oh bother. Is it a Node, or a Link?
-	const std::string& sotype = osatom.substr(1, osatom.find(' ') - 1);
+	// Skip over leading hash, if needed.
+	size_t paren = osatom.find('(');
+	const std::string& sotype = osatom.substr(paren+1, osatom.find(' ', paren) - 1);
 	Type ot = nameserver().getType(sotype);
 	std::string opf = nameserver().isNode(ot) ? "n@" : "l@";
 
 	// Get the matching osid
 	std::string osid;
-	_rfile->Get(rocksdb::ReadOptions(), opf + osatom, &osid);
+	_rfile->Get(rocksdb::ReadOptions(), opf + osatom.substr(paren), &osid);
 
 	// Get the incoming set. Since we have the type, we can get this
 	// directly, without needing any loops.
 	std::string ist = "i@" + osid + ":" + stype;
-	std::string inlist;
-	_rfile->Get(rocksdb::ReadOptions(), ist, &inlist);
+	remFromSidList(ist, sid);
+}
+
+void RocksStorage::remFromSidList(const std::string& klist,
+                                  const std::string& sid)
+{
+	std::string sidlist;
+	_rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
 
 	// Some consistency checks ...
-	if (0 == inlist.size())
+	if (0 == sidlist.size())
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	size_t pos = inlist.find(sid);
+	size_t pos = sidlist.find(sid);
 	if (std::string::npos == pos)
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	// That's it. Now edit the inlist string, remove the sid
-	// from it, and store it as the new inlist. Unless its empty...
-	inlist.replace(pos, sid.size() + 1, "");
-	if (0 == inlist.size())
-		_rfile->Delete(rocksdb::WriteOptions(), ist);
+	// That's it. Now edit the sidlist string, remove the sid
+	// from it, and store it as the new sidlist. Unless its empty...
+	sidlist.replace(pos, sid.size() + 1, "");
+	if (0 == sidlist.size())
+		_rfile->Delete(rocksdb::WriteOptions(), klist);
 	else
-		_rfile->Put(rocksdb::WriteOptions(), ist, inlist);
+		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 }
 
 /// Remove the given Atom from the database.
@@ -434,16 +595,26 @@ void RocksStorage::removeSatom(const std::string& satom,
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	}
 
+	// If the atom to be deleted has a hash, we need to remove it
+	// (the atom) from the list of other atoms having the same hash.
+	// (from the hash-bucket.)
+	size_t paren = satom.find('(');
+	if (0 < paren)
+	{
+		const std::string& shash = satom.substr(0, paren);
+		remFromSidList(shash, sid);
+	}
+
 	// If the atom to be deleted is a link, we need to loop over
 	// it's outgoing set, and patch up the incoming sets of those
 	// atoms.
 	if (not is_node)
 	{
-		size_t pos = satom.find(' ');
+		size_t pos = satom.find(' ', paren);
 		if (std::string::npos != pos)
 		{
-			// style is the type of the Link.
-			const std::string& stype = satom.substr(1, pos-1);
+			// stype is the string-type of the Link.
+			const std::string& stype = satom.substr(paren+1, pos-paren-1);
 
 			// Loop over the outgoing set of `satom`.
 			size_t l = pos;
@@ -466,7 +637,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 
 	// Delete the Atom, next.
 	std::string pfx = is_node ? "n@" : "l@";
-	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom);
+	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom.substr(paren));
 	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid);
 
 	// Delete all values hanging on the atom ...
@@ -477,6 +648,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 }
 
 // =========================================================
+// Work with the incoming set
 
 /// Load the incoming set based on the key prefix `ist`.
 void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
@@ -528,6 +700,9 @@ void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 {
 	getIncomingByType(table.getAtomSpace(), h, t);
 }
+
+// =========================================================
+// Load and store everything in bulk.
 
 /// Load all the Atoms starting with the prefix.
 /// Currently, the prfix must be "n@ " for Nodes or "l@" for Links.
