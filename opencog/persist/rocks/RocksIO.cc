@@ -150,12 +150,15 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	if (h->is_link())
 	{
 		Type t = h->get_type();
+		std::string stype = ":" + nameserver().getTypeName(t);
 
-		// Store the outgoing set .. just in case someone asks for it.
+		// Store the outgoing set ... just in case someone asks for it.
+		// The key is in the format `i@sid:type` and the type is used
+		// for get-incoming-by-type searches.
 		for (const Handle& ho : h->getOutgoingSet())
 		{
-			std::string soid = writeAtom(ho);
-			updateInset(soid, t, sid);
+			std::string ist = "i@" + writeAtom(ho) + stype;
+			updateSidList(ist, sid);
 		}
 	}
 
@@ -202,24 +205,21 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 	storeValue("k@" + sid + ":" + kid, vp);
 }
 
-/// Add `sid` to the incoming set of `soid`.
-/// That is, `sid` is a Link that contains `soid`.
-/// The Type of `sid` should be `t` (and it should always be a Link).
-void RocksStorage::updateInset(const std::string& soid, Type t,
-                               const std::string& sid)
+/// Append to incoming set.
+/// Add `sid` to the list of other sids stored at key `klist`.
+void RocksStorage::updateSidList(const std::string& klist,
+                                 const std::string& sid)
 {
-	std::string ist = "i@" + soid + ":" + nameserver().getTypeName(t);
-
-	// The-read-modify-write of the inset has to be protected
+	// The-read-modify-write of the list has to be protected
 	// from other callers, as well as from the deletion code.
 	std::lock_guard<std::mutex> lck(_mtx);
 
-	std::string inlist;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), ist, &inlist);
-	if (not s.ok() or std::string::npos == inlist.find(sid))
+	std::string sidlist;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
+	if (not s.ok() or std::string::npos == sidlist.find(sid))
 	{
-		inlist += sid + " ";
-		_rfile->Put(rocksdb::WriteOptions(), ist, inlist);
+		sidlist += sid + " ";
+		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 	}
 }
 
@@ -520,6 +520,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 }
 
 // =========================================================
+// Work with the incoming set
 
 /// Load the incoming set based on the key prefix `ist`.
 void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
@@ -571,6 +572,9 @@ void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 {
 	getIncomingByType(table.getAtomSpace(), h, t);
 }
+
+// =========================================================
+// Load and store everything in bulk.
 
 /// Load all the Atoms starting with the prefix.
 /// Currently, the prfix must be "n@ " for Nodes or "l@" for Links.
