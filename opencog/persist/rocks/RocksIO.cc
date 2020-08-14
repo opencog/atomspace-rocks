@@ -122,38 +122,49 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
+	// If it's alpha-convertible, then look for equivalents.
+	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
+	if (convertible)
+	{
+		std::string sid;
+		Handle ha = findAlpha(h, sid);
+		if (ha) return sid;
+	}
+
 	std::string satom = Sexpr::encode_atom(h);
 	std::string pfx = h->is_node() ? "n@" : "l@";
 
 	std::string sid;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
-	if (not s.ok())
+	if (s.ok()) return sid;
+
+	uint64_t aid = _next_aid.fetch_add(1);
+	sid = aidtostr(aid);
+	// Update immediately, in case of a future crash or something...
+	// XXX FIXME, this is wrong, it needs to be atomic, since
+	// other threads may already have a newer aid than us!
+	// So this is racey ... Luckily, the dtor writes the final value,
+	// so if no one crashed, then, in the end, everything is OK ...
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+
+	if (h->is_link())
 	{
-		uint64_t aid = _next_aid.fetch_add(1);
-		sid = aidtostr(aid);
-		// Update immediately, in case of a future crash or something...
-		// XXX FIXME, this is wrong, it needs to be atomic, since
-		// other threads may already have a newer aid than us!
-		// So this is racey ... Luckily, the dtor writes the final value,
-		// so if no one crashed, then, in the end, everything is OK ...
-		_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+		Type t = h->get_type();
 
-		if (h->is_link())
+		// Store the outgoing set .. just in case someone asks for it.
+		for (const Handle& ho : h->getOutgoingSet())
 		{
-			Type t = h->get_type();
-
-			// Store the outgoing set .. just in case someone asks for it.
-			for (const Handle& ho : h->getOutgoingSet())
-			{
-				std::string soid = writeAtom(ho);
-				updateInset(soid, t, sid);
-			}
+			std::string soid = writeAtom(ho);
+			updateInset(soid, t, sid);
 		}
-		_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
-		_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, satom);
 	}
 
-	// logger().debug("Store sid= >>%s<< for >>%s<<", sid.c_str(), satom.c_str());
+	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
+	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
+	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, satom);
+
+	if (not convertible) return sid;
+
 	return sid;
 }
 
@@ -331,7 +342,7 @@ std::string RocksStorage::findAtom(const Handle& h)
 /// If an Atom is an ALPHA_CONVERTIBLE_LINK, then we have to look
 /// for it's hash, and figure out if we already know it in a different
 /// but alpha-equivalent form. Return the sid of that form, if found.
-Handle RocksStorage::findAlpha(const Handle& h)
+Handle RocksStorage::findAlpha(const Handle& h, std::string& sid)
 {
 	std::string shash = "h@" + aidtostr(h->get_hash());
 
@@ -345,11 +356,11 @@ Handle RocksStorage::findAlpha(const Handle& h)
 	size_t last = alfali.find(' ');
 	while (std::string::npos != last)
 	{
-		const std::string& sid = alfali.substr(nsk, last-nsk);
-		Handle ha = getAtom(sid);
+		const std::string& cid = alfali.substr(nsk, last-nsk);
+		Handle ha = getAtom(cid);
 
 		// If content compares, then we got it.
-		if (*ha == *h) return ha;
+		if (*ha == *h) { sid = cid; return ha; }
 	}
 
 	return Handle::UNDEFINED;
