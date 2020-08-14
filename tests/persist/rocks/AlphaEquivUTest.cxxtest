@@ -59,7 +59,9 @@ class AlphaEquivUTest :  public CxxTest::TestSuite
 		void tearDown(void);
 		void kill_data(void);
 
-		void test_alpha(void);
+		void setup_data(void);
+		void test_fetch(void);
+		void test_remove(void);
 };
 
 AlphaEquivUTest:: AlphaEquivUTest(void)
@@ -108,10 +110,8 @@ void AlphaEquivUTest::kill_data(void)
 #define PREDICATE PREDICATE_NODE
 #define VARIABLE VARIABLE_NODE
 
-void AlphaEquivUTest::test_alpha(void)
+void AlphaEquivUTest::setup_data(void)
 {
-	logger().info("BEGIN TEST: %s", __FUNCTION__);
-
 	kill_data();
 
 	_as = new AtomSpace();
@@ -133,11 +133,16 @@ void AlphaEquivUTest::test_alpha(void)
 	store->unregisterWith(_as);
 	delete store;
 	delete _as;
+}
 
-	// Now query ....
+void AlphaEquivUTest::test_fetch(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	setup_data();
+
 	_as = new AtomSpace();
-
-	store = new RocksStorage(uri);
+	RocksStorage *store = new RocksStorage(uri);
 	TS_ASSERT(store->connected())
 	store->registerWith(_as);
 
@@ -167,6 +172,43 @@ void AlphaEquivUTest::test_alpha(void)
 	store->unregisterWith(_as);
 	delete store;
 	delete _as;
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+void AlphaEquivUTest::test_remove(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	setup_data();
+
+	_as = new AtomSpace();
+	RocksStorage *store = new RocksStorage(uri);
+	TS_ASSERT(store->connected())
+	store->registerWith(_as);
+
+	// Remove the alpha-equivalent lambda link.
+	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
+	_as->remove_atom(ly);
+	_as->barrier();
+
+	// Can we still find the original?
+	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
+	lx = _as->fetch_atom(lx);
+
+	TruthValuePtr tvp = lx->getTruthValue();
+	printf("Got TV: %s\n", tvp->to_string().c_str());
+
+	TSM_ASSERT("Expecting default TV", tvp == TruthValue::DEFAULT_TV());
+
+	// Verify that other values are absent
+	ValuePtr fu = ly->getValue(an(PREDICATE, "foo"));
+	TSM_ASSERT("Expecting null value", nullptr == fu);
+
+	store->unregisterWith(_as);
+	delete store;
+	delete _as;
+
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
