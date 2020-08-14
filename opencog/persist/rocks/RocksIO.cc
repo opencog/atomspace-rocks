@@ -512,13 +512,15 @@ void RocksStorage::remIncoming(const std::string& sid,
                                const std::string& osatom)
 {
 	// Oh bother. Is it a Node, or a Link?
-	const std::string& sotype = osatom.substr(1, osatom.find(' ') - 1);
+	// Skip over leading hash, if needed.
+	size_t paren = osatom.find('(');
+	const std::string& sotype = osatom.substr(paren+1, osatom.find(' ', paren) - 1);
 	Type ot = nameserver().getType(sotype);
 	std::string opf = nameserver().isNode(ot) ? "n@" : "l@";
 
 	// Get the matching osid
 	std::string osid;
-	_rfile->Get(rocksdb::ReadOptions(), opf + osatom, &osid);
+	_rfile->Get(rocksdb::ReadOptions(), opf + osatom.substr(paren), &osid);
 
 	// Get the incoming set. Since we have the type, we can get this
 	// directly, without needing any loops.
@@ -635,7 +637,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 
 	// Delete the Atom, next.
 	std::string pfx = is_node ? "n@" : "l@";
-	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom);
+	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom.substr(paren));
 	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid);
 
 	// Delete all values hanging on the atom ...
