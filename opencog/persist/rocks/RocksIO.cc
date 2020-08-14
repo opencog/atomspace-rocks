@@ -125,20 +125,22 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	// If it's alpha-convertible, then look for equivalents.
 	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
 	std::string shash;
+	std::string sid;
 	if (convertible)
 	{
 		shash = "h@" + aidtostr(h->get_hash());
-		std::string sid;
-		Handle ha = findAlpha(h, shash, sid);
-		if (ha) return sid;
+		findAlpha(h, shash, sid);
+		if (0 < sid.size()) return sid;
 	}
 
 	std::string satom = Sexpr::encode_atom(h);
 	std::string pfx = h->is_node() ? "n@" : "l@";
 
-	std::string sid;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
-	if (s.ok()) return sid;
+	if (not convertible)
+	{
+		_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
+		if (0 < sid.size()) return sid;
+	}
 
 	uint64_t aid = _next_aid.fetch_add(1);
 	sid = aidtostr(aid);
