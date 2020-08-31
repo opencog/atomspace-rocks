@@ -286,6 +286,7 @@ void FetchUTest::test_readonly(void)
 	TS_ASSERT(d == nullptr);
 	TS_ASSERT_EQUALS(3, _as->get_size());
 
+	eval->eval("(cog-rocks-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
