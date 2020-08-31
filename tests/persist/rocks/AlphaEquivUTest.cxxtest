@@ -29,9 +29,9 @@
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
@@ -91,6 +91,7 @@ void AlphaEquivUTest::tearDown(void)
 void AlphaEquivUTest::kill_data(void)
 {
 	RocksStorage *astore = new RocksStorage(uri);
+	astore->open();
 	if (!astore->connected())
 	{
 		logger().info("setUp: RocksStorage cannot connect to database");
@@ -117,9 +118,10 @@ void AlphaEquivUTest::setup_data(void)
 
 	_as = new AtomSpace();
 
-	RocksStorage *store = new RocksStorage(uri);
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
-	store->registerWith(_as);
 
 	/* Populate the Storage with stuff that we will later query. */
 	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
@@ -128,11 +130,9 @@ void AlphaEquivUTest::setup_data(void)
 		createFloatValue(std::vector<double>{1, 2, 3}));
 
 	/* Push all atoms out to the database */
-	_as->store_atomspace();
-	_as->barrier();
+	store->store_atomspace();
+	store->barrier();
 
-	store->unregisterWith(_as);
-	delete store;
 	delete _as;
 }
 
@@ -146,15 +146,16 @@ void AlphaEquivUTest::test_fetch(void)
 	setup_data();
 
 	_as = new AtomSpace();
-	RocksStorage *store = new RocksStorage(uri);
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
-	store->registerWith(_as);
 
 	// Fetch an alpha-equivalent lambda link.
 	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
 
-	ly = _as->fetch_atom(ly);
-	_as->barrier();
+	ly = store->fetch_atom(ly);
+	store->barrier();
 
 	// Verify that the correct TV was fetched.
 	TruthValuePtr tvp = ly->getTruthValue();
@@ -174,8 +175,6 @@ void AlphaEquivUTest::test_fetch(void)
 	FloatValuePtr fvp = FloatValueCast(fu);
 	TSM_ASSERT_EQUALS("Expecting three floats", fvp->size(), 3);
 
-	store->unregisterWith(_as);
-	delete store;
 	delete _as;
 
 	logger().info("END TEST: %s", __FUNCTION__);
@@ -191,20 +190,21 @@ void AlphaEquivUTest::test_remove(void)
 	setup_data();
 
 	_as = new AtomSpace();
-	RocksStorage *store = new RocksStorage(uri);
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
-	store->registerWith(_as);
 
 	// Remove the alpha-equivalent lambda link.
 	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
-	_as->remove_atom(ly);
-	_as->barrier();
+	store->remove_atom(ly);
+	store->barrier();
 	ly = Handle::UNDEFINED;
 
 	// Can we still find the original?
 	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
-	lx = _as->fetch_atom(lx);
-	_as->barrier();
+	lx = store->fetch_atom(lx);
+	store->barrier();
 
 	TruthValuePtr tvp = lx->getTruthValue();
 	printf("Got TV: %s\n", tvp->to_string().c_str());
@@ -215,8 +215,6 @@ void AlphaEquivUTest::test_remove(void)
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
 	TSM_ASSERT("Expecting null value", nullptr == fu);
 
-	store->unregisterWith(_as);
-	delete store;
 	delete _as;
 
 	logger().info("END TEST: %s", __FUNCTION__);
@@ -232,19 +230,20 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	setup_data();
 
 	_as = new AtomSpace();
-	RocksStorage *store = new RocksStorage(uri);
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
-	store->registerWith(_as);
 
 	// Recursive remove Concept "A".
 	Handle ca = an(CONCEPT, "A");
-	_as->remove_atom(ca, true);
-	_as->barrier();
+	store->remove_atom(ca, true);
+	store->barrier();
 
 	// What happens if we look for the original?
 	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
-	lx = _as->fetch_atom(lx);
-	_as->barrier();
+	lx = store->fetch_atom(lx);
+	store->barrier();
 
 	TruthValuePtr tvp = lx->getTruthValue();
 	printf("Got TV: %s\n", tvp->to_string().c_str());
@@ -255,8 +254,6 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
 	TSM_ASSERT("Expecting null value", nullptr == fu);
 
-	store->unregisterWith(_as);
-	delete store;
 	delete _as;
 
 	logger().info("END TEST: %s", __FUNCTION__);

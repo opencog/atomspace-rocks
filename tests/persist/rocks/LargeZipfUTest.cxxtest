@@ -59,7 +59,7 @@ class LargeZipfUTest :  public CxxTest::TestSuite
 		void kill_data(void);
 
 		int filler_up(AtomSpace *);
-		void fetch_space(AtomSpace *);
+		void fetch_space(AtomSpace *, StorageNodePtr);
 		void check_space(AtomSpace *, std::string dbgmsg);
 		void check_empty(AtomSpace *);
 		void atomCompare(AtomPtr, AtomPtr, std::string);
@@ -100,6 +100,7 @@ void LargeZipfUTest::tearDown(void)
 void LargeZipfUTest::kill_data(void)
 {
 	RocksStorage *astore = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
+	astore->open();
 	if (!astore->connected())
 	{
 		logger().info("setUp: RocksStorage cannot connect to database");
@@ -163,20 +164,20 @@ void LargeZipfUTest::atomCompare(AtomPtr a, AtomPtr b, std::string where)
 
 // ============================================================
 
-void LargeZipfUTest::fetch_space(AtomSpace *space)
+void LargeZipfUTest::fetch_space(AtomSpace *space, StorageNodePtr store)
 {
 	for (int w=0; w<NWORDS; w++)
 	{
 		std::string nam = hword[w]->get_name();
 		Handle h = space->add_node(hword[w]->get_type(), std::move(nam));
-		space->fetch_atom(h); // get the TV
+		store->fetch_atom(h); // get the TV
 	}
 
 	for (int p=0; p<npairs; p++)
 	{
 		HandleSeq hs = hpair[p]->getOutgoingSet();
 		Handle h = space->add_link(hpair[p]->get_type(), std::move(hs));
-		space->fetch_atom(h); // get the TV
+		store->fetch_atom(h); // get the TV
 	}
 }
 
@@ -276,9 +277,10 @@ void LargeZipfUTest::test_atomspace(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	RocksStorage *store = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
-	store->registerWith(_as);
 
 	/* Create a large number of atoms */
 	filler_up(_as);
@@ -287,28 +289,40 @@ void LargeZipfUTest::test_atomspace(void)
 	check_space(_as, "verify-add");
 
 	/* Push all atoms out to the SQL DB */
-	_as->store_atomspace();
+	store->store_atomspace();
 
 	/* Extract atoms from the AtomSpace. This does not delete them from
 	 * the SQL storage, though; to do that, they must be deleted, not
 	 * extracted.
 	 */
-	_as->barrier();
+	store->barrier();
 	_as->clear();
 	TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
+	/* The clear above nuked the storage, so restart */
+	hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+	store = StorageNodeCast(hsn);
+	store->open();
+	TS_ASSERT(store->connected())
+
 	/* Verify that the atoms can still be fetched from storage. */
-	fetch_space(_as);
-	_as->barrier();
+	fetch_space(_as, store);
+	store->barrier();
 	check_space(_as, "verify-fetch");
 
 	/* Do it again, for good luck.  */
 	_as->clear();
 	TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
+	/* The clear above nuked the storage, so restart */
+	hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+	store = StorageNodeCast(hsn);
+	store->open();
+	TS_ASSERT(store->connected())
+
 	/* Verify that the atoms can still be fetched from storage. */
-	fetch_space(_as);
-	_as->barrier();
+	fetch_space(_as, store);
+	store->barrier();
 	check_space(_as, "ver-again");
 
 	/* Kill data for good */
@@ -318,7 +332,6 @@ void LargeZipfUTest::test_atomspace(void)
 	/* Verify that the atoms are no longer being found. */
 	check_empty(_as);
 
-	delete store;
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 

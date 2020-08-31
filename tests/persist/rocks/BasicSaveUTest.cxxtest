@@ -163,6 +163,7 @@ static void atomCompare(AtomPtr a, AtomPtr b, const char* where)
 void BasicSaveUTest::single_atom_save_restore(std::string id)
 {
     RocksStorage *store = new RocksStorage(uri);
+    store->open();
     if (!store->connected())
     {
         logger().debug("single_atom_save_restore: cannot connect to storage");
@@ -313,6 +314,7 @@ void BasicSaveUTest::test_fresh_atom(void)
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
     RocksStorage *store = new RocksStorage(uri);
+    store->open();
     if (!store->connected())
     {
         logger().debug("single_atom_save_restore: cannot connect to db");
@@ -357,6 +359,7 @@ void BasicSaveUTest::test_table()
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
     RocksStorage *store = new RocksStorage(uri);
+    store->open();
     if (!store->connected())
     {
         logger().debug("test_table: cannot connect to db");
@@ -365,7 +368,6 @@ void BasicSaveUTest::test_table()
 
     AtomSpace *as1 = new AtomSpace();
     AtomTable *table1 = &as1->get_atomtable();
-    store->registerWith(as1);
 
     int idx = 0;
     add_to_table(idx++, table1, "AA-aa-wow ");
@@ -390,11 +392,11 @@ void BasicSaveUTest::test_table()
 
     // Reopen connection, and load the atom table.
     store = new RocksStorage(uri);
+    store->open();
     TSM_ASSERT("Not connected to database", store->connected());
 
     AtomSpace *as2 = new AtomSpace();
     AtomTable *table2 = &as2->get_atomtable();
-    store->registerWith(as2);
 
     store->loadAtomSpace(*table2);
     store->barrier();
