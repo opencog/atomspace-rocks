@@ -26,7 +26,8 @@
 #include <libguile.h>
 
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/persist/api/BackingStore.h>
+#include <opencog/persist/api/PersistSCM.h>
+#include <opencog/persist/api/StorageNode.h>
 #include <opencog/guile/SchemePrimitive.h>
 
 #include "RocksStorage.h"
@@ -40,7 +41,6 @@ using namespace opencog;
 RocksPersistSCM::RocksPersistSCM(AtomSpace *as)
 {
     _as = as;
-    _backing = nullptr;
 
     static bool is_init = false;
     if (is_init) return;
@@ -71,12 +71,12 @@ void RocksPersistSCM::init(void)
 
 RocksPersistSCM::~RocksPersistSCM()
 {
-    if (_backing) delete _backing;
+    _storage = nullptr;
 }
 
 void RocksPersistSCM::do_open(const std::string& uri)
 {
-    if (_backing)
+    if (_storage)
         throw RuntimeException(TRACE_INFO,
              "cog-rocks-open: Error: Already connected to a database!");
 
@@ -88,58 +88,62 @@ void RocksPersistSCM::do_open(const std::string& uri)
         throw RuntimeException(TRACE_INFO,
              "cog-rocks-open: Error: Can't find the atomspace!");
 
-    // Use the RocksDB driver.
-    RocksStorage *store = new RocksStorage(uri);
-    if (!store)
+    // Adding the postgres node to the atomspace will fail on read-only
+    // atomspaces.
+    if (_as->get_read_only())
         throw RuntimeException(TRACE_INFO,
-            "cog-rocks-open: Error: Unable to open the database");
+             "cog-rocks-open: Error: AtomSpace is read-only!");
 
-    if (!store->connected())
+    // Use the RocksDB driver.
+    Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+    _storage = RocksStorageNodeCast(hsn);
+    _storage->open();
+
+    if (!_storage->connected())
     {
-        delete store;
+        _as->extract_atom(hsn);
+        _storage = nullptr;
         throw RuntimeException(TRACE_INFO,
             "cog-rocks-open: Error: Unable to connect to the database");
     }
 
-    _backing = store;
+    PersistSCM::set_connection(_storage);
 }
 
 void RocksPersistSCM::do_close(void)
 {
-    if (nullptr == _backing)
+    if (nullptr == _storage)
         throw RuntimeException(TRACE_INFO,
              "cog-rocks-close: Error: AtomSpace not connected to database!");
-
-    RocksStorage *backing = _backing;
-    _backing = nullptr;
 
     // The destructor might run for a while before its done; it will
     // be emptying the pending store queues, which might take a while.
     // So unhook the atomspace first -- this will prevent new writes
     // from accidentally being queued. (It will also drain the queues)
     // Only then actually call the dtor.
-    delete backing;
+    _as->extract_atom(HandleCast(_storage));
+    _storage = nullptr;
 }
 
 void RocksPersistSCM::do_stats(void)
 {
-    if (nullptr == _backing) {
+    if (nullptr == _storage) {
         printf("cog-rocks-stats: AtomSpace not connected to database!\n");
         return;
     }
 
     printf("cog-rocks-stats: Atomspace holds %lu atoms\n", _as->get_size());
-    _backing->print_stats();
+    _storage->print_stats();
 }
 
 void RocksPersistSCM::do_clear_stats(void)
 {
-    if (nullptr == _backing) {
+    if (nullptr == _storage) {
         printf("cog-rocks-stats: AtomSpace not connected to database!\n");
         return;
     }
 
-    _backing->clear_stats();
+    _storage->clear_stats();
 }
 
 void opencog_persist_rocks_init(void)

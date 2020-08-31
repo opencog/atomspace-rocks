@@ -43,7 +43,7 @@ private:
 	static void init_in_module(void*);
 	void init(void);
 
-	RocksStorage *_backing;
+	RocksStorageNodePtr _storage;
 	AtomSpace *_as;
 
 public:
