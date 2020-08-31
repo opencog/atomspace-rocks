@@ -421,9 +421,9 @@ void DeleteUTest::test_remove(void)
     /* Push all atoms out to storage */
     store->store_atomspace();
 
-    printf("Initial Atomspace size=%lu expect=%d\n", _as->get_size(), 7*idx);
+    printf("Initial Atomspace size=%lu expect=%d\n", _as->get_size(), 7*idx+1);
     TSM_ASSERT("Initial unexpected atomspace size",
-          ((unsigned)(7*idx)) == _as->get_size());
+          ((unsigned)(7*idx+1)) == _as->get_size());
     /* Delete some atoms with non-empty incoming sets.
      * This should result in thier being removed from the atomspace,
      * but NOT fom the backend!
@@ -433,8 +433,8 @@ void DeleteUTest::test_remove(void)
     for (i=0; i<idx; i++)
         extract_links(i, _as);
 
-    printf("Atomspace size=%lu expect=%d\n", _as->get_size(), 4*idx);
-    TSM_ASSERT("Post-extract unexpected atomspace size", ((unsigned)(4*idx)) == _as->get_size());
+    printf("Atomspace size=%lu expect=%d\n", _as->get_size(), 4*idx+1);
+    TSM_ASSERT("Post-extract unexpected atomspace size", ((unsigned)(4*idx+1)) == _as->get_size());
 
     /* Verify that the atoms can still be fetched from storage. */
     for (i=0; i<idx; i++) {
@@ -446,9 +446,9 @@ void DeleteUTest::test_remove(void)
     for (i=0; i<idx; i++)
         delete_links(i, store);
 
-    printf("Post-remove size=%lu expect=%d\n", _as->get_size(), 4*idx+1);
+    printf("Post-remove size=%lu expect=%d\n", _as->get_size(), 4*idx+2);
     TSM_ASSERT("Post-remove unexpected atomspace size",
-        ((unsigned)(4*idx+1)) == _as->get_size());
+        ((unsigned)(4*idx+2)) == _as->get_size());
 
     /* Verify that the atoms are really gone from storage. */
     for (i=0; i<idx; i++) {
@@ -456,9 +456,9 @@ void DeleteUTest::test_remove(void)
         check_remove(i, _as, "verify-gone");
     }
 
-    printf("Post-referesh size=%lu expect=%d\n", _as->get_size(), 7*idx+1);
+    printf("Post-referesh size=%lu expect=%d\n", _as->get_size(), 7*idx+2);
     TSM_ASSERT("Post-refetch unexpected atomspace size",
-        ((unsigned)(7*idx+1)) == _as->get_size());
+        ((unsigned)(7*idx+2)) == _as->get_size());
 
     /* Kill data for good */
     _as->clear();
@@ -540,9 +540,9 @@ void DeleteUTest::test_recurse(void)
     }
 
     printf("Post-refetch size=%lu expect=%d\n",
-         _as->get_size(), 7*idx+1);
+         _as->get_size(), 7*idx+2);
     TSM_ASSERT("Unexpected atomspace size",
-         ((unsigned) 7*idx+1) == _as->get_size());
+         ((unsigned) 7*idx+2) == _as->get_size());
 
     /* Check that the removed atoms really got zapped. */
     for (i=0; i<zap; i++) {
