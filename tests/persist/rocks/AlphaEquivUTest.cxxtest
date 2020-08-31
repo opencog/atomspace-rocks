@@ -148,6 +148,7 @@ void AlphaEquivUTest::test_fetch(void)
 	_as = new AtomSpace();
 	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
 
 	// Fetch an alpha-equivalent lambda link.
@@ -191,6 +192,7 @@ void AlphaEquivUTest::test_remove(void)
 	_as = new AtomSpace();
 	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
 
 	// Remove the alpha-equivalent lambda link.
@@ -230,6 +232,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	_as = new AtomSpace();
 	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
 	TS_ASSERT(store->connected())
 
 	// Recursive remove Concept "A".

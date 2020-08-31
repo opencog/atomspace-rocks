@@ -90,6 +90,7 @@ void QueryPersistUTest::tearDown(void)
 void QueryPersistUTest::kill_data(void)
 {
 	RocksStorage *astore = new RocksStorage(uri);
+	astore->open();
 	if (!astore->connected())
 	{
 		logger().info("setUp: RocksStorage cannot connect to database");

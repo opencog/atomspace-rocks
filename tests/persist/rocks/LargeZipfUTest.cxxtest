@@ -100,6 +100,7 @@ void LargeZipfUTest::tearDown(void)
 void LargeZipfUTest::kill_data(void)
 {
 	RocksStorage *astore = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
+	astore->open();
 	if (!astore->connected())
 	{
 		logger().info("setUp: RocksStorage cannot connect to database");
