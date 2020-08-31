@@ -123,6 +123,7 @@ void RocksPersistSCM::do_close(void)
     // Only then actually call the dtor.
     _storage->close();
     _as->extract_atom(HandleCast(_storage));
+    PersistSCM::set_connection(nullptr);
     _storage = nullptr;
 }
 

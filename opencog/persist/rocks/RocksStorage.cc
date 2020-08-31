@@ -113,6 +113,8 @@ RocksStorage::~RocksStorage()
 
 void RocksStorage::close()
 {
+	if (nullptr == _rfile) return;
+
 	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
 	std::string sid = aidtostr(_next_aid.load());
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
