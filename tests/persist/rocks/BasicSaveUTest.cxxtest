@@ -162,8 +162,7 @@ static void atomCompare(AtomPtr a, AtomPtr b, const char* where)
  */
 void BasicSaveUTest::single_atom_save_restore(std::string id)
 {
-    Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
-    StorageNodePtr store = StorageNodeCast(hsn);
+    RocksStorage *store = new RocksStorage(uri);
     store->open();
     if (!store->connected())
     {
@@ -182,14 +181,14 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     TSM_ASSERT("Bad Handle", nullptr != h);
 
     // Store the atom ...
-    store->store_atom(h);
+    store->storeAtom(h, true);
     store->barrier();
     printf("Done storing single node\n");
 
     // Fetch it back ...
     std::string nam = id + "someNode";
     Handle b = createNode(SCHEMA_NODE, nam);
-    store->fetch_atom(b);
+    store->getAtom(b);
     printf("Done fetching single node\n");
 
     // Are they equal ??
@@ -198,23 +197,24 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     // Create a second atom, connect it to the first
     // with a link. Save it, fetch it ... are they equal?
     AtomPtr a2(createNode(SCHEMA_NODE, id + "otherNode"));
-    store->store_atom(a2->get_handle());
+    store->storeAtom(a2->get_handle(), true);
 
     HandleSeq hvec;
     hvec.push_back(a->get_handle());
     hvec.push_back(a2->get_handle());
 
     Handle l(createLink(hvec, LIST_LINK));
-    store->store_atom(l->get_handle());
+    store->storeAtom(l->get_handle(), true);
     store->barrier();
     printf("Done storing single link\n");
 
     Handle hl(createLink(LIST_LINK, a->get_handle(), a2->get_handle()));
-    store->fetch_atom(hl);
+    store->getAtom(hl);
     atomCompare(l, hl, "Single link save-restore");
     printf("Done fetching single link\n");
 
-    store->erase();
+    store->kill_data();
+    delete store;
 }
 
 // ============================================================
@@ -313,8 +313,7 @@ void BasicSaveUTest::test_fresh_atom(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
-    StorageNodePtr store = StorageNodeCast(hsn);
+    RocksStorage *store = new RocksStorage(uri);
     store->open();
     if (!store->connected())
     {
@@ -328,28 +327,29 @@ void BasicSaveUTest::test_fresh_atom(void)
     // Store a ListLink with stuff in it.
     Handle lf(createLink(LIST_LINK, ha, hb));
     lf->setTruthValue(SimpleTruthValue::createTV(0.55, 0.6));
-    store->store_atom(lf);
+    store->storeAtom(lf, true);
 
     // Store an empty ListLink.
     Handle le(createLink(HandleSeq(), LIST_LINK));
     le->setTruthValue(SimpleTruthValue::createTV(0.1, 0.9));
-    store->store_atom(le);
+    store->storeAtom(le, true);
     store->barrier();
 
     // Now get them back.  Get empty after full.
     Handle hf(createLink(LIST_LINK, ha, hb));
-    store->fetch_atom(hf);
+    store->getAtom(hf);
     atomCompare(lf, hf, "Fully Fresh");
 
     Handle he(createLink(LIST_LINK));
-    store->fetch_atom(he);
+    store->getAtom(he);
 
     printf("Expecting %s\n", le->to_string().c_str());
 
     if (he) printf("Got %s\n", he->to_string().c_str());
     atomCompare(le, he, "Empty Fresh");
 
-    store->erase();
+    store->kill_data();
+    delete store;
 
     logger().debug("END TEST: %s", __FUNCTION__);
 }
@@ -358,17 +358,17 @@ void BasicSaveUTest::test_table()
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    AtomSpace *as1 = new AtomSpace();
-    Handle hsn = as1->add_node(ROCKS_STORAGE_NODE, std::string(uri));
-    StorageNodePtr store = StorageNodeCast(hsn);
-
+    RocksStorage *store = new RocksStorage(uri);
+    store->open();
     if (!store->connected())
     {
         logger().debug("test_table: cannot connect to db");
         return;
     }
 
+    AtomSpace *as1 = new AtomSpace();
     AtomTable *table1 = &as1->get_atomtable();
+
     int idx = 0;
     add_to_table(idx++, table1, "AA-aa-wow ");
     add_to_table(idx++, table1, "BB-bb-wow ");
@@ -376,7 +376,7 @@ void BasicSaveUTest::test_table()
     add_to_table(idx++, table1, "DD-dd-wow ");
     add_to_table(idx++, table1, "EE-ee-wow ");
 
-    store->store_atomspace();
+    store->storeAtomSpace(*table1);
     size_t num_stored = table1->getSize();
     // table1->print();
 #ifdef DOPRT
@@ -386,20 +386,20 @@ void BasicSaveUTest::test_table()
         printf("Store table has %s\n", h->to_string().c_str());
     }
 #endif
+    delete store;
     delete as1;
     printf("Done storing table; size=%lu\n", num_stored);
 
     // Reopen connection, and load the atom table.
-    AtomSpace *as2 = new AtomSpace();
-    hsn = as2->add_node(ROCKS_STORAGE_NODE, std::string(uri));
-    store = StorageNodeCast(hsn);
+    store = new RocksStorage(uri);
     store->open();
     TSM_ASSERT("Not connected to database", store->connected());
 
-    store->load_atomspace();
-    store->barrier();
-
+    AtomSpace *as2 = new AtomSpace();
     AtomTable *table2 = &as2->get_atomtable();
+
+    store->loadAtomSpace(*table2);
+    store->barrier();
     // table2->print();
     size_t num_fetched = table2->getSize();
     printf("test_table: Done loading table; fetched %lu, expected %lu\n",
@@ -414,7 +414,8 @@ void BasicSaveUTest::test_table()
     check_table(idx++, table2, "ddd ");
     check_table(idx++, table2, "eee ");
 
-    store->erase();
+    store->kill_data();
+    delete store;
     delete as2;
 
     logger().debug("END TEST: %s", __FUNCTION__);
