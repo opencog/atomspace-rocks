@@ -96,7 +96,7 @@ class RocksStorage : public StorageNode
 		virtual ~RocksStorage();
 
 		void open(void);
-		void close(void) { barrier(); /* FIXME we should do more */ }
+		void close(void);
 		bool connected(void); // connection to DB is alive
 
 		void create(void) {}

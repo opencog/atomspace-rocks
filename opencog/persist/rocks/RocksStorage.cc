@@ -108,10 +108,17 @@ RocksStorage::RocksStorage(std::string uri) :
 
 RocksStorage::~RocksStorage()
 {
+	close();
+}
+
+void RocksStorage::close()
+{
 	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
 	std::string sid = aidtostr(_next_aid.load());
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 	delete _rfile;
+	_rfile = nullptr;
+	_next_aid = 0;
 }
 
 bool RocksStorage::connected(void)
