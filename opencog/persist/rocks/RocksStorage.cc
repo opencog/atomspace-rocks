@@ -45,15 +45,11 @@ static const char* aid_key = "*-NextUnusedAID-*";
 
 void RocksStorage::init(const char * uri)
 {
-#define URIX_LEN (sizeof("rocks://") - 1)  // Should be 8
-	if (strncmp(uri, "rocks://", URIX_LEN))
-		throw IOException(TRACE_INFO, "Unknown URI '%s'\n", uri);
-
 	_uri = uri;
 
+#define URIX_LEN (sizeof("rocks://") - 1)  // Should be 8
 	// We expect the URI to be for the form (note: three slashes)
 	//    rocks:///path/to/file
-
 	std::string file(uri + URIX_LEN);
 
 	rocksdb::Options options;
@@ -95,11 +91,19 @@ printf("Rocks: initial aid=%lu\n", _next_aid.load());
 	tv_pred_sid = ":" + writeAtom(h);
 }
 
+void RocksStorage::open()
+{
+	init(_name.c_str());
+}
+
 RocksStorage::RocksStorage(std::string uri) :
+	StorageNode(ROCKS_STORAGE_NODE, std::move(uri)),
 	_rfile(nullptr),
 	_next_aid(0)
 {
-	init(uri.c_str());
+	const char *yuri = _name.c_str();
+	if (strncmp(yuri, "rocks://", URIX_LEN))
+		throw IOException(TRACE_INFO, "Unknown URI '%s'\n", yuri);
 }
 
 RocksStorage::~RocksStorage()
@@ -137,5 +141,7 @@ void RocksStorage::print_stats(void)
 	printf("Database contents:\n");
 	print_all();
 }
+
+DEFINE_NODE_FACTORY(RocksStorageNode, ROCKS_STORAGE_NODE)
 
 /* ============================= END OF FILE ================= */

@@ -10,7 +10,7 @@
  *
  * LICENSE:
  * SPDX-License-Identifier: AGPL-3.0-or-later
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
@@ -35,7 +35,7 @@
 #include "rocksdb/db.h"
 
 #include <opencog/atomspace/AtomTable.h>
-#include <opencog/persist/api/BackingStore.h>
+#include <opencog/persist/api/StorageNode.h>
 
 namespace opencog
 {
@@ -45,7 +45,7 @@ namespace opencog
 
 class RocksSatisfyingSet;
 
-class RocksStorage : public BackingStore
+class RocksStorage : public StorageNode
 {
 	friend class RocksImplicator;
 	friend class RocksSatisfyingSet;
@@ -94,7 +94,14 @@ class RocksStorage : public BackingStore
 		RocksStorage(const RocksStorage&) = delete; // disable copying
 		RocksStorage& operator=(const RocksStorage&) = delete; // disable assignment
 		virtual ~RocksStorage();
+
+		void open(void);
+		void close(void) { barrier(); /* FIXME we should do more */ }
 		bool connected(void); // connection to DB is alive
+
+		void create(void) {}
+		void destroy(void) { kill_data(); /* TODO also delete the db */ }
+		void erase(void) { kill_data(); }
 
 		void kill_data(void); // destroy DB contents
 
@@ -116,6 +123,24 @@ class RocksStorage : public BackingStore
 		void print_stats(void);
 		void clear_stats(void); // reset stats counters.
 };
+
+class RocksStorageNode : public RocksStorage
+{
+	public:
+		RocksStorageNode(Type t, const std::string&& uri) :
+			RocksStorage(std::move(uri))
+		{}
+		RocksStorageNode(const std::string&& uri) :
+			RocksStorage(std::move(uri))
+		{}
+		static Handle factory(const Handle&);
+};
+
+typedef std::shared_ptr<RocksStorageNode> RocksStorageNodePtr;
+static inline RocksStorageNodePtr RocksStorageNodeCast(const Handle& h)
+	{ return std::dynamic_pointer_cast<RocksStorageNode>(h); }
+
+#define createRocksStorageNode std::make_shared<RocksStorageNode>
 
 /** @}*/
 } // namespace opencog
