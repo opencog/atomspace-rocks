@@ -344,7 +344,7 @@ void ValueSaveUTest::test_load_by_type()
 	// and PredicateNode "some pred key" -- the two preds show up
 	// when the attached values are fetched.
 	printf ("fetched %lu atoms\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 6);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 7);
 
 	Handle gkey = as->add_node(PREDICATE_NODE, "some pred key");
 	Handle gaf = as->add_node(CONCEPT_NODE, "float node");
@@ -505,7 +505,7 @@ void ValueSaveUTest::test_link_by_type()
 	store->fetch_all_atoms_of_type(LIST_LINK);
 	store->barrier();
 	printf ("fetched %lu atoms\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 14);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 15);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");
@@ -718,7 +718,7 @@ void ValueSaveUTest::test_incoming()
 	store->fetch_incoming_set(gav, false);
 	store->barrier();
 	printf ("fetched %lu atoms\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 14);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 15);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");
