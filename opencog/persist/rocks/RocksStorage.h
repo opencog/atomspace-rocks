@@ -35,7 +35,7 @@
 #include "rocksdb/db.h"
 
 #include <opencog/atomspace/AtomTable.h>
-#include <opencog/atomspace/BackingStore.h>
+#include <opencog/persist/api/BackingStore.h>
 
 namespace opencog
 {
@@ -97,9 +97,6 @@ class RocksStorage : public BackingStore
 		bool connected(void); // connection to DB is alive
 
 		void kill_data(void); // destroy DB contents
-
-		void registerWith(AtomSpace*);
-		void unregisterWith(AtomSpace*);
 
 		// AtomStorage interface
 		void getAtom(const Handle&);

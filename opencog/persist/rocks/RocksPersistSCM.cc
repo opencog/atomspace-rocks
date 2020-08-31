@@ -26,7 +26,7 @@
 #include <libguile.h>
 
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/atomspace/BackingStore.h>
+#include <opencog/persist/api/BackingStore.h>
 #include <opencog/guile/SchemePrimitive.h>
 
 #include "RocksStorage.h"
@@ -88,10 +88,6 @@ void RocksPersistSCM::do_open(const std::string& uri)
         throw RuntimeException(TRACE_INFO,
              "cog-rocks-open: Error: Can't find the atomspace!");
 
-    // Allow only one connection at a time.
-    if (_as->isAttachedToBackingStore())
-        throw RuntimeException(TRACE_INFO,
-             "cog-rocks-open: Error: Atomspace connected to another storage backend!");
     // Use the RocksDB driver.
     RocksStorage *store = new RocksStorage(uri);
     if (!store)
@@ -106,7 +102,6 @@ void RocksPersistSCM::do_open(const std::string& uri)
     }
 
     _backing = store;
-    _backing->registerWith(_as);
 }
 
 void RocksPersistSCM::do_close(void)
@@ -123,7 +118,6 @@ void RocksPersistSCM::do_close(void)
     // So unhook the atomspace first -- this will prevent new writes
     // from accidentally being queued. (It will also drain the queues)
     // Only then actually call the dtor.
-    backing->unregisterWith(_as);
     delete backing;
 }
 

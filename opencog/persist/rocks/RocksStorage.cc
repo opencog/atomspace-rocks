@@ -127,18 +127,6 @@ void RocksStorage::barrier()
 
 /* ================================================================ */
 
-void RocksStorage::registerWith(AtomSpace* as)
-{
-	BackingStore::registerWith(as);
-}
-
-void RocksStorage::unregisterWith(AtomSpace* as)
-{
-	BackingStore::unregisterWith(as);
-}
-
-/* ================================================================ */
-
 void RocksStorage::clear_stats(void)
 {
 }
