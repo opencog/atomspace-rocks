@@ -93,6 +93,8 @@ printf("Rocks: initial aid=%lu\n", _next_aid.load());
 
 void RocksStorage::open()
 {
+	// User might call us twice. If so, ignore the second call.
+	if (_rfile) return;
 	init(_name.c_str());
 }
 
