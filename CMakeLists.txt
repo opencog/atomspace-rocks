@@ -88,15 +88,14 @@ ELSE (ATOMSPACE_FOUND)
 	MESSAGE(FATAL_ERROR "AtomSpace missing: it is needed!")
 ENDIF (ATOMSPACE_FOUND)
 
-# CogServer
-FIND_PACKAGE(CogServer 1.0.0 CONFIG)
-IF (COGSERVER_FOUND)
-	MESSAGE(STATUS "CogServer found.")
-	ADD_DEFINITIONS(-DHAVE_SERVER)
-	SET(HAVE_SERVER 1)
-ELSE (COGSERVER_FOUND)
-	MESSAGE(STATUS "CogServer was not found.")
-ENDIF (COGSERVER_FOUND)
+# RocksDB
+FIND_PACKAGE(RocksDB)
+IF (ROCKSDB_FOUND)
+	MESSAGE(STATUS "RocksDB found.")
+	SET(HAVE_ROCKSDB 1)
+ELSE (ROCKSDB_FOUND)
+	MESSAGE(STATUS "RocksDB was not found.")
+ENDIF (ROCKSDB_FOUND)
 
 # ----------------------------------------------------------
 # Needed for unit tests
@@ -239,7 +238,7 @@ FIND_PACKAGE(Doxygen)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("AtomSpace-Rocks" "AtomSpace RocksDB Backend" HAVE_ATOMSPACE)
+SUMMARY_ADD("AtomSpace-Rocks" "AtomSpace RocksDB Backend" HAVE_ATOMSPACE AND HAVE_ROCKSDB)
 SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
 
