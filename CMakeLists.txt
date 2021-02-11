@@ -145,6 +145,7 @@ INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogGuile.cmake")
 # ==========================================================
 # Decide what to build, based on the packages found.
 
+ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(opencog)
 
 IF (CXXTEST_FOUND)
