@@ -5,10 +5,10 @@ include(CMakePackageConfigHelpers)
 
 set(ConfigPackageLocation lib/cmake/AtomSpaceRocks)
 
-#install(EXPORT AtomSpaceRocksTargets
-#	FILE AtomSpaceRocksTargets.cmake
-#	DESTINATION ${ConfigPackageLocation}
-#)
+install(EXPORT AtomSpaceRocksTargets
+	FILE AtomSpaceRocksTargets.cmake
+	DESTINATION ${ConfigPackageLocation}
+)
 
 configure_package_config_file(AtomSpaceRocksConfig.cmake.in
 	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfig.cmake
