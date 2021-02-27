@@ -19,7 +19,6 @@
 ; Start by creating some data - an Atom with some values on it:
 (cog-set-value! (Concept "a") (Predicate "flo") (FloatValue 1 2 3))
 (cog-set-value! (Concept "a") (Predicate "blo") (FloatValue 4 5 6))
-(store-atom (Concept "a"))
 
 ; Take a look at it:
 (cog-keys->alist (Concept "a"))
