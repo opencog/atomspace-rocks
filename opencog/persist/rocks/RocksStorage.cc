@@ -10,7 +10,7 @@
  *
  * LICENSE:
  * SPDX-License-Identifier: AGPL-3.0-or-later
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License v3 as
  * published by the Free Software Foundation and including the exceptions
@@ -150,7 +150,13 @@ void RocksStorage::print_stats(void)
 {
 	printf("Connected to %s\n", _uri.c_str());
 	printf("Database contents:\n");
-	print_all();
+	printf("Next aid: %lu\n", _next_aid.load());
+	printf("Atoms/Links/Nodes a@: %lu l@: %lu n@: %lu\n",
+		count_records("a@"), count_records("l@"), count_records("n@"));
+	printf("Keys/Incoming/Hash k@: %lu i@: %lu h@: %lu\n",
+		count_records("k@"), count_records("i@"), count_records("h@"));
+
+	// print_all();
 }
 
 DEFINE_NODE_FACTORY(RocksStorageNode, ROCKS_STORAGE_NODE)

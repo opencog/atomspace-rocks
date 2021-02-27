@@ -705,7 +705,7 @@ void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 // Load and store everything in bulk.
 
 /// Load all the Atoms starting with the prefix.
-/// Currently, the prfix must be "n@ " for Nodes or "l@" for Links.
+/// Currently, the `pfx` must be "n@ " for Nodes or "l@" for Links.
 void RocksStorage::loadAtoms(AtomTable &table, const std::string& pfx)
 {
 	AtomSpace* as = table.getAtomSpace();
@@ -778,6 +778,17 @@ void RocksStorage::print_all(void)
 		printf("rkey: >>%s<<    rval: >>%s<<\n",
 			it->key().ToString().c_str(), it->value().ToString().c_str());
 	}
+}
+
+/// Return a count of the number of records with the indicated prefix
+size_t RocksStorage::count_records(const std::string& pfx)
+{
+	size_t cnt = 0;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+		cnt++;
+
+	return cnt;
 }
 
 // ======================== THE END ======================

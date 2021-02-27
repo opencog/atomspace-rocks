@@ -88,6 +88,7 @@ class RocksStorage : public StorageNode
 		void getIncomingSet(AtomSpace*, const Handle&);
 		void getIncomingByType(AtomSpace*, const Handle&, Type t);
 		void print_all(void);
+		size_t count_records(const std::string&);
 
 	public:
 		RocksStorage(std::string uri);
