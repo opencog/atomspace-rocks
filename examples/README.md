@@ -32,6 +32,12 @@ query will run correctly, in that it will behave as if the entire
 AtomSpace had been loaded into RAM. However, it does not actually
 require that everything be loaded; Atoms are fectched from the filestore
 in an as-needed basis.  This is currently a bit experimental; the API
-is subject to change without notice, and there may be bugs.
+is subject to change without notice (and there may be bugs?)
 
 * [query-storage.scm](query-storage.scm) -- Run queries out of the database.
+
+All AtomSpace backends are encapsulated with `StorageNode`s, and can
+thus be treated as ordinary Atoms. Among other things, this allows
+multiple databases to be simultaneously opened for reading and writing.
+
+* [multiple-databases.scm](multiple-databases.scm) -- Several at once.
