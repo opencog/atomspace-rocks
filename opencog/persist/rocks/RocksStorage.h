@@ -134,6 +134,14 @@ class RocksStorageNode : public RocksStorage
 		RocksStorageNode(const std::string&& uri) :
 			RocksStorage(std::move(uri))
 		{}
+
+		void setAtomSpace(AtomSpace* as)
+		{
+			// This is called with a null pointer when this
+			// Atom is extracted from the AtomSpace.
+			if (nullptr == as) close();
+			Atom::setAtomSpace(as);
+		}
 		static Handle factory(const Handle&);
 };
 
