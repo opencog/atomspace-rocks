@@ -346,7 +346,25 @@ void RocksStorage::getKeys(AtomSpace* as,
 	size_t pos = cid.size();
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
-		Handle key = getAtom(it->key().ToString().substr(pos));
+		Handle key;
+		try
+		{
+			key = getAtom(it->key().ToString().substr(pos));
+		}
+		catch (const IOException& ex)
+		{
+			// If the user deleted the key-Atom from storage, then
+			// the above getAtom() will fail. Ignore the failure,
+			// and instead just cleanup the key storage.
+			//
+			// (Design comments: its easiest to do it like this,
+			// because doing it any other way would require
+			// tracking keys. Which is hard; the atomspace was
+			// designed to NOT track keys on purpose, for efficiency.)
+			std::lock_guard<std::mutex> lck(_mtx);
+			_rfile->Delete(rocksdb::WriteOptions(), it->key());
+			continue;
+		}
 		if (as) key = as->add_atom(key);
 
 		// read-only Atomspaces will refuse insertion of keys.
