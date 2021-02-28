@@ -79,7 +79,7 @@ void RocksStorage::init(const char * uri)
 		s = _rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 	}
 	else
-		_next_aid = strtoaid(sid);
+		_next_aid = strtoaid(sid) + 1; // next unused...
 
 printf("Rocks: opened=%s\n", file.c_str());
 printf("Rocks: initial aid=%lu\n", _next_aid.load());
@@ -118,11 +118,20 @@ void RocksStorage::close()
 	if (nullptr == _rfile) return;
 
 	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
-	std::string sid = aidtostr(_next_aid.load());
-	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+	write_aid();
 	delete _rfile;
 	_rfile = nullptr;
 	_next_aid = 0;
+}
+
+void RocksStorage::write_aid(void)
+{
+	// We write the highest issued atom-id. This is the behavior that
+	// is compatible with writeAtom(), which also write the atom-id.
+	uint64_t naid = _next_aid.load();
+	naid --;
+	std::string sid = aidtostr(naid);
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 }
 
 bool RocksStorage::connected(void)

@@ -770,8 +770,7 @@ void RocksStorage::storeAtomSpace(const AtomTable &table)
 		storeAtom(h);
 
 	// Make sure that the latest atomid has been stored!
-	std::string sid = aidtostr(_next_aid.load());
-	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+	write_aid();
 }
 
 /// Kill everything in the database ... everything.
@@ -787,8 +786,9 @@ void RocksStorage::kill_data(void)
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 #endif
 
-	// Reset. Will be stored on close.
+	// Reset.
 	_next_aid = 1;
+	write_aid();
 }
 
 /// Dump database contents to stdout.
