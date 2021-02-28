@@ -147,6 +147,8 @@ bool RocksStorage::connected(void)
 ///
 void RocksStorage::barrier()
 {
+	// belt and suspenders.
+	write_aid();
 }
 
 /* ================================================================ */
