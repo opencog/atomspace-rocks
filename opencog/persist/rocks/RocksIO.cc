@@ -546,9 +546,17 @@ void RocksStorage::remIncoming(const std::string& sid,
 	remFromSidList(ist, sid);
 }
 
+/// Remove `sid` from the list of sids stored at `klist`.
+/// Write out the revised `klist` or just delete `klist` if
+/// the result is empty.
 void RocksStorage::remFromSidList(const std::string& klist,
                                   const std::string& sid)
 {
+	// Hmm. DeleteUTest sometimes triggers on this.
+	// Haven't been able to catch it yet.
+	if (0 == klist.size())
+		throw IOException(TRACE_INFO, "Internal Error!");
+
 	std::string sidlist;
 	_rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
 
