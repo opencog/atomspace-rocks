@@ -768,6 +768,10 @@ void RocksStorage::storeAtomSpace(const AtomTable &table)
 	table.getHandleSetByType(all_atoms, ATOM, true);
 	for (const Handle& h : all_atoms)
 		storeAtom(h);
+
+	// Make sure that the latest atomid has been stored!
+	std::string sid = aidtostr(_next_aid.load());
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 }
 
 /// Kill everything in the database ... everything.
