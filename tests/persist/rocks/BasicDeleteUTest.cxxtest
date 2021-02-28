@@ -139,9 +139,10 @@ void BasicDeleteUTest::test_key_deletion(void)
 	store->open();
 	TS_ASSERT(store->connected())
 
+	// We expect 5 keys, including the truth-value key.
 	printf("Loading the atomspace ...\n");
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 4);
+	TS_ASSERT_EQUALS(as->get_size(), 5);
 
 	// Verify that there are only two keys
 	ha = as->add_node(CONCEPT_NODE, "a");
@@ -149,6 +150,11 @@ void BasicDeleteUTest::test_key_deletion(void)
 	for (const Handle& k : hs)
 		printf("key=%s\n", k->get_name().c_str());
 	TS_ASSERT_EQUALS(hs.size(), 2);
+
+	// Verify that none of the keys are key-b
+	kb = as->add_node(PREDICATE_NODE, "key-b");
+	for (const Handle& k : hs)
+		TS_ASSERT(*k != *kb);
 
 	store->erase();
 	delete as;
