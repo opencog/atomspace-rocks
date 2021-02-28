@@ -1,5 +1,6 @@
 AtomSpace RocksDB Backend
 =========================
+[![CircleCI](https://circleci.com/gh/opencog/atomspace-rocks.svg?style=svg)](https://circleci.com/gh/opencog/atomspace-rocks)
 
 Save and restore AtomSpace contents to a RocksDB database. The RocksDB
 database is a single-user, local-host-only file-backed database. That
