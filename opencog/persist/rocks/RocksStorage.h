@@ -59,6 +59,7 @@ class RocksStorage : public StorageNode
 		std::atomic_uint64_t _next_aid;
 		uint64_t strtoaid(const std::string&) const;
 		std::string aidtostr(uint64_t) const;
+		void write_aid(void);
 
 		// Special case (PredicateNode "*-TruthValueKey-*")
 		std::string tv_pred_sid;
@@ -134,6 +135,14 @@ class RocksStorageNode : public RocksStorage
 		RocksStorageNode(const std::string&& uri) :
 			RocksStorage(std::move(uri))
 		{}
+
+		void setAtomSpace(AtomSpace* as)
+		{
+			// This is called with a null pointer when this
+			// Atom is extracted from the AtomSpace.
+			if (nullptr == as) close();
+			Atom::setAtomSpace(as);
+		}
 		static Handle factory(const Handle&);
 };
 

@@ -26,7 +26,7 @@
 ; Save it:
 (store-atom (Concept "a"))
 
-; Delete it from the AtomSpace:
+; Delete it from the AtomSpace (but not from RocksDB):
 (cog-extract! (Concept "a"))
 
 ; Verify the AtomSpace no longer contains `(Concept "a")`.
