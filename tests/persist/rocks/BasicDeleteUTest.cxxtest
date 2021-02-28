@@ -42,7 +42,6 @@ using namespace opencog;
 class BasicDeleteUTest :  public CxxTest::TestSuite
 {
 	private:
-		AtomSpace *as;
 		std::string uri;
 
 	public:
@@ -74,12 +73,10 @@ class BasicDeleteUTest :  public CxxTest::TestSuite
  */
 void BasicDeleteUTest::setUp(void)
 {
-	as = new AtomSpace();
 }
 
 void BasicDeleteUTest::tearDown(void)
 {
-	delete as;
 }
 
 // ============================================================
@@ -87,6 +84,9 @@ void BasicDeleteUTest::tearDown(void)
 void BasicDeleteUTest::test_key_deletion(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	// Create an Atom with some keys on it.
+	AtomSpace* as = new AtomSpace();
 
 	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
@@ -98,22 +98,60 @@ void BasicDeleteUTest::test_key_deletion(void)
 	store->erase();
 
 	Handle ha(as->add_node(CONCEPT_NODE, "a"));
-	Handle ka(as->add_node(PREDICATE_NODE, "ka"));
-	Handle kb(as->add_node(PREDICATE_NODE, "kb"));
-	Handle kc(as->add_node(PREDICATE_NODE, "kc"));
+	Handle ka(as->add_node(PREDICATE_NODE, "key-a"));
+	Handle kb(as->add_node(PREDICATE_NODE, "key-b"));
+	Handle kc(as->add_node(PREDICATE_NODE, "key-c"));
 
 	ha = as->set_value(ha, ka, createFloatValue(std::vector<double>({1, 2, 3})));
 	ha = as->set_value(ha, kb, createFloatValue(std::vector<double>({4, 5, 6})));
 	ha = as->set_value(ha, kc, createFloatValue(std::vector<double>({7, 8, 9})));
 
+	// Store all three keys.
 	store->store_atom(ha);
 	store->barrier();
 
+	// Verify the atomspace size
+	TS_ASSERT_EQUALS(as->get_size(), 5);
 
-	ha = store->fetch_atom(ha);
-	// printf("Got %s\n", he->to_string().c_str());
+	// Verify that there are three keys
+	HandleSet hs = ha->getKeys();
+	for (const Handle& k : hs)
+		printf("key=%s\n", k->get_name().c_str());
+	TS_ASSERT_EQUALS(hs.size(), 3);
+
+	// Remove one of the keys
+	store->remove_atom(kb);
+	as->extract_atom(kb);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
+
+	// We are done.
+	delete as;
+
+	// -------------------------------------------------------
+	// Start again, with a fresh connection.
+	// Verify that the delete key is really deleted.
+
+	as = new AtomSpace();
+
+	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	store = StorageNodeCast(hsn);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	printf("Loading the atomspace ...\n");
+	store->load_atomspace();
+	TS_ASSERT_EQUALS(as->get_size(), 4);
+
+	// Verify that there are only two keys
+	ha = as->add_node(CONCEPT_NODE, "a");
+	hs = ha->getKeys();
+	for (const Handle& k : hs)
+		printf("key=%s\n", k->get_name().c_str());
+	TS_ASSERT_EQUALS(hs.size(), 2);
 
 	store->erase();
+	delete as;
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
