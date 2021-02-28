@@ -30,7 +30,8 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/atom_types/atom_types.h>
-#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/LinkValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 
 #include <opencog/persist/api/StorageNode.h>
@@ -66,6 +67,7 @@ class BasicDeleteUTest :  public CxxTest::TestSuite
 		void tearDown(void);
 
 		void test_key_deletion(void);
+		void test_key_corruption(void);
 };
 
 /*
@@ -124,6 +126,11 @@ void BasicDeleteUTest::test_key_deletion(void)
 	as->extract_atom(kb);
 	TS_ASSERT_EQUALS(as->get_size(), 4);
 
+	// FYI, we should call store->close() at this point, but we
+	// don't, because ... most users forget to do this too.
+	// So this is a softball check that everything worked, even
+	// without the close().
+
 	// We are done.
 	delete as;
 
@@ -157,6 +164,131 @@ void BasicDeleteUTest::test_key_deletion(void)
 		TS_ASSERT(*k != *kb);
 
 	store->erase();
+	store->close();
+	delete as;
+
+	logger().debug("END TEST: %s", __FUNCTION__);
+}
+
+// ============================================================
+
+// This tests for a nasty off-by-one bug that showed up
+// in RocksDB. Make sure it never happens again.
+void BasicDeleteUTest::test_key_corruption(void)
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	// Create an Atom with some keys on it.
+	AtomSpace* as = new AtomSpace();
+
+	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// Clear out left-over junk, just in case.
+	store->erase();
+
+	Handle hb(as->add_node(CONCEPT_NODE, "b"));
+	Handle hx(as->add_node(CONCEPT_NODE, "x"));
+	Handle kx(as->add_node(PREDICATE_NODE, "key-x"));
+
+	hb = as->set_value(hb, kx, hx);
+
+	// Store everything.
+	store->store_atom(hb);
+	store->barrier();
+
+	// Verify the atomspace size
+	TS_ASSERT_EQUALS(as->get_size(), 4);
+
+	// Remove the value
+	store->remove_atom(hx);
+	as->extract_atom(hx);
+	TS_ASSERT_EQUALS(as->get_size(), 3);
+
+	// FYI, we should call store->close() at this point, but we
+	// don't, because ... most users forget to do this too.
+	// So this is a softball check that everything worked, even
+	// without the close().
+
+	// We are done.
+	delete as;
+
+	// -------------------------------------------------------
+	// Start again, with a fresh connection.
+	// Verify that the delete key is really deleted.
+
+	as = new AtomSpace();
+
+	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	store = StorageNodeCast(hsn);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// We expect 5 keys, including the truth-value key.
+	printf("Loading the atomspace ...\n");
+	store->load_atomspace();
+	TS_ASSERT_EQUALS(as->get_size(), 5);
+
+	hb = as->add_node(CONCEPT_NODE, "b");
+	hx = as->add_node(CONCEPT_NODE, "x");
+	Handle hy(as->add_node(CONCEPT_NODE, "y"));
+	Handle kl(as->add_node(PREDICATE_NODE, "key-li"));
+
+	hb = as->set_value(hb, kl, createLinkValue(ValueSeq({hx, hy})));
+
+	// Store the new value
+	store->store_atom(hb);
+	store->barrier();
+
+	TS_ASSERT_EQUALS(as->get_size(), 7);
+
+	// Remove the value .. again
+	store->remove_atom(hx);
+	as->extract_atom(hx);
+	TS_ASSERT_EQUALS(as->get_size(), 6);
+
+	// FYI, we should call store->close() at this point, but we
+	// don't, because ... most users forget to do this too.
+	// So this is a softball check that everything worked, even
+	// without the close().
+
+	// We are done.
+	delete as;
+
+	// -------------------------------------------------------
+	// Start again, with a fresh connection.
+	// Verify that the delete key is really deleted.
+
+	as = new AtomSpace();
+
+	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	store = StorageNodeCast(hsn);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// We expect 7 keys, including the truth-value key.
+	printf("Loading the atomspace ...\n");
+	store->load_atomspace();
+	TS_ASSERT_EQUALS(as->get_size(), 7);
+
+	// Verify that there are two keys
+	hb = as->add_node(CONCEPT_NODE, "b");
+	HandleSet hs = hb->getKeys();
+	for (const Handle& k : hs)
+	{
+		ValuePtr vp = hb->getValue(k);
+		printf("key=%s value=%s\n", k->to_short_string().c_str(),
+			vp->to_short_string().c_str());
+	}
+	TS_ASSERT_EQUALS(hs.size(), 2);
+
+	store->erase();
+	store->close();
 	delete as;
 
 	logger().debug("END TEST: %s", __FUNCTION__);
