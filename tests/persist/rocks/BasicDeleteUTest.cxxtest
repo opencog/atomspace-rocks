@@ -1,0 +1,121 @@
+/*
+ * tests/persist/rocks/BasicDeleteUTest.cxxtest
+ *
+ * Verify that deletion of keys works, even if some Atoms are still
+ * using those keys.
+ *
+ * Copyright (C) 2008, 2009, 2019, 2021 Linas Vepstas <linasvepstas@gmail.com>
+ *
+ * LICENSE:
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+#include <cstdio>
+
+#include <opencog/atoms/base/Atom.h>
+#include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/base/Node.h>
+#include <opencog/atoms/atom_types/atom_types.h>
+#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atomspace/AtomSpace.h>
+
+#include <opencog/persist/api/StorageNode.h>
+
+#include <opencog/util/Logger.h>
+
+using namespace opencog;
+
+class BasicDeleteUTest :  public CxxTest::TestSuite
+{
+	private:
+		AtomSpace *as;
+		std::string uri;
+
+	public:
+
+		BasicDeleteUTest(void)
+		{
+			logger().set_level(Logger::INFO);
+			// logger().set_level(Logger::DEBUG);
+			logger().set_print_to_stdout_flag(true);
+
+			uri = "rocks:///tmp/cog-rocks-unit-test";
+		}
+
+		~BasicDeleteUTest()
+		{
+			// erase the log file if no assertions failed
+			if (!CxxTest::TestTracker::tracker().suiteFailed())
+				std::remove(logger().get_filename().c_str());
+		}
+
+		void setUp(void);
+		void tearDown(void);
+
+		void test_key_deletion(void);
+};
+
+/*
+ * This is called once before each test, for each test (!!)
+ */
+void BasicDeleteUTest::setUp(void)
+{
+	as = new AtomSpace();
+}
+
+void BasicDeleteUTest::tearDown(void)
+{
+	delete as;
+}
+
+// ============================================================
+
+void BasicDeleteUTest::test_key_deletion(void)
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// Clear out left-over junk, just in case.
+	store->erase();
+
+	Handle ha(as->add_node(CONCEPT_NODE, "a"));
+	Handle ka(as->add_node(PREDICATE_NODE, "ka"));
+	Handle kb(as->add_node(PREDICATE_NODE, "kb"));
+	Handle kc(as->add_node(PREDICATE_NODE, "kc"));
+
+	ha = as->set_value(ha, ka, createFloatValue(std::vector<double>({1, 2, 3})));
+	ha = as->set_value(ha, kb, createFloatValue(std::vector<double>({4, 5, 6})));
+	ha = as->set_value(ha, kc, createFloatValue(std::vector<double>({7, 8, 9})));
+
+	store->store_atom(ha);
+	store->barrier();
+
+
+	ha = store->fetch_atom(ha);
+	// printf("Got %s\n", he->to_string().c_str());
+
+	store->erase();
+
+	logger().debug("END TEST: %s", __FUNCTION__);
+}
+
+/* ============================= END OF FILE ================= */
