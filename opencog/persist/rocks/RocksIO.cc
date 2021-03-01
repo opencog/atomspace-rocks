@@ -552,11 +552,6 @@ void RocksStorage::remIncoming(const std::string& sid,
 void RocksStorage::remFromSidList(const std::string& klist,
                                   const std::string& sid)
 {
-	// Hmm. DeleteUTest sometimes triggers on this.
-	// Haven't been able to catch it yet.
-	if (0 == klist.size())
-		throw IOException(TRACE_INFO, "Internal Error!");
-
 	std::string sidlist;
 	_rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
 
@@ -589,7 +584,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 {
 	// So first, iterate up to the top, chopping away the incoming set.
 	// It's stored with prefixes according to type, so this is a loop...
-	std::string ist = "i@" + sid;
+	std::string ist = "i@" + sid + ":";
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
