@@ -77,3 +77,5 @@ This is a minimalistic implementation. There has been no performance
 tuning. There's only just enough code to make everything work; that's
 it. This does nothing at all fancy/sophisticated with RocksDB, and it
 might be possible to improve performance and squeeze out some air.
+However, the code is not sloppy, so it might be hard to make it go
+faster.

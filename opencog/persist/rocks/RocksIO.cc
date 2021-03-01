@@ -546,6 +546,9 @@ void RocksStorage::remIncoming(const std::string& sid,
 	remFromSidList(ist, sid);
 }
 
+/// Remove `sid` from the list of sids stored at `klist`.
+/// Write out the revised `klist` or just delete `klist` if
+/// the result is empty.
 void RocksStorage::remFromSidList(const std::string& klist,
                                   const std::string& sid)
 {
@@ -581,7 +584,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 {
 	// So first, iterate up to the top, chopping away the incoming set.
 	// It's stored with prefixes according to type, so this is a loop...
-	std::string ist = "i@" + sid;
+	std::string ist = "i@" + sid + ":";
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
