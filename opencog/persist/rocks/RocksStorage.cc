@@ -88,7 +88,7 @@ printf("Rocks: initial aid=%lu\n", _next_aid.load());
 	// This must match what the AtomSpace is using.
 	// Tack on a leading colon, for convenience.
 	Handle h = createNode(PREDICATE_NODE, "*-TruthValueKey-*");
-	tv_pred_sid = ":" + writeAtom(h);
+	tv_pred_sid = writeAtom(h);
 }
 
 void RocksStorage::open()

@@ -251,7 +251,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
-	_rfile->Delete(rocksdb::WriteOptions(), "k@" + sid + tv_pred_sid);
+	_rfile->Delete(rocksdb::WriteOptions(), cid + tv_pred_sid);
 
 	// Store all the keys on the atom ...
 	for (const Handle& key : h->getKeys())
@@ -373,8 +373,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 		// is not in the AtomSpace. Argh! That's an old design flaw.
 		if (nullptr == key)
 		{
-			if (0 == tv_pred_sid.compare(1, tv_pred_sid.size(),
-				it->key().ToString().substr(pos)))
+			if (0 == tv_pred_sid.compare(it->key().ToString().substr(pos)))
 			{
 				size_t junk = 0;
 				ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
