@@ -637,6 +637,8 @@ void RocksStorage::removeSatom(const std::string& satom,
 			const std::string& stype = satom.substr(paren+1, pos-paren-1);
 
 			// Loop over the outgoing set of `satom`.
+			// Deduplicate the set by using std::set<>
+			std::set<std::string> soset;
 			size_t l = pos;
 			size_t e = satom.size() - 1;
 			while (l < e)
@@ -647,11 +649,14 @@ void RocksStorage::removeSatom(const std::string& satom,
 				r++;
 
 				// osatom is an atom in the outgoing set of satom
-				const std::string& osatom = satom.substr(l, r-l);
-				remIncoming(sid, stype, osatom);
+				soset.insert(satom.substr(l, r-l));
 
 				l = r;
 			}
+
+			// Perform the deduplicated delete.
+			for (const std::string& osatom : soset)
+				remIncoming(sid, stype, osatom);
 		}
 	}
 
