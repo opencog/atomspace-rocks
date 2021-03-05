@@ -67,6 +67,7 @@ class BasicDeleteUTest :  public CxxTest::TestSuite
 		void tearDown(void);
 
 		void test_duplicates(void);
+		void test_recursive(void);
 		void test_key_deletion(void);
 		void test_key_corruption(void);
 };
@@ -88,7 +89,6 @@ void BasicDeleteUTest::test_duplicates(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	// Create an Atom with some keys on it.
 	AtomSpace* as = new AtomSpace();
 
 	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
@@ -118,6 +118,92 @@ void BasicDeleteUTest::test_duplicates(void)
 	as->extract_atom(li);
 	TS_ASSERT_EQUALS(as->get_size(), 3);
 
+	store->erase();
+	store->close();
+	delete as;
+
+	logger().debug("END TEST: %s", __FUNCTION__);
+}
+
+// ============================================================
+
+void BasicDeleteUTest::test_recursive(void)
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	AtomSpace* as = new AtomSpace();
+
+	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// Clear out left-over junk, just in case.
+	store->erase();
+
+	Handle ha(as->add_node(CONCEPT_NODE, "a"));
+	Handle hb(as->add_node(CONCEPT_NODE, "b"));
+	Handle li(as->add_link(LIST_LINK, ha, hb));
+	Handle lj(as->add_link(LIST_LINK, ha, li));
+
+	// Store the link.
+	store->store_atom(lj);
+	store->barrier();
+
+	// Verify the atomspace size
+	TS_ASSERT_EQUALS(as->get_size(), 5);
+
+	// Remove (Concept "a"). Since this appears twice, recursion
+	// will hit it twice, in stange ways, and maybe crash.
+	store->remove_atom(ha);
+	as->extract_atom(ha);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
+
+	// --------------------------------------
+	// Do it again, but with a different order.
+	ha = as->add_node(CONCEPT_NODE, "a");
+	li = as->add_link(LIST_LINK, ha, hb);
+	lj = as->add_link(LIST_LINK, li, ha);
+
+	store->store_atom(lj);
+	store->barrier();
+	TS_ASSERT_EQUALS(as->get_size(), 5);
+
+	store->remove_atom(ha);
+	as->extract_atom(ha);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
+
+	// --------------------------------------
+	// Do it again, but with a complex order.
+	ha = as->add_node(CONCEPT_NODE, "a");
+	li = as->add_link(LIST_LINK, ha, hb);
+	lj = as->add_link(LIST_LINK, ha, li, ha);
+
+	store->store_atom(lj);
+	store->barrier();
+	TS_ASSERT_EQUALS(as->get_size(), 5);
+
+	store->remove_atom(ha);
+	as->extract_atom(ha);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
+
+	// --------------------------------------
+	// Do it again, but more deeply.
+	ha = as->add_node(CONCEPT_NODE, "a");
+	li = as->add_link(LIST_LINK, ha, hb);
+	lj = as->add_link(LIST_LINK, ha, li, ha);
+	Handle lk = as->add_link(LIST_LINK, ha, lj, ha);
+
+	store->store_atom(lk);
+	store->barrier();
+	TS_ASSERT_EQUALS(as->get_size(), 6);
+
+	store->remove_atom(ha);
+	as->extract_atom(ha);
+	TS_ASSERT_EQUALS(as->get_size(), 5);
+
+	// --------------------------------------
 	store->erase();
 	store->close();
 	delete as;
