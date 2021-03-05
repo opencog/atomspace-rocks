@@ -605,7 +605,10 @@ void RocksStorage::removeSatom(const std::string& satom,
 			std::string isatom;
 			_rfile->Get(rocksdb::ReadOptions(), "a@" + isid, &isatom);
 
-			removeSatom(isatom, isid, false, recursive);
+			// Its possible its been already removed. For example,
+			// delete a in (Link (Link a b) a)
+			if (0 < isatom.size())
+				removeSatom(isatom, isid, false, recursive);
 
 			nsk = last + 1;
 			last = inset.find(' ', nsk);
