@@ -154,11 +154,19 @@ void BasicDeleteUTest::test_recursive(void)
 	// Verify the atomspace size
 	TS_ASSERT_EQUALS(as->get_size(), 5);
 
+	HandleSet hset;
+	as->get_rootset_by_type(hset, ATOM, true);
+	for (const Handle& h : hset)
+		printf("Atomspace contains: %s\n", h->to_short_string().c_str());
+
 	// Remove (Concept "a"). Since this appears twice, recursion
 	// will hit it twice, in stange ways, and maybe crash.
-	store->remove_atom(ha);
+	store->remove_atom(ha, true);
 	as->extract_atom(ha);
-	TS_ASSERT_EQUALS(as->get_size(), 4);
+	TS_ASSERT_EQUALS(as->get_size(), 2);
+	as->get_rootset_by_type(hset, ATOM, true);
+	for (const Handle& h : hset)
+		printf("Post delete: %s\n", h->to_short_string().c_str());
 
 	// --------------------------------------
 	// Do it again, but with a different order.
@@ -170,9 +178,9 @@ void BasicDeleteUTest::test_recursive(void)
 	store->barrier();
 	TS_ASSERT_EQUALS(as->get_size(), 5);
 
-	store->remove_atom(ha);
+	store->remove_atom(ha, true);
 	as->extract_atom(ha);
-	TS_ASSERT_EQUALS(as->get_size(), 4);
+	TS_ASSERT_EQUALS(as->get_size(), 2);
 
 	// --------------------------------------
 	// Do it again, but with a complex order.
@@ -184,9 +192,9 @@ void BasicDeleteUTest::test_recursive(void)
 	store->barrier();
 	TS_ASSERT_EQUALS(as->get_size(), 5);
 
-	store->remove_atom(ha);
+	store->remove_atom(ha, true);
 	as->extract_atom(ha);
-	TS_ASSERT_EQUALS(as->get_size(), 4);
+	TS_ASSERT_EQUALS(as->get_size(), 2);
 
 	// --------------------------------------
 	// Do it again, but more deeply.
@@ -199,9 +207,9 @@ void BasicDeleteUTest::test_recursive(void)
 	store->barrier();
 	TS_ASSERT_EQUALS(as->get_size(), 6);
 
-	store->remove_atom(ha);
+	store->remove_atom(ha, true);
 	as->extract_atom(ha);
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 2);
 
 	// --------------------------------------
 	store->erase();
