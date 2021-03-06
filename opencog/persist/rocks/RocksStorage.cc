@@ -31,6 +31,8 @@
 #include "rocksdb/db.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/options.h"
+// #include "rocksdb/table.h"
+// #include "rocksdb/filter_policy.h"
 
 #include <opencog/atoms/base/Node.h>
 
@@ -61,6 +63,18 @@ void RocksStorage::init(const char * uri)
 
 	// Create the file if it doesn't exist yet.
 	options.create_if_missing = true;
+
+#if 0
+	// According to the RocksDB wiki, Bloom filters should make
+	// everything go faster for us, since we use lots of Get()'s.
+	// But the unit tests are completely unaffected by this.
+	// So don't enable.
+	rocksdb::BlockBasedTableOptions toptions;
+	toptions.filter_policy.reset(rocksdb::NewBloomFilterPolicy(10, false));
+	// toptions.optimize_filters_for_memory = true;
+	auto tfactory = rocksdb::NewBlockBasedTableFactory(toptions);
+	options.table_factory.reset(tfactory);
+#endif
 
 	// Open the file.
 	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
