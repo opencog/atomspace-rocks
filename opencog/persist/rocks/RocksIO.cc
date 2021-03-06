@@ -181,6 +181,11 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
+	// The issue of new sids needs to be atomic, as otherwise we risk
+	// having the Get(pfx + satom) fail in parallel, and have two
+	// different sids issued for the same atom.
+	std::unique_lock<std::mutex> lck(_mtx_sid);
+
 	// If it's alpha-convertible, then look for equivalents.
 	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
 	std::string shash;
@@ -216,28 +221,30 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	// someone crashes, then this is racey.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
-	if (h->is_link())
-	{
-		Type t = h->get_type();
-		std::string stype = ":" + nameserver().getTypeName(t);
-
-		// Store the outgoing set ... just in case someone asks for it.
-		// The key is in the format `i@sid:type` and the type is used
-		// for get-incoming-by-type searches.
-		for (const Handle& ho : h->getOutgoingSet())
-		{
-			std::string ist = "i@" + writeAtom(ho) + stype;
-			appendToSidList(ist, sid);
-		}
-	}
-
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
 
-	if (not convertible) return sid;
+	lck.unlock();
 
-	appendToSidList(shash, sid);
+	if (convertible)
+		appendToSidList(shash, sid);
+
+	// If its a Node, we are done.
+	if (not h->is_link()) return sid;
+
+	// Recurse downwards
+	Type t = h->get_type();
+	std::string stype = ":" + nameserver().getTypeName(t);
+
+	// Store the outgoing set ... just in case someone asks for it.
+	// The key is in the format `i@sid:type` and the type is used
+	// for get-incoming-by-type searches.
+	for (const Handle& ho : h->getOutgoingSet())
+	{
+		std::string ist = "i@" + writeAtom(ho) + stype;
+		appendToSidList(ist, sid);
+	}
 
 	return sid;
 }
@@ -283,7 +290,7 @@ void RocksStorage::appendToSidList(const std::string& klist,
 {
 	// The-read-modify-write of the list has to be protected
 	// from other callers, as well as from the deletion code.
-	std::lock_guard<std::mutex> lck(_mtx);
+	std::lock_guard<std::mutex> lck(_mtx_list);
 
 	std::string sidlist;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
@@ -361,7 +368,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// because doing it any other way would require
 			// tracking keys. Which is hard; the atomspace was
 			// designed to NOT track keys on purpose, for efficiency.)
-			std::lock_guard<std::mutex> lck(_mtx);
+			std::lock_guard<std::mutex> lck(_mtx_list);
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
@@ -516,7 +523,7 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	// Removal needs to be atomic, and not race with other
 	// removals, nor with other manipulations of the incoming
 	// set. A plain-old lock is the easiest way to get this.
-	std::lock_guard<std::mutex> lck(_mtx);
+	std::lock_guard<std::mutex> lck(_mtx_list);
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 
