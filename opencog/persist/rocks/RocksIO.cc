@@ -184,24 +184,26 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	// The issue of new sids needs to be atomic, as otherwise we risk
 	// having the Get(pfx + satom) fail in parallel, and have two
 	// different sids issued for the same atom.
-	std::unique_lock<std::mutex> lck(_mtx_sid);
+	std::unique_lock<std::mutex> lck(_mtx_sid, std::defer_lock);
+
+	std::string shash, sid, satom, pfx;
 
 	// If it's alpha-convertible, then look for equivalents.
 	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
-	std::string shash;
-	std::string sid;
 	if (convertible)
 	{
 		shash = "h@" + aidtostr(h->get_hash());
+		lck.lock();
 		findAlpha(h, shash, sid);
 		if (0 < sid.size()) return sid;
 	}
 
-	std::string satom = Sexpr::encode_atom(h);
-	std::string pfx = h->is_node() ? "n@" : "l@";
+	satom = Sexpr::encode_atom(h);
+	pfx = h->is_node() ? "n@" : "l@";
 
 	if (not convertible)
 	{
+		lck.lock();
 		_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
 		if (0 < sid.size()) return sid;
 	}
@@ -225,6 +227,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
 
+	// The rest is safe to do in parallel.
 	lck.unlock();
 
 	if (convertible)
