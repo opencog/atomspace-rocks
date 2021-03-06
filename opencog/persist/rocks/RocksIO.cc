@@ -211,16 +211,12 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	uint64_t aid = _next_aid.fetch_add(1);
 	sid = aidtostr(aid);
 
-	// Update immediately, in case of a future crash or something...
-	// Notes: (1) this isn't "really" necessary, because the dtor
-	// updates this value. But we want to update anyway, just in case
-	// someone crashes before the dtor. (2) this is racey, in that
-	// other threads may already have a newer aid than us (and so
-	// we are clobbering a newer aid with an older one). But the
-	// raciness doesn't matter because (3) next time someone writes
-	// an atom, or if the dtor runs, then the correct aid will be
-	// stored. So ... if no one crashes, then everything is OK. If
-	// someone crashes, then this is racey.
+	// Update immediately, in case of a future crash or badness...
+	// This isn't "really" necessary, because our dtor ~RocksStorage()
+	// updates this value. But if someone crashes before our dtor runs,
+	// we want to make sure the new bumped value is written, before we
+	// start using it in other records.  We want to avoid issueing it
+	// twice.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
