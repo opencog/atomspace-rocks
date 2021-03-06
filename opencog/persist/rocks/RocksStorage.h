@@ -88,7 +88,6 @@ class RocksStorage : public StorageNode
 
 		void getIncomingSet(AtomSpace*, const Handle&);
 		void getIncomingByType(AtomSpace*, const Handle&, Type t);
-		void print_all(void);
 		size_t count_records(const std::string&);
 
 	public:
@@ -106,6 +105,7 @@ class RocksStorage : public StorageNode
 		void erase(void) { kill_data(); }
 
 		void kill_data(void); // destroy DB contents
+		void print_range(const std::string&); // Debugging utility
 
 		// AtomStorage interface
 		void getAtom(const Handle&);

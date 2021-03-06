@@ -48,7 +48,7 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is **Version 0.9.5**.  All unit tests pass.  This is effectively
+This is **Version 0.9.6**.  All unit tests pass.  This is effectively
 version 1.0; waiting on user feedback.
 
 
@@ -61,8 +61,10 @@ $ guile
 scheme@(guile-user)> (use-modules (opencog))
 scheme@(guile-user)> (use-modules (opencog persist))
 scheme@(guile-user)> (use-modules (opencog persist-rocks))
-scheme@(guile-user)> (cog-rocks-open "rocks:///tmp/foo.rdb/")
+scheme@(guile-user)> (define sto (RocksStorageNode "rocks:///tmp/foo.rdb/"))
+scheme@(guile-user)> (cog-open sto)
 scheme@(guile-user)> (load-atomspace)
+scheme@(guile-user)> (cog-close sto)
 ```
 
 That's it! You've loaded the entire contents of `foo.rdb` into the

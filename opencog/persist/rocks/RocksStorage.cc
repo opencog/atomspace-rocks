@@ -166,8 +166,6 @@ void RocksStorage::print_stats(void)
 		count_records("a@"), count_records("l@"), count_records("n@"));
 	printf("Keys/Incoming/Hash k@: %lu i@: %lu h@: %lu\n",
 		count_records("k@"), count_records("i@"), count_records("h@"));
-
-	// print_all();
 }
 
 DEFINE_NODE_FACTORY(RocksStorageNode, ROCKS_STORAGE_NODE)

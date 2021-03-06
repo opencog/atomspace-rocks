@@ -57,6 +57,8 @@ public:
 
 	void do_stats(void);
 	void do_clear_stats(void);
+
+	void do_get(const std::string&);
 }; // class
 
 /** @}*/

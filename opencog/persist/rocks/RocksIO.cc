@@ -802,10 +802,10 @@ void RocksStorage::kill_data(void)
 }
 
 /// Dump database contents to stdout.
-void RocksStorage::print_all(void)
+void RocksStorage::print_range(const std::string& pfx)
 {
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek(""); it->Valid(); it->Next())
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		printf("rkey: >>%s<<    rval: >>%s<<\n",
 			it->key().ToString().c_str(), it->value().ToString().c_str());

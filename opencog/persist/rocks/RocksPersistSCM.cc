@@ -67,6 +67,7 @@ void RocksPersistSCM::init(void)
     define_scheme_primitive("cog-rocks-close", &RocksPersistSCM::do_close, this, "persist-rocks");
     define_scheme_primitive("cog-rocks-stats", &RocksPersistSCM::do_stats, this, "persist-rocks");
     define_scheme_primitive("cog-rocks-clear-stats", &RocksPersistSCM::do_clear_stats, this, "persist-rocks");
+    define_scheme_primitive("cog-rocks-get", &RocksPersistSCM::do_get, this, "persist-rocks");
 }
 
 RocksPersistSCM::~RocksPersistSCM()
@@ -146,6 +147,15 @@ void RocksPersistSCM::do_clear_stats(void)
     }
 
     _storage->clear_stats();
+}
+
+void RocksPersistSCM::do_get(const std::string& prefix)
+{
+    if (nullptr == _storage) {
+        printf("cog-rocks-stats: AtomSpace not connected to database!\n");
+        return;
+    }
+    _storage->print_range(prefix);
 }
 
 void opencog_persist_rocks_init(void)
