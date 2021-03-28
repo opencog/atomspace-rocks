@@ -51,6 +51,12 @@ Status
 This is **Version 0.9.7**.  All unit tests pass.  This is effectively
 version 1.0; waiting on user feedback.
 
+User feedback: This code is 2x or 3x faster than Postgres on small
+datasets and on synthetic benchmarks. It is 9x slower than Postgres
+on a real-world dataset. Why? See
+[bug report #11](https://github.com/opencog/atomspace-rocks/issues/11)
+and also see #9 and #10 as well.
+
 
 Example Usage
 -------------
