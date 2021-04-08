@@ -25,6 +25,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include <cstdio>
+#include <string>
 
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
@@ -44,6 +45,8 @@ class MultiDeleteUTest :  public CxxTest::TestSuite
 {
 	private:
 		std::string uri;
+		AtomSpace* as;
+		StorageNodePtr store;
 
 	public:
 
@@ -98,7 +101,7 @@ void MultiDeleteUTest::worker(int thread_id)
 	for (int i=0; i<nloops; i++)
 	{
 		int id = (thread_id + i) % (thread_id + 7);
-		Handle hb(as->add_node(CONCEPT_NODE, to_string(id));
+		Handle hb(as->add_node(CONCEPT_NODE, std::to_string(id)));
 		Handle li(as->add_link(LIST_LINK, ha, hb, ha, hb));
 
 		// Store the link.
@@ -109,7 +112,7 @@ void MultiDeleteUTest::worker(int thread_id)
 	for (int i=0; i<nloops; i++)
 	{
 		int id = (thread_id + i) % (thread_id + 7);
-		Handle hb(as->get_node(CONCEPT_NODE, to_string(id));
+		Handle hb(as->get_node(CONCEPT_NODE, std::to_string(id)));
 		Handle li(as->get_link(LIST_LINK, ha, hb, ha, hb));
 
 		// If it's already gone, do nothing.
@@ -129,12 +132,12 @@ void MultiDeleteUTest::test_add_delete(void)
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
 	// Configuration
-	int nthreads = 10;
+	int n_threads = 10;
 
-	AtomSpace* as = new AtomSpace();
+	as = new AtomSpace();
 
 	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
-	StorageNodePtr store = StorageNodeCast(hsn);
+	store = StorageNodeCast(hsn);
 
 	store->open();
 	TS_ASSERT(store->connected())
@@ -159,6 +162,7 @@ void MultiDeleteUTest::test_add_delete(void)
 
 	store->erase();
 	store->close();
+	store = nullptr;
 	delete as;
 
 	logger().debug("END TEST: %s", __FUNCTION__);
