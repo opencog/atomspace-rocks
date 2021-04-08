@@ -181,6 +181,8 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
+	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
+
 	// The issueance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
 	// two different sids issued for the same atom.
@@ -289,7 +291,7 @@ void RocksStorage::appendToSidList(const std::string& klist,
 {
 	// The-read-modify-write of the list has to be protected
 	// from other callers, as well as from the deletion code.
-	std::lock_guard<std::mutex> lck(_mtx_list);
+	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
 
 	std::string sidlist;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
@@ -367,7 +369,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// because doing it any other way would require
 			// tracking keys. Which is hard; the atomspace was
 			// designed to NOT track keys on purpose, for efficiency.)
-			std::lock_guard<std::mutex> lck(_mtx_list);
+			std::lock_guard<std::recursive_mutex> lck(_mtx_list);
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
@@ -522,7 +524,7 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	// Removal needs to be atomic, and not race with other
 	// removals, nor with other manipulations of the incoming
 	// set. A plain-old lock is the easiest way to get this.
-	std::lock_guard<std::mutex> lck(_mtx_list);
+	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 
