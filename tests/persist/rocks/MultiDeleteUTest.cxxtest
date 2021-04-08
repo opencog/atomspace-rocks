@@ -92,9 +92,7 @@ void MultiDeleteUTest::tearDown(void)
 // This should not cause any failures or crashes.
 void MultiDeleteUTest::worker(int thread_id)
 {
-	int nloops = 10000;
-
-	sleep(1);
+	int nloops = 50000;
 
 	Handle ha(as->add_node(CONCEPT_NODE, "a"));
 
@@ -131,7 +129,9 @@ void MultiDeleteUTest::test_add_delete(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	// Configuration
+	// Configuration. On my machine, the locks allow about 2.5 to
+	// 3 threads run in parallel, and of that time, a third is spent
+	// in the kernel (I assume that's kernel time for file-writes.)
 	int n_threads = 10;
 
 	as = new AtomSpace();
