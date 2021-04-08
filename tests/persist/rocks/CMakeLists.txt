@@ -19,6 +19,7 @@ ADD_CXXTEST(BasicDeleteUTest)
 ADD_CXXTEST(DeleteUTest)
 ADD_CXXTEST(AlphaEquivUTest)
 ADD_CXXTEST(MultiPersistUTest)
+ADD_CXXTEST(MultiDeleteUTest)
 ADD_CXXTEST(QueryPersistUTest)
 #
 ADD_CXXTEST(LargeFlatUTest)
