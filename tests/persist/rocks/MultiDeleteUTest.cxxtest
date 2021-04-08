@@ -93,7 +93,7 @@ void MultiDeleteUTest::tearDown(void)
 void MultiDeleteUTest::worker(int thread_id)
 {
 	int nloops = 50;
-	int nsplice = 1000;
+	int nsplice = 100;
 
 	Handle ha(as->add_node(CONCEPT_NODE, "a"));
 
