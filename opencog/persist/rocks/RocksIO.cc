@@ -226,7 +226,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	// protected from other callers, as well as from the atom
 	// deletion code. Delete races are checked with a@ and so the
 	// update of a@ and i@ must be atomic.
-	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
+	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
 
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
@@ -564,11 +564,11 @@ void RocksStorage::remFromSidList(const std::string& klist,
 
 	// Some consistency checks ...
 	if (0 == sidlist.size())
-		throw IOException(TRACE_INFO, "Internal Error!");
+		throw NotFoundException(TRACE_INFO, "Internal Error!");
 
 	size_t pos = sidlist.find(sid);
 	if (std::string::npos == pos)
-		throw IOException(TRACE_INFO, "Internal Error!");
+		throw NotFoundException(TRACE_INFO, "Internal Error!");
 
 	// That's it. Now edit the sidlist string, remove the sid
 	// from it, and store it as the new sidlist. Unless its empty...
@@ -667,7 +667,22 @@ void RocksStorage::removeSatom(const std::string& satom,
 
 			// Perform the deduplicated delete.
 			for (const std::string& osatom : soset)
-				remIncoming(sid, stype, osatom);
+			{
+				// Two diferent threads may be racing to delete the same
+				// atom. If so, the second thread loses and throws a
+				// consistency check error. If it lost, we just ignore
+				// the error here. Triggered by MultiDeleteUTest.
+				try
+				{
+					remIncoming(sid, stype, osatom);
+				}
+				catch(const NotFoundException& ex)
+				{
+					std::string satom;
+					rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), "a@" + sid, &satom);
+					if (s.ok()) throw;
+				}
+			}
 		}
 	}
 
