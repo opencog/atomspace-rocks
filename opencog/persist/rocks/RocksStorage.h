@@ -65,7 +65,7 @@ class RocksStorage : public StorageNode
 		std::string tv_pred_sid;
 
 		// Several operations really need to be exclusive.
-		std::mutex _mtx_list;
+		std::recursive_mutex _mtx_list;
 		std::mutex _mtx_sid;
 
 		// Assorted helper functions

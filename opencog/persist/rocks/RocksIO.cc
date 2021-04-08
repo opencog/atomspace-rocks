@@ -222,6 +222,12 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	// The rest is safe to do in parallel.
 	lck.unlock();
 
+	// The-read-modify-write of the incoming-set list has to be
+	// protected from other callers, as well as from the atom
+	// deletion code. Delete races are checked with a@ and so the
+	// update of a@ and i@ must be atomic.
+	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
+
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
@@ -287,10 +293,6 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 void RocksStorage::appendToSidList(const std::string& klist,
                                    const std::string& sid)
 {
-	// The-read-modify-write of the list has to be protected
-	// from other callers, as well as from the deletion code.
-	std::lock_guard<std::mutex> lck(_mtx_list);
-
 	std::string sidlist;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
 	if (not s.ok() or std::string::npos == sidlist.find(sid))
@@ -367,7 +369,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// because doing it any other way would require
 			// tracking keys. Which is hard; the atomspace was
 			// designed to NOT track keys on purpose, for efficiency.)
-			std::lock_guard<std::mutex> lck(_mtx_list);
+			std::lock_guard<std::recursive_mutex> lck(_mtx_list);
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
@@ -522,7 +524,7 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 	// Removal needs to be atomic, and not race with other
 	// removals, nor with other manipulations of the incoming
 	// set. A plain-old lock is the easiest way to get this.
-	std::lock_guard<std::mutex> lck(_mtx_list);
+	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 
