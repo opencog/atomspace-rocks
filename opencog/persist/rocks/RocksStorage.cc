@@ -42,6 +42,8 @@ using namespace opencog;
 
 static const char* aid_key = "*-NextUnusedAID-*";
 
+FILE* fh;
+
 /* ================================================================ */
 // Constructors
 
@@ -109,7 +111,9 @@ void RocksStorage::open()
 {
 	// User might call us twice. If so, ignore the second call.
 	if (_rfile) return;
+fh = fopen("/tmp/ro.log", "w");
 	init(_name.c_str());
+fprintf(fh, "duude done opening\n");
 }
 
 RocksStorage::RocksStorage(std::string uri) :

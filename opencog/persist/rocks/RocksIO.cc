@@ -23,6 +23,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdio.h>
+#include <sys/types.h>
+
+#include <unistd.h>
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
+
+
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/base/Link.h>
@@ -32,6 +40,8 @@
 #include "RocksStorage.h"
 
 using namespace opencog;
+
+extern FILE* fh;
 
 /// int to base-62 We use base62 not base64 because we
 /// want to reserve punctuation "just in case" as special chars.
@@ -182,6 +192,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 std::string RocksStorage::writeAtom(const Handle& h)
 {
 	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
+fprintf(fh, "Enter writeAtom\n");
 
 	// The issueance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
@@ -244,6 +255,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	for (const Handle& ho : h->getOutgoingSet())
 	{
 		std::string ist = "i@" + writeAtom(ho) + stype;
+fprintf(fh, "in writeAtom ist=%s\n", ist.c_str());
 		appendToSidList(ist, sid);
 	}
 
@@ -550,6 +562,7 @@ void RocksStorage::remIncoming(const std::string& sid,
 	// Get the incoming set. Since we have the type, we can get this
 	// directly, without needing any loops.
 	std::string ist = "i@" + osid + ":" + stype;
+fprintf(fh, "in remincoming ist=%s\n", ist.c_str());
 	remFromSidList(ist, sid);
 }
 
@@ -564,11 +577,21 @@ void RocksStorage::remFromSidList(const std::string& klist,
 
 	// Some consistency checks ...
 	if (0 == sidlist.size())
+{
+fprintf(fh, "in remFromSidList no list for %s in %s tid=%ld\n",
+sid.c_str(), klist.c_str(), gettid());
+fflush (fh);
 		throw IOException(TRACE_INFO, "Internal Error!");
+}
 
 	size_t pos = sidlist.find(sid);
 	if (std::string::npos == pos)
-		throw IOException(TRACE_INFO, "Internal Error!");
+{
+fprintf(fh, "in remFromSidList %s not found in list %s in tid=%ld\n", sid.c_str(),
+klist.c_str(), gettid());
+fflush (fh);
+		throw NotFoundException(TRACE_INFO, "Internal Error!");
+}
 
 	// That's it. Now edit the sidlist string, remove the sid
 	// from it, and store it as the new sidlist. Unless its empty...
@@ -577,6 +600,11 @@ void RocksStorage::remFromSidList(const std::string& klist,
 		_rfile->Delete(rocksdb::WriteOptions(), klist);
 	else
 		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
+
+fprintf(fh, "success remFromSidList %s from %s in tid=%ld\n", sid.c_str(),
+klist.c_str(), gettid());
+
+// std::this_thread::get_id()
 }
 
 /// Remove the given Atom from the database.
@@ -592,6 +620,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// So first, iterate up to the top, chopping away the incoming set.
 	// It's stored with prefixes according to type, so this is a loop...
 	std::string ist = "i@" + sid + ":";
+fprintf(fh, "in removeSatom sid=%s\n", sid.c_str());
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -633,6 +662,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	if (0 < paren)
 	{
 		const std::string& shash = satom.substr(0, paren);
+fprintf(fh, "in remSatom hashy=%s\n", satom.c_str());
 		remFromSidList(shash, sid);
 	}
 
@@ -667,7 +697,18 @@ void RocksStorage::removeSatom(const std::string& satom,
 
 			// Perform the deduplicated delete.
 			for (const std::string& osatom : soset)
-				remIncoming(sid, stype, osatom);
+			{
+				try
+				{
+					remIncoming(sid, stype, osatom);
+				}
+				catch(const IOException& ex)
+				{
+					std::string satom;
+					rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), "a@" + sid, &satom);
+					if (s.ok()) throw;
+				}
+			}
 		}
 	}
 
@@ -716,6 +757,7 @@ void RocksStorage::getIncomingSet(AtomSpace* as, const Handle& h)
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":";
+fprintf(fh, "in getincom ist=%s\n", ist.c_str());
 	loadInset(as, ist);
 }
 
@@ -724,6 +766,7 @@ void RocksStorage::getIncomingByType(AtomSpace* as, const Handle& h, Type t)
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":" + nameserver().getTypeName(t);
+fprintf(fh, "in getincom by type ist=%s\n", ist.c_str());
 	loadInset(as, ist);
 }
 
