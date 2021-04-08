@@ -66,6 +66,7 @@ class MultiDeleteUTest :  public CxxTest::TestSuite
 		void setUp(void);
 		void tearDown(void);
 
+		void worker(int);
 		void test_add_delete(void);
 };
 
@@ -82,9 +83,53 @@ void MultiDeleteUTest::tearDown(void)
 
 // ============================================================
 
+// Add and then remove a bunch of links.
+// This is designed so that multiple threads will be
+// touching the same atoms, adding and removing the same atoms.
+// This should not cause any failures or crashes.
+void MultiDeleteUTest::worker(int thread_id)
+{
+	int nloops = 1000;
+
+	sleep(1);
+
+	Handle ha(as->add_node(CONCEPT_NODE, "a"));
+
+	for (int i=0; i<nloops; i++)
+	{
+		int id = (thread_id + i) % (thread_id + 7);
+		Handle hb(as->add_node(CONCEPT_NODE, to_string(id));
+		Handle li(as->add_link(LIST_LINK, ha, hb, ha, hb));
+
+		// Store the link.
+		store->store_atom(li);
+		store->barrier();
+	}
+
+	for (int i=0; i<nloops; i++)
+	{
+		int id = (thread_id + i) % (thread_id + 7);
+		Handle hb(as->get_node(CONCEPT_NODE, to_string(id));
+		Handle li(as->get_link(LIST_LINK, ha, hb, ha, hb));
+
+		// If it's already gone, do nothing.
+		if (nullptr == li) continue;
+
+		// Remove the link.
+		store->remove_atom(li);
+		as->extract_atom(li);
+		store->barrier();
+	}
+}
+
+// ============================================================
+
 void MultiDeleteUTest::test_add_delete(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	// Configuration
+	int nthreads = 10;
 
 	AtomSpace* as = new AtomSpace();
 
@@ -97,23 +142,20 @@ void MultiDeleteUTest::test_add_delete(void)
 	// Clear out left-over junk, just in case.
 	store->erase();
 
-	Handle ha(as->add_node(CONCEPT_NODE, "a"));
-	Handle hb(as->add_node(CONCEPT_NODE, "b"));
-	Handle li(as->add_link(LIST_LINK, ha, hb, ha, hb));
+	printf("Start creating %d threads\n", n_threads);
 
-	// Store the link.
-	store->store_atom(li);
-	store->barrier();
+	std::vector<std::thread> thread_pool;
+	for (int i=0; i < n_threads; i++) {
+		thread_pool.push_back(
+			std::thread(&MultiDeleteUTest::worker, this, i));
+	}
 
+	for (std::thread& t : thread_pool) t.join();
+	printf("Done joining threads\n");
+
+	printf("Final atomspace size=%lu\n", as->get_size());
 	// Verify the atomspace size
-	TS_ASSERT_EQUALS(as->get_size(), 4);
-
-	// Remove the link. Since the link has duplicate atoms
-	// in it, this can cause trouble, depending on how the
-	// incoming set is managed.
-	store->remove_atom(li);
-	as->extract_atom(li);
-	TS_ASSERT_EQUALS(as->get_size(), 3);
+	// TS_ASSERT_EQUALS(as->get_size(), 2);
 
 	store->erase();
 	store->close();
