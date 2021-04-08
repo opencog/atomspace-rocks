@@ -181,9 +181,9 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
-	// The issue of new sids needs to be atomic, as otherwise we risk
-	// having the Get(pfx + satom) fail in parallel, and have two
-	// different sids issued for the same atom.
+	// The issueance of new sids needs to be atomic, as otherwise we
+	// risk having the Get(pfx + satom) fail in parallel, and have
+	// two different sids issued for the same atom.
 	std::unique_lock<std::mutex> lck(_mtx_sid, std::defer_lock);
 
 	std::string shash, sid, satom, pfx;
