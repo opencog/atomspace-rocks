@@ -219,12 +219,12 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	// twice.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
+	// The rest is safe to do in parallel.
+	lck.unlock();
+
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
-
-	// The rest is safe to do in parallel.
-	lck.unlock();
 
 	if (convertible)
 		appendToSidList(shash, sid);
