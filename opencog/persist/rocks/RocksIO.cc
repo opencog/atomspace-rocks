@@ -232,12 +232,18 @@ fprintf(fh, "Enter writeAtom\n");
 	// twice.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
+	// The rest is safe to do in parallel.
+	lck.unlock();
+
+	// The-read-modify-write of the incoming-set list has to be
+	// protected from other callers, as well as from the atom
+	// deletion code. Delete races are checked with a@ and so the
+	// update of a@ and i@ must be atomic.
+	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
+
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
-
-	// The rest is safe to do in parallel.
-	lck.unlock();
 
 	if (convertible)
 		appendToSidList(shash, sid);
@@ -301,10 +307,6 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 void RocksStorage::appendToSidList(const std::string& klist,
                                    const std::string& sid)
 {
-	// The-read-modify-write of the list has to be protected
-	// from other callers, as well as from the deletion code.
-	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
-
 	std::string sidlist;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
 	if (not s.ok() or std::string::npos == sidlist.find(sid))
@@ -581,7 +583,7 @@ void RocksStorage::remFromSidList(const std::string& klist,
 fprintf(fh, "in remFromSidList no list for %s in %s tid=%ld\n",
 sid.c_str(), klist.c_str(), gettid());
 fflush (fh);
-		throw IOException(TRACE_INFO, "Internal Error!");
+		throw NotFoundException(TRACE_INFO, "Internal Error!");
 }
 
 	size_t pos = sidlist.find(sid);
@@ -698,11 +700,15 @@ fprintf(fh, "in remSatom hashy=%s\n", satom.c_str());
 			// Perform the deduplicated delete.
 			for (const std::string& osatom : soset)
 			{
+				// Two diferent threads may be racing to delete the same
+				// atom. If so, the second thread loses and throws a
+				// consistency check error. If it lost, we just ignore
+				// the error here. Triggered by MultiDeleteUTest.
 				try
 				{
 					remIncoming(sid, stype, osatom);
 				}
-				catch(const IOException& ex)
+				catch(const NotFoundException& ex)
 				{
 					std::string satom;
 					rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), "a@" + sid, &satom);

@@ -1,8 +1,8 @@
 /*
  * tests/persist/rocks/MultiDeleteUTest.cxxtest
  *
- * Verify that deletion of keys works, even if some Atoms are still
- * using those keys.
+ * Verify that racing atom insertion and deletion does not trigger
+ * internal errors.
  *
  * Copyright (C) 2008, 2009, 2019, 2021 Linas Vepstas <linasvepstas@gmail.com>
  *
@@ -92,36 +92,38 @@ void MultiDeleteUTest::tearDown(void)
 // This should not cause any failures or crashes.
 void MultiDeleteUTest::worker(int thread_id)
 {
-	int nloops = 1000;
-
-	sleep(1);
+	int nloops = 50;
+	int nsplice = 50;
 
 	Handle ha(as->add_node(CONCEPT_NODE, "a"));
 
-	for (int i=0; i<nloops; i++)
+	for (int j=0; j<nsplice; j++)
 	{
-		int id = (thread_id + i) % (thread_id + 7);
-		Handle hb(as->add_node(CONCEPT_NODE, std::to_string(id)));
-		Handle li(as->add_link(LIST_LINK, ha, hb, ha, hb));
+		for (int i=0; i<nloops; i++)
+		{
+			int id = (thread_id + i) % (thread_id + 7);
+			Handle hb(as->add_node(CONCEPT_NODE, std::to_string(id)));
+			Handle li(as->add_link(LIST_LINK, ha, hb, ha, hb));
 
-		// Store the link.
-		store->store_atom(li);
-		store->barrier();
-	}
+			// Store the link.
+			store->store_atom(li);
+			store->barrier();
+		}
 
-	for (int i=0; i<nloops; i++)
-	{
-		int id = (thread_id + i) % (thread_id + 7);
-		Handle hb(as->get_node(CONCEPT_NODE, std::to_string(id)));
-		Handle li(as->get_link(LIST_LINK, ha, hb, ha, hb));
+		for (int i=0; i<nloops; i++)
+		{
+			int id = (thread_id + i) % (thread_id + 7);
+			Handle hb(as->get_node(CONCEPT_NODE, std::to_string(id)));
+			Handle li(as->get_link(LIST_LINK, ha, hb, ha, hb));
 
-		// If it's already gone, do nothing.
-		if (nullptr == li) continue;
+			// If it's already gone, do nothing.
+			if (nullptr == li) continue;
 
-		// Remove the link.
-		store->remove_atom(li);
-		as->extract_atom(li);
-		store->barrier();
+			// Remove the link.
+			store->remove_atom(li);
+			as->extract_atom(li);
+			store->barrier();
+		}
 	}
 }
 
@@ -131,7 +133,9 @@ void MultiDeleteUTest::test_add_delete(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	// Configuration
+	// Configuration. On my machine, the locks allow about 2.5 to
+	// 3 threads run in parallel, and of that time, a third is spent
+	// in the kernel (I assume that's kernel time for file-writes.)
 	int n_threads = 10;
 
 	as = new AtomSpace();
