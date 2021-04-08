@@ -92,7 +92,7 @@ void MultiDeleteUTest::tearDown(void)
 // This should not cause any failures or crashes.
 void MultiDeleteUTest::worker(int thread_id)
 {
-	int nloops = 1000;
+	int nloops = 10000;
 
 	sleep(1);
 
