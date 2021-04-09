@@ -191,13 +191,14 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
-	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
-fprintf(fh, "Enter writeAtom\n");
+	// std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
 
 	// The issueance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
 	// two different sids issued for the same atom.
 	std::unique_lock<std::mutex> lck(_mtx_sid, std::defer_lock);
+if (h->is_link())
+fprintf(fh, "Enter writeAtom\n");
 
 	std::string shash, sid, satom, pfx;
 
@@ -218,7 +219,12 @@ fprintf(fh, "Enter writeAtom\n");
 	{
 		lck.lock();
 		_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
-		if (0 < sid.size()) return sid;
+		if (0 < sid.size())
+{
+if (h->is_link())
+fprintf(fh, "Exit writeAtom existing sid=%s\n", sid.c_str());
+		return sid;
+}
 	}
 
 	uint64_t aid = _next_aid.fetch_add(1);
@@ -232,6 +238,7 @@ fprintf(fh, "Enter writeAtom\n");
 	// twice.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
+fprintf(fh, "In writeAtom new sid=%s link=%d\n", sid.c_str(), h->is_link());
 	// The rest is safe to do in parallel.
 	lck.unlock();
 
@@ -241,6 +248,7 @@ fprintf(fh, "Enter writeAtom\n");
 	// update of a@ and i@ must be atomic.
 	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
 
+fprintf(fh, "In writeAtom aongoing w/sid=a@ %s\n", sid.c_str());
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
@@ -249,7 +257,11 @@ fprintf(fh, "Enter writeAtom\n");
 		appendToSidList(shash, sid);
 
 	// If its a Node, we are done.
-	if (not h->is_link()) return sid;
+	if (not h->is_link())
+{
+fprintf(fh, "Exit writeAtom it was node for sid=%s\n", sid.c_str());
+ return sid;
+}
 
 	// Recurse downwards
 	Type t = h->get_type();
@@ -261,7 +273,7 @@ fprintf(fh, "Enter writeAtom\n");
 	for (const Handle& ho : h->getOutgoingSet())
 	{
 		std::string ist = "i@" + writeAtom(ho) + stype;
-fprintf(fh, "in writeAtom ist=%s\n", ist.c_str());
+fprintf(fh, "in writeAtom add sid=%s ti ist=%s\n", sid.c_str(), ist.c_str());
 		appendToSidList(ist, sid);
 	}
 
