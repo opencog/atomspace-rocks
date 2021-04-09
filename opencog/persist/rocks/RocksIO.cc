@@ -323,9 +323,12 @@ void RocksStorage::appendToSidList(const std::string& klist,
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), klist, &sidlist);
 	if (not s.ok() or std::string::npos == sidlist.find(sid))
 	{
+fprintf(fh, "Prior to sid add len=%lu old sid list for %s is %s\n",
+sidlist.size(), klist.c_str(), sidlist.c_str());
 		sidlist += sid + " ";
 		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 fprintf(fh, "Added sid %s new sid list for %s is %s\n", sid.c_str(), klist.c_str(), sidlist.c_str());
+fflush(fh);
 	}
 }
 
@@ -600,6 +603,12 @@ fflush (fh);
 }
 
 	size_t pos = sidlist.find(sid);
+	while (std::string::npos != pos and 0 < pos)
+	{
+		if (' ' != sidlist[pos-1])
+			pos = sidlist.find(sid, pos+1);
+	}
+
 	if (std::string::npos == pos)
 {
 fprintf(fh, "in remFromSidList %s not found in list %s in tid=%ld\n", sid.c_str(),
@@ -611,6 +620,7 @@ fflush (fh);
 	// That's it. Now edit the sidlist string, remove the sid
 	// from it, and store it as the new sidlist. Unless its empty...
 	sidlist.replace(pos, sid.size() + 1, "");
+
 	if (0 == sidlist.size())
 		_rfile->Delete(rocksdb::WriteOptions(), klist);
 	else
