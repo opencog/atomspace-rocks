@@ -566,13 +566,26 @@ void RocksStorage::remFromSidList(const std::string& klist,
 	if (0 == sidlist.size())
 		throw NotFoundException(TRACE_INFO, "Internal Error!");
 
-	size_t pos = sidlist.find(sid);
+	// Search for the sid in the sidlist. If must be either the
+	// very first sid in the list, or it must be preceeded and
+	// followed by whitespace. Else we risk finding a substring
+	// of some other sid. We don't want substrings!
+	std::string sidblank = sid + " ";
+	size_t sidlen = sidblank.size();
+	size_t pos = sidlist.find(sidblank);
+	while (std::string::npos != pos and 0 < pos)
+	{
+		if (' ' != sidlist[pos-1])
+			pos = sidlist.find(sidblank, pos+sidlen);
+		else
+			break;
+	}
 	if (std::string::npos == pos)
 		throw NotFoundException(TRACE_INFO, "Internal Error!");
 
 	// That's it. Now edit the sidlist string, remove the sid
 	// from it, and store it as the new sidlist. Unless its empty...
-	sidlist.replace(pos, sid.size() + 1, "");
+	sidlist.replace(pos, sidlen, "");
 	if (0 == sidlist.size())
 		_rfile->Delete(rocksdb::WriteOptions(), klist);
 	else
