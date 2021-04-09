@@ -273,7 +273,7 @@ fprintf(fh, "Exit writeAtom it was node for sid=%s\n", sid.c_str());
 	for (const Handle& ho : h->getOutgoingSet())
 	{
 		std::string ist = "i@" + writeAtom(ho) + stype;
-fprintf(fh, "in writeAtom add sid=%s ti ist=%s\n", sid.c_str(), ist.c_str());
+fprintf(fh, "in writeAtom add sid=%s to ist=%s\n", sid.c_str(), ist.c_str());
 		appendToSidList(ist, sid);
 	}
 
@@ -325,6 +325,7 @@ void RocksStorage::appendToSidList(const std::string& klist,
 	{
 		sidlist += sid + " ";
 		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
+fprintf(fh, "Added sid %s new sid list for %s is %s\n", sid.c_str(), klist.c_str(), sidlist.c_str());
 	}
 }
 
@@ -615,8 +616,7 @@ fflush (fh);
 	else
 		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 
-fprintf(fh, "success remFromSidList %s from %s in tid=%ld\n", sid.c_str(),
-klist.c_str(), gettid());
+fprintf(fh, "remove sid %s new sid list for %s is %s\n", sid.c_str(), klist.c_str(), sidlist.c_str());
 
 // std::this_thread::get_id()
 }
