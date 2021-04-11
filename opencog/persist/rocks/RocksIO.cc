@@ -92,7 +92,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
-// "i@" sid:stype . sid-list -- finds IncomingSet of sid
+// "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
 // "h@" shash . sid-list -- finds all sids having a given hash
 
 // General design:
@@ -119,15 +119,17 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //
 // The same trick is applied for incoming-sets. So, the entire
 // incoming set for an atom appears under the prefix `i@sid:` and
-// the incoming set of a given type is under `i@sid:stype`.  The
-// incoming set itself is stored as a space-separated list of sids.
-// This works, but has the (minor!?) disadvantage that this list has
-// to be edited every time an atom is added or removed.
+// the incoming set of a given type is under `i@sid:stype`.  There
+// are two choices for how to store the incoming set: either as a
+// long space-separated list of sids, or by encoding each sid into
+// it's own key. The former style seems to cause issues when the
+// incoming set is large: the update of the large string seems to
+// drive RocksDB just crazy, leading to RAM and dis-usage issues.
+// See https://github.com/facebook/rocksdb/issues/3216 for more.
 //
-// TODO: The above incoming set design is problematic. The `learn`
-// codebase performs clustering, which takes atoms with giant incoming
-// sets, and moves them around. This leads to vast numbers of edits to
-// the incoming set, which seems to be very punishing to RocksDB.
+// The current code will use the space-separated list when
+// #define USE_INLIST_STRING 1 is set, otherwise it uses one key
+// per incoming.
 //
 // That's pretty much it ... except that there's one last little tricky
 // bit, forced on us by alpha-equivalence and alpha-conversion.
@@ -245,7 +247,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	for (const Handle& ho : h->getOutgoingSet())
 	{
 		std::string ist = "i@" + writeAtom(ho) + stype;
-		appendToSidList(ist, sid);
+		appendToInset(ist, sid);
 	}
 
 	return sid;
@@ -549,7 +551,7 @@ void RocksStorage::remIncoming(const std::string& sid,
 	// Get the incoming set. Since we have the type, we can get this
 	// directly, without needing any loops.
 	std::string ist = "i@" + osid + ":" + stype;
-	remFromSidList(ist, sid);
+	remFromInset(ist, sid);
 }
 
 /// Remove `sid` from the list of sids stored at `klist`.
@@ -604,6 +606,8 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// So first, iterate up to the top, chopping away the incoming set.
 	// It's stored with prefixes according to type, so this is a loop...
 	std::string ist = "i@" + sid + ":";
+
+#if USE_INLIST_STRING
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -637,6 +641,25 @@ void RocksStorage::removeSatom(const std::string& satom,
 		// Finally, delete the inset itself.
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	}
+#else
+	size_t offset = ist.size();
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
+	{
+		// If there is an incoming set, but were are not recursive,
+		// then refuse to do anything more.
+		if (not recursive) return;
+
+		const std::string& isid = it->key.ToString().substr(offset);
+		std::string isatom;
+		_rfile->Get(rocksdb::ReadOptions(), "a@" + isid + ":", &isatom);
+
+		// Its possible its been already removed. For example,
+		// delete a in (Link (Link a b) a)
+		if (0 < isatom.size())
+			removeSatom(isatom, isid, false, recursive);
+	}
+#endif
 
 	// If the atom to be deleted has a hash, we need to remove it
 	// (the atom) from the list of other atoms having the same hash.
@@ -714,9 +737,36 @@ void RocksStorage::removeSatom(const std::string& satom,
 // =========================================================
 // Work with the incoming set
 
+void RocksStorage::appendToInset(const std::string& klist,
+                                 const std::string& sid)
+{
+#if USE_INLIST_STRING
+	appendToSidList(klist, sid);
+#else
+	std::string key = klist + "-" + sid;
+	rocksdb::Status s = _rfile->Put(rocksdb::WriteOptions(), key, "");
+	if (not s.ok())
+		throw IOException(TRACE_INFO, "Internal Error!");
+#endif
+}
+
+void RocksStorage::remFromInset(const std::string& klist,
+                                const std::string& sid)
+{
+#if USE_INLIST_STRING
+	remFromSidList(klist, sid);
+#else
+	std::string key = klist + "-" + sid;
+	rocksdb::Status s = _rfile->Delete(rocksdb::WriteOptions(), key);
+	if (not s.ok())
+		throw IOException(TRACE_INFO, "Internal Error!");
+#endif
+}
+
 /// Load the incoming set based on the key prefix `ist`.
 void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 {
+#if USE_INLIST_STRING
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -736,6 +786,19 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 			last = inlist.find(' ', nsk);
 		}
 	}
+#else
+	size_t offset = ist.size();
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
+	{
+		// The sid is appended to the key.
+		const std::string& sid = it->key().ToString().substr(offset);
+
+		Handle hi = getAtom(sid);
+		getKeys(as, sid, hi);
+		as->add_atom(hi);
+	}
+#endif
 }
 
 /// Backing API - get the incoming set.

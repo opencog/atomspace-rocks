@@ -82,6 +82,8 @@ class RocksStorage : public StorageNode
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
 		void loadAtoms(AtomTable& table, const std::string& pfx);
 		void loadInset(AtomSpace*, const std::string& ist);
+		void appendToInset(const std::string&, const std::string&);
+		void remFromInset(const std::string&, const std::string&);
 
 		void removeSatom(const std::string&, const std::string&, bool, bool);
 		void remIncoming(const std::string&, const std::string&,
