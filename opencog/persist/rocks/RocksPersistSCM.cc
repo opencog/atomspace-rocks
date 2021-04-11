@@ -68,6 +68,7 @@ void RocksPersistSCM::init(void)
     define_scheme_primitive("cog-rocks-stats", &RocksPersistSCM::do_stats, this, "persist-rocks");
     define_scheme_primitive("cog-rocks-clear-stats", &RocksPersistSCM::do_clear_stats, this, "persist-rocks");
     define_scheme_primitive("cog-rocks-get", &RocksPersistSCM::do_get, this, "persist-rocks");
+    define_scheme_primitive("cog-rocks-print", &RocksPersistSCM::do_print, this, "persist-rocks");
 }
 
 RocksPersistSCM::~RocksPersistSCM()
@@ -156,6 +157,16 @@ void RocksPersistSCM::do_get(const std::string& prefix)
         return;
     }
     _storage->print_range(prefix);
+}
+
+void RocksPersistSCM::do_print(const Handle& h, const std::string& prefix)
+{
+    RocksStorageNodePtr snp = RocksStorageNodeCast(h);
+    if (nullptr == snp) {
+        printf("cog-rocks-print: Not a storage node!\n");
+        return;
+    }
+    snp->print_range(prefix);
 }
 
 void opencog_persist_rocks_init(void)

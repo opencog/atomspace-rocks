@@ -59,6 +59,7 @@ public:
 	void do_clear_stats(void);
 
 	void do_get(const std::string&);
+	void do_print(const Handle&, const std::string&);
 }; // class
 
 /** @}*/
