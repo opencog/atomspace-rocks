@@ -702,7 +702,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid);
 
 	// Delete all values hanging on the atom ...
-	pfx = "k@" + sid;
+	pfx = "k@" + sid + ":";
 	it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
