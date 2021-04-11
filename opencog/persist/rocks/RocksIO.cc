@@ -787,12 +787,20 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		}
 	}
 #else
-	size_t offset = ist.size();
+	size_t istlen = ist.size();
+	size_t offset = -1;
+	if ('-' == ist[istlen - 1]) offset = 0;
+
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
+		const std::string& frag = it->key().ToString().substr(istlen);
+
 		// The sid is appended to the key.
-		const std::string& sid = it->key().ToString().substr(offset);
+		// `ist` is either `i@ABC:ConceptNode-` or else it is
+		// just `i@ABC:` and we have to search for the dash.
+		if (0 != offset) offset = frag.find('-', istlen) + 1;
+		const std::string& sid = frag.substr(offset);
 
 		Handle hi = getAtom(sid);
 		getKeys(as, sid, hi);
