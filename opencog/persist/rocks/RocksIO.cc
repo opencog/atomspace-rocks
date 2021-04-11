@@ -157,24 +157,16 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // ======================================================================
 // Some notes about threading and locking.
 //
-// The current implementation is minimalist, and uses only one mutex
-// to ensure the safety of the one obviously-racey section, where
-// multiple threads might be editing the IncomingSet of the same
-// Atom.  (We use only one lock to protect *all* incoming sets.)
+// The current implementation is fairly minimal; it uses two mutexes.
+// One mutex protects the increment and issue of new sid's (new numeric
+// ID's for each atom). The other mutex guarantees atomic updates of
+// the atom plus it's incoming set.
 //
-// Note that, even without this lock, the current multi-threading
-// test i.e. MultiPersistUTest passes just fine. Maybe the test is
-// too short, or too small, or doesn't do anything dangerous...
-//
-// Besides the above, there may be other racey usages that are not
-// anticipated. For example, if one thread is getting the same Atom
-// that another thread is deleting, it might be possible to arrive at
-// some weird state, possibly with a crash(??) or a malfunctioning
-// get(??). This code has NOT been audited for this situation.
-// The degree of safety here for production usage is unknown.
-// (That's why it's version 0.8 right now, as of 4 August 2020.)
-// The good news: this file is really pretty small, as such things go,
-// so auditing should not be that hard.
+// Note that, even without these locks, the MultiPersistUTest multi-
+// threading test i.e. MultiPersistUTest passes just fine. Maybe this
+// test is too short, or too small, or doesn't do anything dangerous...
+// The other test: MultiDeleteUTest does need the locking. It tests
+// the simultaneous addition and deletion of the same atoms.
 
 // ======================================================================
 /// Place Atom into storage.
