@@ -642,7 +642,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	}
 #else
-	size_t offset = ist.size();
+	size_t istlen = ist.size();
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -650,7 +650,11 @@ void RocksStorage::removeSatom(const std::string& satom,
 		// then refuse to do anything more.
 		if (not recursive) return;
 
-		const std::string& isid = it->key().ToString().substr(offset);
+		// The key is of the form `i@ABC:ConceptNode-456`
+		// where `456` is the sid that we want.
+		const std::string& frag = it->key().ToString().substr(istlen);
+		size_t offset = frag.find('-') + 1;
+		const std::string& isid = frag.substr(offset);
 		std::string isatom;
 		_rfile->Get(rocksdb::ReadOptions(), "a@" + isid + ":", &isatom);
 
@@ -787,6 +791,9 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		}
 	}
 #else
+
+	// `ist` is either `i@ABC:ConceptNode-` or else it is
+	// just `i@ABC:` and we have to search for the dash.
 	size_t istlen = ist.size();
 	size_t offset = -1;
 	if ('-' == ist[istlen - 1]) offset = 0;
@@ -797,9 +804,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		const std::string& frag = it->key().ToString().substr(istlen);
 
 		// The sid is appended to the key.
-		// `ist` is either `i@ABC:ConceptNode-` or else it is
-		// just `i@ABC:` and we have to search for the dash.
-		if (0 != offset) offset = frag.find('-', istlen) + 1;
+		if (0 != offset) offset = frag.find('-') + 1;
 		const std::string& sid = frag.substr(offset);
 
 		Handle hi = getAtom(sid);
