@@ -124,6 +124,11 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // This works, but has the (minor!?) disadvantage that this list has
 // to be edited every time an atom is added or removed.
 //
+// TODO: The above incoming set design is problematic. The `learn`
+// codebase performs clustering, which takes atoms with giant incoming
+// sets, and moves them around. This leads to vast numbers of edits to
+// the incoming set, which seems to be very punishing to RocksDB.
+//
 // That's pretty much it ... except that there's one last little tricky
 // bit, forced on us by alpha-equivalence and alpha-conversion.
 //
