@@ -650,7 +650,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		// then refuse to do anything more.
 		if (not recursive) return;
 
-		const std::string& isid = it->key.ToString().substr(offset);
+		const std::string& isid = it->key().ToString().substr(offset);
 		std::string isatom;
 		_rfile->Get(rocksdb::ReadOptions(), "a@" + isid + ":", &isatom);
 
