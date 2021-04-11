@@ -142,7 +142,7 @@ void RocksPersistSCM::do_stats(void)
 void RocksPersistSCM::do_clear_stats(void)
 {
     if (nullptr == _storage) {
-        printf("cog-rocks-stats: AtomSpace not connected to database!\n");
+        printf("cog-rocks-clear-stats: AtomSpace not connected to database!\n");
         return;
     }
 
@@ -152,7 +152,7 @@ void RocksPersistSCM::do_clear_stats(void)
 void RocksPersistSCM::do_get(const std::string& prefix)
 {
     if (nullptr == _storage) {
-        printf("cog-rocks-stats: AtomSpace not connected to database!\n");
+        printf("cog-rocks-get: AtomSpace not connected to database!\n");
         return;
     }
     _storage->print_range(prefix);
