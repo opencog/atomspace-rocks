@@ -33,6 +33,11 @@
 
 using namespace opencog;
 
+// The old incoming-list needs locks.
+#if USE_INLIST_STRING
+	#define NEED_LIST_LOCK 1
+#endif // USE_INLIST_STRING
+
 /// int to base-62 We use base62 not base64 because we
 /// want to reserve punctuation "just in case" as special chars.
 std::string RocksStorage::aidtostr(uint64_t aid) const
@@ -164,16 +169,13 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // ======================================================================
 // Some notes about threading and locking.
 //
-// The current implementation is fairly minimal; it uses two mutexes.
-// One mutex protects the increment and issue of new sid's (new numeric
-// ID's for each atom). The other mutex guarantees atomic updates of
-// the atom plus it's incoming set.
+// The current implementation is minimal; it uses one mutex to protect
+// the increment and issue of new sid's (new numeric ID's for each atom).
 //
-// Note that, even without these locks, the MultiPersistUTest multi-
-// threading test i.e. MultiPersistUTest passes just fine. Maybe this
-// test is too short, or too small, or doesn't do anything dangerous...
-// The other test: MultiDeleteUTest does need the locking. It tests
-// the simultaneous addition and deletion of the same atoms.
+// There is another mutex that guarantees that the update of the atom
+// plus it's incoming set will be atomic. This was needed in an earlier
+// incoming-set design; it's not needed in the current design. It's been
+// left in the code, #ifdef'ed out, just in case something blows up.
 
 // ======================================================================
 /// Place Atom into storage.
@@ -221,11 +223,13 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	// The rest is safe to do in parallel.
 	lck.unlock();
 
+#ifdef NEED_LIST_LOCK
 	// The-read-modify-write of the incoming-set list has to be
 	// protected from other callers, as well as from the atom
 	// deletion code. Delete races are checked with a@ and so the
 	// update of a@ and i@ must be atomic.
 	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
+#endif
 
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
@@ -369,7 +373,9 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// because doing it any other way would require
 			// tracking keys. Which is hard; the atomspace was
 			// designed to NOT track keys on purpose, for efficiency.)
+#ifdef NEED_LIST_LOCK
 			std::lock_guard<std::recursive_mutex> lck(_mtx_list);
+#endif
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
@@ -522,10 +528,12 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 		if (0 == sid.size()) return;
 	}
 
+#ifdef NEED_LIST_LOCK
 	// Removal needs to be atomic, and not race with other
 	// removals, nor with other manipulations of the incoming
 	// set. A plain-old lock is the easiest way to get this.
 	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
+#endif
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 
