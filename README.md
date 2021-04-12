@@ -48,14 +48,16 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is **Version 0.9.9**.  All unit tests pass.  This is effectively
-version 1.0; waiting on user feedback.
+This is **Version 1.0.0**.  All unit tests pass.  It has been used in
+at least one "serious" project to process many millions of Atoms.
 
-User feedback: This code is 2x or 3x faster than Postgres on small
-datasets and on synthetic benchmarks. It is 9x slower than Postgres
-on a real-world dataset. Why? See
-[bug report #11](https://github.com/opencog/atomspace-rocks/issues/11)
-and also see #9 and #10 as well.
+This code is 2x or 3x faster than Postgres on synthetic benchmarks,
+and has been observed to run 12x faster in a real-world application.
+
+Note: RocksDB version 5.17 that comes with Ubuntu 20.04 (focal) appears
+to leak RAM and file descriptors. See
+[bug report #10](https://github.com/opencog/atomspace-rocks/issues/10).
+The root cause, the trigger is not known.
 
 
 Example Usage
