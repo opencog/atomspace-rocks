@@ -65,24 +65,25 @@ void RocksStorage::init(const char * uri)
 	// Create the file if it doesn't exist yet.
 	options.create_if_missing = true;
 
-	// RocksDB likes to splurge with `*.sst` files. Without setting the
-	// upper bound, Rocks will exceed the ulimit -n setting, and follow
-	// up with data corruption. Worse: it appears that total RAM usage
-	// is about 3x the total disk usage, and disk usage is dominated by
-	// tempory sst files. For me, each sst file is about 40MBytes, and
-	// costs about 120MBytes of RAM. Thus, 100 of these chews up 12
-	// GBytes, and 1K of them chews up 120GBytes. Root cause, unknown.
-	// See https://github.com/facebook/rocksdb/issues/3216 for more.
-	// The below hard-codes max_open_files to 300, which means that
-	// Rocks will use about 172 sst files, and about 20GB RAM. XXX
-	// This is submission by blunt-force trauma; something more elegant
-	// is needed here.
+	// The primary consumer of disk and RAM in RocksDB are the `*.sst`
+	// files: each one is opened and memory-mapped. RocksDB does NOT
+	// check the `ulimit -n` setting, and can overflow it, resulting
+	// in failed reads and dropped writes. We MUST set `max_open_files`
+	// to an acceptable value. Rocks will run, just more slowly, when
+	// it hits this limit.
+	//
+	// For me, each sst file averages about 40MBytes, with a roughly
+	// comparable amount of RAM usage. Thus, the linux default of 1024
+	// limits RAM usage to about 40GBytes.
+	//
+	// The setting is a bit of a guesstimate: guile+opencog uses maybe
+	// 200 or so filedesc's for open *.go bytecode files. So reserve
+	// that many. This is a bit blunt.
 	struct rlimit maxfh;
 	getrlimit(RLIMIT_NOFILE, &maxfh);
 	size_t max_of = maxfh.rlim_cur;
 	if (400 < max_of) max_of -= 200;
 	else max_of /= 2;
-	if (300 < max_of) max_of = 300;
 
 	options.max_open_files = max_of;
 
