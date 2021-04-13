@@ -401,6 +401,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 		if (vp) vp = as->add_atoms(vp);
 		h->setValue(key, vp);
 	}
+	delete it;
 }
 
 /// Backend callback - get the Atom
@@ -621,7 +622,11 @@ void RocksStorage::removeSatom(const std::string& satom,
 	{
 		// If there is an incoming set, but were are not recursive,
 		// then refuse to do anything more.
-		if (not recursive) return;
+		if (not recursive)
+		{
+			delete it;
+			return;
+		}
 
 		// The list of sids of incoming Atoms.
 		std::string inset = it->value().ToString();
@@ -649,6 +654,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		// Finally, delete the inset itself.
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	}
+	delete it;
 #else
 	size_t istlen = ist.size();
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -656,7 +662,11 @@ void RocksStorage::removeSatom(const std::string& satom,
 	{
 		// If there is an incoming set, but were are not recursive,
 		// then refuse to do anything more.
-		if (not recursive) return;
+		if (not recursive)
+		{
+			delete it;
+			return;
+		}
 
 		// The key is of the form `i@ABC:ConceptNode-456`
 		// where `456` is the sid that we want.
@@ -671,6 +681,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		if (0 < isatom.size())
 			removeSatom(isatom, isid, false, recursive);
 	}
+	delete it;
 #endif
 
 	// If the atom to be deleted has a hash, we need to remove it
@@ -744,6 +755,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
+	delete it;
 }
 
 // =========================================================
@@ -798,6 +810,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 			last = inlist.find(' ', nsk);
 		}
 	}
+	delete it;
 #else
 
 	// `ist` is either `i@ABC:ConceptNode-` or else it is
@@ -819,6 +832,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		getKeys(as, sid, hi);
 		as->add_atom(hi);
 	}
+	delete it;
 #endif
 }
 
@@ -865,6 +879,7 @@ void RocksStorage::loadAtoms(AtomTable &table, const std::string& pfx)
 		getKeys(as, it->value().ToString(), h);
 		table.add(h);
 	}
+	delete it;
 }
 
 /// Backing API - load the entire AtomSpace.
@@ -890,6 +905,7 @@ void RocksStorage::loadType(AtomTable &table, Type t)
 		getKeys(as, it->value().ToString(), h);
 		table.add(h);
 	}
+	delete it;
 }
 
 void RocksStorage::storeAtomSpace(const AtomTable &table)
@@ -914,6 +930,7 @@ void RocksStorage::kill_data(void)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(""); it->Valid(); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
+	delete it;
 #endif
 
 	// Reset.
@@ -930,6 +947,7 @@ void RocksStorage::print_range(const std::string& pfx)
 		printf("rkey: >>%s<<    rval: >>%s<<\n",
 			it->key().ToString().c_str(), it->value().ToString().c_str());
 	}
+	delete it;
 }
 
 /// Return a count of the number of records with the indicated prefix
@@ -940,6 +958,7 @@ size_t RocksStorage::count_records(const std::string& pfx)
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		cnt++;
 
+	delete it;
 	return cnt;
 }
 
