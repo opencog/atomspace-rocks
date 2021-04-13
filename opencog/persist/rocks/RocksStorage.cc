@@ -76,14 +76,17 @@ void RocksStorage::init(const char * uri)
 	// comparable amount of RAM usage. Thus, the linux default of 1024
 	// limits RAM usage to about 40GBytes.
 	//
-	// The setting is a bit of a guesstimate: guile+opencog uses maybe
-	// 200 or so filedesc's for open *.go bytecode files. So reserve
-	// that many. This is a bit blunt.
+	// The setting is a bit of a guesstimate: guile+opencog currently
+	// uses 185 filedesc's for open *.so shared libs and *.go bytecode
+	// files, and another 25 for misc other stuff. So reserve that many
+	// plus a little more, for future expansion.  This is a bit blunt.
 	struct rlimit maxfh;
 	getrlimit(RLIMIT_NOFILE, &maxfh);
 	size_t max_of = maxfh.rlim_cur;
-	if (400 < max_of) max_of -= 200;
-	else max_of /= 2;
+	if (256 < max_of) max_of -= 230;
+	else
+		throw IOException(TRACE_INFO,
+			"Open file limit too low. Set ulimit -n 1024 or larger!");
 
 	options.max_open_files = max_of;
 
