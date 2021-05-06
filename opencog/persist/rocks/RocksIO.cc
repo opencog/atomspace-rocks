@@ -83,6 +83,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 
 // ======================================================================
 // Common abbreviations:
+// ---------------------
 // satom == string s-expression for an Atom.
 // sval == string s-expression for a Value.
 // stype == string name of Atomese Type. e.g. "ConceptNode".
@@ -101,6 +102,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "h@" shash . sid-list -- finds all sids having a given hash
 
 // General design:
+// ---------------
 // The basic representation for an Atom is its s-expression.
 // Because this is verbose, each s-expression is associated with a
 // unique integer, the "aid" or "atom id". Since Rocks works with
@@ -129,13 +131,21 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // long space-separated list of sids, or by encoding each sid into
 // it's own key. The former style seems to cause issues when the
 // incoming set is large: the update of the large string seems to
-// drive RocksDB just crazy, leading to RAM and dis-usage issues.
+// drive RocksDB just crazy, leading to RAM and disk-usage issues.
 // See https://github.com/facebook/rocksdb/issues/3216 for more.
 //
 // The current code will use the space-separated list when
 // #define USE_INLIST_STRING 1 is set, otherwise it uses one key
 // per incoming.
-//
+
+// Debugging
+// ---------
+// To view the database contents, use `cog-rocks-get` to fetch a range
+// of database keys. For example, (cog-rocks-get "n@(Con") will print
+// all of the ConceptNodes stored in the database.
+
+// Alpha Conversion
+// ----------------
 // That's pretty much it ... except that there's one last little tricky
 // bit, forced on us by alpha-equivalence and alpha-conversion.
 //
