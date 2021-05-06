@@ -644,7 +644,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 
 	// --------------------
 	ValuePtr pvt = createStringValue(
-		std::vector<std::string>({"aaa", "bb bb bb", "ccc ccc ccc"}));
+		std::vector<std::string>({"a\"a\"a", "bb) (bb) (bb", "ccc \")(\"ccc))\" ccc"}));
 	at->setValue(key, pvt);
 	bt->setValue(key, pvt);
 	ct->setValue(key, pvt);
