@@ -11,7 +11,7 @@
 	"opencog_persist_rocks_init")
 
 (export cog-rocks-clear-stats cog-rocks-close cog-rocks-open
-cog-rocks-stats cog-rocks-load-atomspace)
+cog-rocks-stats)
 
 ; --------------------------------------------------------------
 
