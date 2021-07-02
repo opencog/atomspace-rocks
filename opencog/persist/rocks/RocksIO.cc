@@ -188,6 +188,13 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // left in the code, #ifdef'ed out, just in case something blows up.
 
 // ======================================================================
+
+#define CHECK_OPEN \
+	if (nullptr == _rfile) \
+		throw IOException(TRACE_INFO, "RocksDB is not open! %s", \
+			_name.c_str());
+
+// ======================================================================
 /// Place Atom into storage.
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
@@ -269,6 +276,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
+	CHECK_OPEN;
 	std::string sid = writeAtom(h);
 
 	// Separator for keys
@@ -293,6 +301,7 @@ void RocksStorage::storeValue(const std::string& skid,
 /// Backing-store API.
 void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
+	CHECK_OPEN;
 	std::string sid = writeAtom(h);
 	std::string kid = writeAtom(key);
 	ValuePtr vp = h->getValue(key);
@@ -346,6 +355,7 @@ ValuePtr RocksStorage::getValue(const std::string& skid)
 /// Backend callback
 void RocksStorage::loadValue(const Handle& h, const Handle& key)
 {
+	CHECK_OPEN;
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string kid = findAtom(key);
@@ -417,6 +427,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 /// Backend callback - get the Atom
 void RocksStorage::getAtom(const Handle& h)
 {
+	CHECK_OPEN;
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	getKeys(h->getAtomSpace(), sid, h);
@@ -425,6 +436,7 @@ void RocksStorage::getAtom(const Handle& h)
 /// Backend callback - find the Link
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 {
+	CHECK_OPEN;
 	// If it's alpha-convertible, then look for equivalents.
 	bool convertible = nameserver().isA(t, ALPHA_CONVERTIBLE_LINK);
 	if (convertible)
@@ -457,6 +469,7 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 /// Find the sid of Atom. Return empty string if its not there.
 std::string RocksStorage::findAtom(const Handle& h)
 {
+	CHECK_OPEN;
 	// If it's alpha-convertible, maybe we already know about
 	// an alpha-equivalent form...
 	if (nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK))
@@ -506,6 +519,7 @@ Handle RocksStorage::findAlpha(const Handle& h, const std::string& shash,
 
 void RocksStorage::removeAtom(const Handle& h, bool recursive)
 {
+	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
 	rocksdb::Slice start, end;
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
@@ -849,6 +863,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 /// Backing API - get the incoming set.
 void RocksStorage::getIncomingSet(AtomSpace* as, const Handle& h)
 {
+	CHECK_OPEN;
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":";
@@ -857,6 +872,7 @@ void RocksStorage::getIncomingSet(AtomSpace* as, const Handle& h)
 
 void RocksStorage::getIncomingByType(AtomSpace* as, const Handle& h, Type t)
 {
+	CHECK_OPEN;
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
 	std::string ist = "i@" + sid + ":" + nameserver().getTypeName(t);
@@ -880,6 +896,7 @@ void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
 /// Currently, the `pfx` must be "n@ " for Nodes or "l@" for Links.
 void RocksStorage::loadAtoms(AtomTable &table, const std::string& pfx)
 {
+	CHECK_OPEN;
 	AtomSpace* as = table.getAtomSpace();
 
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -895,6 +912,7 @@ void RocksStorage::loadAtoms(AtomTable &table, const std::string& pfx)
 /// Backing API - load the entire AtomSpace.
 void RocksStorage::loadAtomSpace(AtomTable &table)
 {
+	CHECK_OPEN;
 	// First, load all the nodes ... then the links.
 	// XXX TODO - maybe load links depth-order...
 	loadAtoms(table, "n@");
@@ -903,6 +921,7 @@ void RocksStorage::loadAtomSpace(AtomTable &table)
 
 void RocksStorage::loadType(AtomTable &table, Type t)
 {
+	CHECK_OPEN;
 	AtomSpace* as = table.getAtomSpace();
 
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
@@ -920,6 +939,7 @@ void RocksStorage::loadType(AtomTable &table, Type t)
 
 void RocksStorage::storeAtomSpace(const AtomTable &table)
 {
+	CHECK_OPEN;
 	HandleSet all_atoms;
 	table.getHandleSetByType(all_atoms, ATOM, true);
 	for (const Handle& h : all_atoms)
@@ -932,6 +952,7 @@ void RocksStorage::storeAtomSpace(const AtomTable &table)
 /// Kill everything in the database ... everything.
 void RocksStorage::kill_data(void)
 {
+	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
 	rocksdb::Slice start, end;
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
@@ -951,6 +972,7 @@ void RocksStorage::kill_data(void)
 /// Dump database contents to stdout.
 void RocksStorage::print_range(const std::string& pfx)
 {
+	CHECK_OPEN;
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
@@ -963,6 +985,7 @@ void RocksStorage::print_range(const std::string& pfx)
 /// Return a count of the number of records with the indicated prefix
 size_t RocksStorage::count_records(const std::string& pfx)
 {
+	CHECK_OPEN;
 	size_t cnt = 0;
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
