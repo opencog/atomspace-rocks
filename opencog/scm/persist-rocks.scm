@@ -49,3 +49,10 @@ cog-rocks-stats)
     to the stdout of the server. These statistics can be quite arcane
     and are useful primarily to the developers of the backend.
 ")
+
+(set-procedure-property! cog-rocks-print 'documentation
+"
+ cog-rocks-print RSN PREFIX - internal-use-only debugging utility.
+    RSN must be a RocksStorageNode.
+    PREFIX must be a prefix, for example \"a@\" or \"n@\" and so on.
+")
