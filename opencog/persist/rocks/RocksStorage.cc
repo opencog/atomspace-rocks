@@ -197,20 +197,33 @@ void RocksStorage::clear_stats(void)
 {
 }
 
-void RocksStorage::print_stats(void)
+std::string RocksStorage::monitor(void)
 {
-	printf("Connected to %s\n", _uri.c_str());
-	printf("Database contents:\n");
-	printf("Next aid: %lu\n", _next_aid.load());
-	printf("Atoms/Links/Nodes a@: %lu l@: %lu n@: %lu\n",
-		count_records("a@"), count_records("l@"), count_records("n@"));
-	printf("Keys/Incoming/Hash k@: %lu i@: %lu h@: %lu\n",
-		count_records("k@"), count_records("i@"), count_records("h@"));
+	std::string rs;
+	rs += "Connected to `" + _uri + "`\n";
+	rs += "Database contents:\n";
+	rs += "  Next aid: " + std::to_string(_next_aid.load());
+	rs += "\n";
+	rs += "  Atoms/Links/Nodes a@: " + std::to_string(count_records("a@"));
+	rs += " l@: " + std::to_string(count_records("l@"));
+	rs += " n@: " + std::to_string(count_records("n@"));
+	rs += "\n";
+	rs += "  Keys/Incoming/Hash k@: " + std::to_string(count_records("k@"));
+	rs += " i@: " + std::to_string(count_records("i@"));
+	rs += " h@: " + std::to_string(count_records("h@"));
+	rs += "\n";
 
-	printf("\n");
 	struct rlimit maxfh;
 	getrlimit(RLIMIT_NOFILE, &maxfh);
-	printf("Unix max open files lim=%lu %lu\n", maxfh.rlim_cur, maxfh.rlim_max);
+	rs += "Unix max open files rlimit= " + std::to_string(maxfh.rlim_cur);
+	rs += " " + std::to_string(maxfh.rlim_max);
+	rs += "\n";
+	return rs;
+}
+
+void RocksStorage::print_stats(void)
+{
+	printf("%s\n", monitor().c_str());
 }
 
 DEFINE_NODE_FACTORY(RocksStorageNode, ROCKS_STORAGE_NODE)
