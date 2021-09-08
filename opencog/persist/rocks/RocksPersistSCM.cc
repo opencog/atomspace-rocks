@@ -136,7 +136,7 @@ void RocksPersistSCM::do_stats(void)
         return;
     }
 
-    printf("cog-rocks-stats: Atomspace holds %lu atoms\n", _as->get_size());
+    printf("cog-rocks-stats: Atomspace holds %zu atoms\n", _as->get_size());
     _storage->print_stats();
 }
 
