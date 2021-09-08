@@ -131,6 +131,7 @@ void MultiPersistUTest::setUp(void)
 
 void MultiPersistUTest::tearDown(void)
 {
+    store->close();
     delete _as;
 }
 
