@@ -138,6 +138,10 @@ void RocksPersistSCM::do_stats(void)
 
     printf("cog-rocks-stats: Atomspace holds %zu atoms\n", _as->get_size());
     _storage->print_stats();
+
+    // Optionally validate the database contents for corruption.
+    // We're not doing this, because everything seems to be OK.
+    // _storage->checkdb();
 }
 
 void RocksPersistSCM::do_clear_stats(void)

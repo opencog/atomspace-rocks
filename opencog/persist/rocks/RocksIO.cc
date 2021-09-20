@@ -995,4 +995,34 @@ size_t RocksStorage::count_records(const std::string& pfx)
 	return cnt;
 }
 
+/// Perform some consistency checks
+void RocksStorage::checkdb()
+{
+	CHECK_OPEN;
+
+	// Look for orphaned Values -- Values not attached to any Atom.
+	// These are in the form of "k@sid:" which have no matching "a@sid:"
+	// Note the use of the colon to terminate te sid!
+	std::string pfx = "k@";
+	size_t cnt = 0;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+	{
+		std::string vkey = it->key().ToString();
+		vkey[0] = 'a';
+		vkey.resize(vkey.find(':') + 1);
+
+		std::string satom;
+		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), vkey,  &satom);
+		if (not s.ok())
+			cnt++;
+	}
+	delete it;
+
+	if (cnt)
+		printf("Error: found %zu orphaned Values!\n", cnt);
+	else
+		printf("Completed DB consistency check w/o errors\n");
+}
+
 // ======================== THE END ======================

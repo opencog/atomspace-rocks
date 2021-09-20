@@ -132,6 +132,7 @@ class RocksStorage : public StorageNode
 		// Debugging and performance monitoring
 		void print_stats(void);
 		void clear_stats(void); // reset stats counters.
+		void checkdb(void);
 };
 
 class RocksStorageNode : public RocksStorage
