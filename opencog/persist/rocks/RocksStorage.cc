@@ -35,6 +35,7 @@
 // #include "rocksdb/table.h"
 // #include "rocksdb/filter_policy.h"
 
+#include <opencog/util/Logger.h>
 #include <opencog/atoms/base/Node.h>
 
 #include "RocksStorage.h"
