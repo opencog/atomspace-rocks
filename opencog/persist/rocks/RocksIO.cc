@@ -861,7 +861,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 }
 
 /// Backing API - get the incoming set.
-void RocksStorage::getIncomingSet(AtomSpace* as, const Handle& h)
+void RocksStorage::fetchIncomingSet(AtomSpace* as, const Handle& h)
 {
 	CHECK_OPEN;
 	std::string sid = findAtom(h);
@@ -870,7 +870,7 @@ void RocksStorage::getIncomingSet(AtomSpace* as, const Handle& h)
 	loadInset(as, ist);
 }
 
-void RocksStorage::getIncomingByType(AtomSpace* as, const Handle& h, Type t)
+void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 {
 	CHECK_OPEN;
 	std::string sid = findAtom(h);
@@ -879,38 +879,27 @@ void RocksStorage::getIncomingByType(AtomSpace* as, const Handle& h, Type t)
 	loadInset(as, ist);
 }
 
-void RocksStorage::getIncomingSet(AtomTable& table, const Handle& h)
-{
-	getIncomingSet(table.getAtomSpace(), h);
-}
-
-void RocksStorage::getIncomingByType(AtomTable& table, const Handle& h, Type t)
-{
-	getIncomingByType(table.getAtomSpace(), h, t);
-}
-
 // =========================================================
 // Load and store everything in bulk.
 
 /// Load all the Atoms starting with the prefix.
 /// Currently, the `pfx` must be "n@ " for Nodes or "l@" for Links.
-void RocksStorage::loadAtoms(AtomTable &table, const std::string& pfx)
+void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 {
 	CHECK_OPEN;
-	AtomSpace* as = table.getAtomSpace();
 
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		getKeys(as, it->value().ToString(), h);
-		table.add(h);
+		as->storage_add_nocheck(h);
 	}
 	delete it;
 }
 
 /// Backing API - load the entire AtomSpace.
-void RocksStorage::loadAtomSpace(AtomTable &table)
+void RocksStorage::loadAtomSpace(AtomSpace* table)
 {
 	CHECK_OPEN;
 	// First, load all the nodes ... then the links.
@@ -919,10 +908,9 @@ void RocksStorage::loadAtomSpace(AtomTable &table)
 	loadAtoms(table, "l@");
 }
 
-void RocksStorage::loadType(AtomTable &table, Type t)
+void RocksStorage::loadType(AtomSpace* as, Type t)
 {
 	CHECK_OPEN;
-	AtomSpace* as = table.getAtomSpace();
 
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
 	std::string typ = pfx + nameserver().getTypeName(t);
@@ -932,16 +920,16 @@ void RocksStorage::loadType(AtomTable &table, Type t)
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		getKeys(as, it->value().ToString(), h);
-		table.add(h);
+		as->storage_add_nocheck(h);
 	}
 	delete it;
 }
 
-void RocksStorage::storeAtomSpace(const AtomTable &table)
+void RocksStorage::storeAtomSpace(const AtomSpace* table)
 {
 	CHECK_OPEN;
-	HandleSet all_atoms;
-	table.getHandleSetByType(all_atoms, ATOM, true);
+	HandleSeq all_atoms;
+	table->get_handles_by_type(all_atoms, ATOM, true);
 	for (const Handle& h : all_atoms)
 		storeAtom(h);
 

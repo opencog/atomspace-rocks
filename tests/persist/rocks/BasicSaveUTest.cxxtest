@@ -77,8 +77,8 @@ class BasicSaveUTest :  public CxxTest::TestSuite
         void tearDown(void);
 
         void single_atom_save_restore(std::string id);
-        void add_to_table(int, AtomTable *, std::string id);
-        void check_table(int, AtomTable *, std::string id);
+        void add_to_table(int, AtomSpace*, std::string id);
+        void check_table(int, AtomSpace*, std::string id);
 
         void test_single_atom(void);
         void test_fresh_atom(void);
@@ -215,19 +215,19 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
 
 // ============================================================
 
-void BasicSaveUTest::add_to_table(int idx, AtomTable *table, std::string id)
+void BasicSaveUTest::add_to_table(int idx, AtomSpace *table, std::string id)
 {
     // Create an atom ...
     n1[idx] = createNode(SCHEMA_NODE, id + "fromNode");
     TruthValuePtr stv(SimpleTruthValue::createTV(0.11, 1.0/(100.0+idx)));
     n1[idx]->setTruthValue(stv);
-    n1[idx] = table->add(n1[idx], false);
+    n1[idx] = table->add_atom(n1[idx]);
     a1[idx] = n1[idx];
 
     n2[idx] = createNode(SCHEMA_NODE, id + "toNode");
     TruthValuePtr stv2(SimpleTruthValue::createTV(0.22, 1.0/(200.0+idx)));
     n2[idx]->setTruthValue(stv2);
-    n2[idx] = table->add(n2[idx], false);
+    n2[idx] = table->add_atom(n2[idx]);
     a2[idx] = n2[idx];
 
     // ODBC fails when there is a question mark in the text.
@@ -238,10 +238,10 @@ void BasicSaveUTest::add_to_table(int idx, AtomTable *table, std::string id)
     // We need to test crazy-large and crazy-small float point values.
     TruthValuePtr stv3(SimpleTruthValue::createTV(1.0e33/3.0, (1.0e-30)/(300.0+idx)));
     n3[idx]->setTruthValue(stv3);
-    n3[idx] = table->add(n3[idx], false);
+    n3[idx] = table->add_atom(n3[idx]);
     a3[idx] = n3[idx];
 
-    // The NumberNode will go through the AtomTable clone factory
+    // The NumberNode will go through the AtomSpace clone factory
     // and should thus elicit any errors in clone uuid handling.
     char buf[40]; sprintf(buf, "%f", idx+0.14159265358979);
     n4[idx] = createNode(NUMBER_NODE, buf);
@@ -249,7 +249,7 @@ void BasicSaveUTest::add_to_table(int idx, AtomTable *table, std::string id)
     // We need to test crazy-large and crazy-small float point values.
     TruthValuePtr stv4(SimpleTruthValue::createTV((4.0e-200)/9.0, 1.0e40/(400.0+idx)));
     n4[idx]->setTruthValue(stv4);
-    n4[idx] = table->add(n4[idx], false);
+    n4[idx] = table->add_atom(n4[idx]);
     a4[idx] = n4[idx];
 
     HandleSeq hvec;
@@ -259,22 +259,22 @@ void BasicSaveUTest::add_to_table(int idx, AtomTable *table, std::string id)
     hvec.push_back(a4[idx]->get_handle());
 
     l[idx] = createLink(hvec, SET_LINK);
-    l[idx] = table->add(l[idx], false);
+    l[idx] = table->add_atom(l[idx]);
     al[idx] = l[idx];
 }
 
-void BasicSaveUTest::check_table(int idx, AtomTable *table, std::string id)
+void BasicSaveUTest::check_table(int idx, AtomSpace *table, std::string id)
 {
-    Handle hb1 = table->getHandle(Handle(n1[idx]));
+    Handle hb1 = table->get_atom(Handle(n1[idx]));
     atomCompare(a1[idx], hb1, "check_table hb1");
 
-    Handle hb2 = table->getHandle(Handle(n2[idx]));
+    Handle hb2 = table->get_atom(Handle(n2[idx]));
     atomCompare(a2[idx], hb2, "check_table hb2");
 
-    Handle hb3 = table->getHandle(Handle(n3[idx]));
+    Handle hb3 = table->get_atom(Handle(n3[idx]));
     atomCompare(a3[idx], hb3, "check_table hb3");
 
-    Handle hb4 = table->getHandle(Handle(n4[idx]));
+    Handle hb4 = table->get_atom(Handle(n4[idx]));
     atomCompare(a4[idx], hb4, "check_table hb4");
 
     HandleSeq hvec;
@@ -284,7 +284,7 @@ void BasicSaveUTest::check_table(int idx, AtomTable *table, std::string id)
     hvec.push_back(hb4);
 
     Handle lb(createLink(hvec, SET_LINK));
-    Handle hlb = table->getHandle(lb);
+    Handle hlb = table->get_atom(lb);
     atomCompare(al[idx], hlb, "check_table hlb");
 }
 
@@ -363,7 +363,7 @@ void BasicSaveUTest::test_table()
     }
 
     AtomSpace *as1 = new AtomSpace();
-    AtomTable *table1 = &as1->get_atomtable();
+    AtomSpace *table1 = as1;
 
     int idx = 0;
     add_to_table(idx++, table1, "AA-aa-wow ");
@@ -372,12 +372,12 @@ void BasicSaveUTest::test_table()
     add_to_table(idx++, table1, "DD-dd-wow ");
     add_to_table(idx++, table1, "EE-ee-wow ");
 
-    store->storeAtomSpace(*table1);
-    size_t num_stored = table1->getSize();
+    store->storeAtomSpace(table1);
+    size_t num_stored = table1->get_size();
     // table1->print();
 #ifdef DOPRT
-    HandleSet hset;
-    table1->getHandleSetByType(hset, ATOM, true, false);
+    HandleSeq hset;
+    table1->get_handles_by_type(hset, ATOM, true, false);
     for (auto h: hset) {
         printf("Store table has %s\n", h->to_string().c_str());
     }
@@ -392,12 +392,12 @@ void BasicSaveUTest::test_table()
     TSM_ASSERT("Not connected to database", store->connected());
 
     AtomSpace *as2 = new AtomSpace();
-    AtomTable *table2 = &as2->get_atomtable();
+    AtomSpace *table2 = as2;
 
-    store->loadAtomSpace(*table2);
+    store->loadAtomSpace(table2);
     store->barrier();
     // table2->print();
-    size_t num_fetched = table2->getSize();
+    size_t num_fetched = table2->get_size();
     printf("test_table: Done loading table; fetched %lu, expected %lu\n",
            num_fetched, num_stored);
     // One extra, for the (PredicateNode "*-TruthValueKey-*")

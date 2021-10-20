@@ -34,7 +34,6 @@
 #include <mutex>
 #include "rocksdb/db.h"
 
-#include <opencog/atomspace/AtomTable.h>
 #include <opencog/persist/api/StorageNode.h>
 
 namespace opencog
@@ -84,7 +83,7 @@ class RocksStorage : public StorageNode
 		Handle getAtom(const std::string&);
 		Handle findAlpha(const Handle&, const std::string&, std::string&);
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
-		void loadAtoms(AtomTable& table, const std::string& pfx);
+		void loadAtoms(AtomSpace*, const std::string& pfx);
 		void loadInset(AtomSpace*, const std::string& ist);
 		void appendToInset(const std::string&, const std::string&);
 		void remFromInset(const std::string&, const std::string&);
@@ -93,8 +92,6 @@ class RocksStorage : public StorageNode
 		void remIncoming(const std::string&, const std::string&,
 		                 const std::string&);
 
-		void getIncomingSet(AtomSpace*, const Handle&);
-		void getIncomingByType(AtomSpace*, const Handle&, Type t);
 		size_t count_records(const std::string&);
 
 	public:
@@ -117,15 +114,15 @@ class RocksStorage : public StorageNode
 		// AtomStorage interface
 		void getAtom(const Handle&);
 		Handle getLink(Type, const HandleSeq&);
-		void getIncomingSet(AtomTable&, const Handle&);
-		void getIncomingByType(AtomTable&, const Handle&, Type t);
+		void fetchIncomingSet(AtomSpace*, const Handle&);
+		void fetchIncomingByType(AtomSpace*, const Handle&, Type t);
 		void storeAtom(const Handle&, bool synchronous = false);
 		void removeAtom(const Handle&, bool recursive);
 		void storeValue(const Handle& atom, const Handle& key);
 		void loadValue(const Handle& atom, const Handle& key);
-		void loadType(AtomTable&, Type);
-		void loadAtomSpace(AtomTable&); // Load entire contents
-		void storeAtomSpace(const AtomTable&); // Store entire contents
+		void loadType(AtomSpace*, Type);
+		void loadAtomSpace(AtomSpace*); // Load entire contents
+		void storeAtomSpace(const AtomSpace*); // Store entire contents
 		void barrier();
 		std::string monitor();
 
