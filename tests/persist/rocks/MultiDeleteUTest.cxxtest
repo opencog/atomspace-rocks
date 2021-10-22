@@ -45,7 +45,7 @@ class MultiDeleteUTest :  public CxxTest::TestSuite
 {
 	private:
 		std::string uri;
-		AtomSpace* as;
+		AtomSpacePtr as;
 		StorageNodePtr store;
 
 	public:
@@ -139,7 +139,7 @@ void MultiDeleteUTest::test_add_delete(void)
 	// in the kernel (I assume that's kernel time for file-writes.)
 	int n_threads = 10;
 
-	as = new AtomSpace();
+	as = createAtomSpace();
 
 	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
@@ -168,7 +168,6 @@ void MultiDeleteUTest::test_add_delete(void)
 	store->erase();
 	store->close();
 	store = nullptr;
-	delete as;
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
