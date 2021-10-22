@@ -82,6 +82,7 @@ void QueryPersistUTest::setUp(void)
 
 void QueryPersistUTest::tearDown(void)
 {
+	_as = nullptr;
 	kill_data();
 }
 
