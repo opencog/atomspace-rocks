@@ -2,7 +2,7 @@
  * RocksIO.cc
  * Save/restore of individual atoms.
  *
- * Copyright (c) 2020 Linas Vepstas <linas@linas.org>
+ * Copyright (c) 2020,2021 Linas Vepstas <linas@linas.org>
  *
  * LICENSE:
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -33,7 +33,7 @@
 
 using namespace opencog;
 
-// The old incoming-list needs locks.
+// The old incoming-list needs locks; the new one does not.
 #if USE_INLIST_STRING
 	#define NEED_LIST_LOCK 1
 #endif // USE_INLIST_STRING
@@ -89,18 +89,21 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // stype == string name of Atomese Type. e.g. "ConceptNode".
 // aid == uint-64 ID. Every Atom gets one.
 // sid == aid as ASCII string.
-// kid == sid for an Atomese key (i.e. an Atom)
+// kid == sid for an Atomese key (keys must always be Atoms)
+// fid == sid for an AtomSpace frame.
 // skid == sid:kid pair of id's
 // shash == 64-bit hash of the Atom (as provided by Atom::get_hash())
-
+//
 // Prefixes and associative pairs in the Rocks DB are:
 // "a@" sid: . [shash]satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
+// "f@" satom . sid -- finds the sid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
+// "k@" sid:kid:fid . sval -- find the Atomese Value for the Atom,Key,AtomSpace
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
 // "h@" shash . sid-list -- finds all sids having a given hash
-
+//
 // General design:
 // ---------------
 // The basic representation for an Atom is its s-expression.
@@ -137,13 +140,28 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // The current code will use the space-separated list when
 // #define USE_INLIST_STRING 1 is set, otherwise it uses one key
 // per incoming.
-
+//
+// Multiple AtomSpaces
+// -------------------
+// Multiple AtomSpaces are used to define "Frames" (Kripke frames).
+// These are DAGs of AtomSpaces, one on top another, with Atoms having
+// different Values in different Spaces, or simply being absent in some
+// but not others.
+//
+// In this case, the representation is slightly more complex, for the
+// expected reasons:
+//  * Atoms must be tagged with the AtomSpace that they are in.
+//  * Values (identified by atom-key pairs) can be different in
+//    different AtomSpaces.
+//  * Atoms lower down in a stack can be hidden, when they are deleted
+//    higher up in a stack.
+//
 // Debugging
 // ---------
 // To view the database contents, use `cog-rocks-get` to fetch a range
 // of database keys. For example, (cog-rocks-get "n@(Con") will print
 // all of the ConceptNodes stored in the database.
-
+//
 // Alpha Conversion
 // ----------------
 // That's pretty much it ... except that there's one last little tricky
@@ -175,7 +193,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // being used. At this time, hashes are used only to track the alpha-
 // convertible atoms. Although every atom has a hash, we don't need it
 // for the "ordinary" case, and so don't use it.
-
+//
 // ======================================================================
 // Some notes about threading and locking.
 //
