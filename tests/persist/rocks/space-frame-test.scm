@@ -8,6 +8,25 @@
 
 (opencog-test-runner)
 
+; Delete the directory `dirname` and everything in it.
+; I don't understand why scheme doesn't provide this, built-in.
+(define (whack dirname)
+	(define (unlink dir)
+		(define fname (readdir dir))
+		(when (not (eof-object? fname))
+			(let ((fpath (string-append dirname "/" fname)))
+				(when (equal? 'regular (stat:type (stat fpath)))
+					(delete-file fpath))
+				(unlink dir))))
+
+	(when (access? dirname F_OK)
+		(let ((dir (opendir dirname)))
+			(unlink dir)
+			(closedir dir)
+			(rmdir dirname))))
+
+(whack "/tmp/cog-rocks-unit-test")
+
 ; -------------------------------------------------------------------
 ; Common setup, used by all tests.
 
@@ -59,5 +78,7 @@
 (test-equal "link-space" mid2-space (cog-atomspace lilly))
 (test-equal "foo-space" base-space (cog-atomspace (gar lilly)))
 (test-equal "bar-space" mid1-space (cog-atomspace (gdr lilly)))
+
+(whack "/tmp/cog-rocks-unit-test")
 
 (test-end deep-link)
