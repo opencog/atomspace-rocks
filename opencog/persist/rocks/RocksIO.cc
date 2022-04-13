@@ -359,7 +359,7 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	// string lookup. We expect this to be small, no larger than a few
 	// thousand entries, and so don't expect it to compete for RAM.
 	{
-		std::unique_lock<std::mutex> flck(_mtx_frame);
+		std::lock_guard<std::mutex> flck(_mtx_frame);
 		auto it = _frame_map.find(as);
 		if (it != _frame_map.end())
 			return it->second;
@@ -376,7 +376,7 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	_rfile->Get(rocksdb::ReadOptions(), "f@" + sframe, &sid);
 	if (0 < sid.size())
 	{
-		std::unique_lock<std::mutex> flck(_mtx_frame);
+		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({as, sid});
 		return sid;
 	}
@@ -384,8 +384,13 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	_multi_space = true;
 
 	// Recurse downwards first, if possible.
-	for (const Handle& ho : as->getOutgoingSet())
-		writeFrame((AtomSpace*) ho.get());
+	if (0 < as->get_arity())
+	{
+		lck.unlock();
+		for (const Handle& ho : as->getOutgoingSet())
+			writeFrame((AtomSpace*) ho.get());
+		lck.lock();
+	}
 
 	uint64_t aid = _next_aid.fetch_add(1);
 	sid = aidtostr(aid);
@@ -399,7 +404,7 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
 	{
-		std::unique_lock<std::mutex> flck(_mtx_frame);
+		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({as, sid});
 	}
 
