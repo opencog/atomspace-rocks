@@ -37,6 +37,7 @@
 
 #include <opencog/util/Logger.h>
 #include <opencog/atoms/base/Node.h>
+#include <opencog/atomspace/AtomSpace.h>
 
 #include "RocksStorage.h"
 
@@ -124,6 +125,11 @@ void RocksStorage::init(const char * uri)
 
 printf("Rocks: opened=%s\n", file.c_str());
 printf("Rocks: initial aid=%lu\n", _next_aid.load());
+
+	// If it looks like there will be multiple AtomSpaces,
+	// then set them up now, before anything else.
+	if (0 < _atom_space->get_arity())
+		writeFrame(_atom_space);
 
 	// Set up a SID for the TV predicate key.
 	// This must match what the AtomSpace is using.

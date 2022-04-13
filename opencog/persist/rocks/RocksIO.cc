@@ -353,6 +353,10 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 {
 	if (nullptr == as) return "0";
 
+	// Recurse downwards first, if possible.
+	for (const Handle& ho : as->getOutgoingSet())
+		writeFrame((AtomSpace*) ho.get());
+
 	std::string sframe = Sexpr::encode_frame(as);
 
 	// The issuance of new sids needs to be atomic, as otherwise we
@@ -378,13 +382,9 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	// The rest is safe to do in parallel.
 	lck.unlock();
 
-	logger().debug("Frame sid=>>%s<< for >>%s<<", sid.c_str(), sframe.c_str());
+	// logger().debug("Frame sid=>>%s<< for >>%s<<", sid.c_str(), sframe.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), "f@" + sframe, sid);
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid + ":", sframe);
-
-	// Recurse downwards
-	for (const Handle& ho : as->getOutgoingSet())
-		writeFrame((AtomSpace*) ho.get());
 
 	return sid;
 }
