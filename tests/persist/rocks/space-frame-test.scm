@@ -47,10 +47,13 @@
 
 (cog-set-atomspace! surface-space)
 
-; Store the content
+; Store the content. Store the Concepts as well as the link,
+; as otherwise, the TV's on the Concepts aren't stored.
 (define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 (cog-open storage)
 (store-atom (ListLink (Concept "foo") (Concept "bar")))
+(store-atom (Concept "foo"))
+(store-atom (Concept "bar"))
 (cog-close storage)
 
 ; Clear out the spaces, start with a clean slate.
