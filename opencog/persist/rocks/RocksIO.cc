@@ -302,6 +302,8 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 
 	// Separator for keys
 	std::string cid = "k@" + sid + ":";
+	if (_multi_space)
+		cid += writeFrame(h->getAtomSpace()) + ":";
 
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
@@ -353,9 +355,15 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 {
 	if (nullptr == as) return "0";
 
-	// Recurse downwards first, if possible.
-	for (const Handle& ho : as->getOutgoingSet())
-		writeFrame((AtomSpace*) ho.get());
+	// Keep a map. This will be faster than the string conversion and
+	// string lookup. We expect this to be small, no larger than a few
+	// thousand entries, and so don't expect it to compete for RAM.
+	{
+		std::unique_lock<std::mutex> flck(_mtx_frame);
+		auto it = _frame_map.find(as);
+		if (it != _frame_map.end())
+			return it->second;
+	}
 
 	std::string sframe = Sexpr::encode_frame(as);
 
@@ -366,9 +374,18 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 
 	std::string sid;
 	_rfile->Get(rocksdb::ReadOptions(), "f@" + sframe, &sid);
-	if (0 < sid.size()) return sid;
+	if (0 < sid.size())
+	{
+		std::unique_lock<std::mutex> flck(_mtx_frame);
+		_frame_map.insert({as, sid});
+		return sid;
+	}
 
 	_multi_space = true;
+
+	// Recurse downwards first, if possible.
+	for (const Handle& ho : as->getOutgoingSet())
+		writeFrame((AtomSpace*) ho.get());
 
 	uint64_t aid = _next_aid.fetch_add(1);
 	sid = aidtostr(aid);
@@ -380,6 +397,11 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	// start using it in other records.  We want to avoid issueing it
 	// twice.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+
+	{
+		std::unique_lock<std::mutex> flck(_mtx_frame);
+		_frame_map.insert({as, sid});
+	}
 
 	// The rest is safe to do in parallel.
 	lck.unlock();

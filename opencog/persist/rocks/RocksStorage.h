@@ -31,6 +31,7 @@
 #define _ATOMSPACE_ROCKS_STORAGE_H
 
 #include <atomic>
+#include <map>
 #include <mutex>
 #include "rocksdb/db.h"
 
@@ -56,6 +57,9 @@ class RocksStorage : public StorageNode
 
 		// True if file contains more than one atomspace.
 		bool _multi_space;
+		std::unordered_map<AtomSpace*, const std::string> _frame_map;
+		std::mutex _mtx_frame;
+		std::string writeFrame(AtomSpace*);
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
@@ -94,8 +98,6 @@ class RocksStorage : public StorageNode
 		void removeSatom(const std::string&, const std::string&, bool, bool);
 		void remIncoming(const std::string&, const std::string&,
 		                 const std::string&);
-
-		std::string writeFrame(AtomSpace*);
 
 		size_t count_records(const std::string&);
 
