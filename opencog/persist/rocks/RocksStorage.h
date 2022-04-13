@@ -92,6 +92,8 @@ class RocksStorage : public StorageNode
 		void remIncoming(const std::string&, const std::string&,
 		                 const std::string&);
 
+		std::string writeFrame(AtomSpace*);
+
 		size_t count_records(const std::string&);
 
 	public:

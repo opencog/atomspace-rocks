@@ -217,7 +217,10 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
-	// The issueance of new sids needs to be atomic, as otherwise we
+	AtomSpace* as = h->getAtomSpace();
+	if (as != _atom_space) writeFrame(as);
+
+	// The issuance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
 	// two different sids issued for the same atom.
 	std::unique_lock<std::mutex> lck(_mtx_sid, std::defer_lock);
@@ -340,6 +343,50 @@ void RocksStorage::appendToSidList(const std::string& klist,
 		sidlist += sid + " ";
 		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 	}
+}
+
+// =========================================================
+
+// Similar to writeAtom, but specifically specialized for
+// writing out AtomSpaces.
+std::string RocksStorage::writeFrame(AtomSpace* as)
+{
+	if (nullptr == as) return "0";
+
+	std::string sframe = Sexpr::encode_frame(as);
+
+	// The issuance of new sids needs to be atomic, as otherwise we
+	// risk having the Get(pfx + satom) fail in parallel, and have
+	// two different sids issued for the same AtomSpace.
+	std::unique_lock<std::mutex> lck(_mtx_sid);
+
+	std::string sid;
+	_rfile->Get(rocksdb::ReadOptions(), "f@" + sframe, &sid);
+	if (0 < sid.size()) return sid;
+
+	uint64_t aid = _next_aid.fetch_add(1);
+	sid = aidtostr(aid);
+
+	// Update immediately, in case of a future crash or badness...
+	// This isn't "really" necessary, because our dtor ~RocksStorage()
+	// updates this value. But if someone crashes before our dtor runs,
+	// we want to make sure the new bumped value is written, before we
+	// start using it in other records.  We want to avoid issueing it
+	// twice.
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+
+	// The rest is safe to do in parallel.
+	lck.unlock();
+
+	logger().debug("Frame sid=>>%s<< for >>%s<<", sid.c_str(), sframe.c_str());
+	_rfile->Put(rocksdb::WriteOptions(), "f@" + sframe, sid);
+	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid + ":", sframe);
+
+	// Recurse downwards
+	for (const Handle& ho : as->getOutgoingSet())
+		writeFrame((AtomSpace*) ho.get());
+
+	return sid;
 }
 
 // =========================================================
