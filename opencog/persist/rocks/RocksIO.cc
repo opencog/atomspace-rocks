@@ -381,6 +381,7 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	{
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({as, sid});
+		_fid_map.insert({sid, as});
 		return sid;
 	}
 
@@ -409,6 +410,7 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	{
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({as, sid});
+		_fid_map.insert({sid, as});
 	}
 
 	// The rest is safe to do in parallel.
@@ -419,6 +421,30 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid + ":", sframe);
 
 	return sid;
+}
+
+AtomSpace* RocksStorage::getFrame(const std::string& fid)
+{
+	{
+		std::lock_guard<std::mutex> flck(_mtx_frame);
+		auto it = _fid_map.find(fid);
+		if (it != _fid_map.end())
+			return it->second;
+	}
+
+	std::string sframe;
+	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
+#if 0
+
+	AtomSpace* as = Sexpr::foobar(sframe);
+	std::lock_guard<std::mutex> flck(_mtx_frame);
+	_frame_map.insert({as, fid});
+	_fid_map.insert({fid, as});
+
+	_multi_space = true;
+	return as;
+#endif
+	return nullptr;
 }
 
 // =========================================================
@@ -477,14 +503,17 @@ void RocksStorage::getKeys(AtomSpace* as,
 		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
-	size_t pos = cid.size();
+	size_t esid = cid.size();
+	size_t pos = esid;
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
+		const std::string& rks = it->key().ToString();
 		Handle key;
 		try
 		{
-			key = getAtom(it->key().ToString().substr(pos));
+			if (_multi_space) pos = rks.rfind(':') + 1;
+			key = getAtom(rks.substr(pos));
 		}
 		catch (const IOException& ex)
 		{
@@ -521,8 +550,22 @@ void RocksStorage::getKeys(AtomSpace* as,
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-		if (vp) vp = as->add_atoms(vp);
-		h->setValue(key, vp);
+		if (vp) vp = as->add_atoms(vp); // XXX adding to the wrong atomspace???
+
+		// If multi-space, then the lookup is in the form of
+		// k@sid:fid:kid where fid is the AtomSpace frame. Set the frame.
+		if (_multi_space)
+		{
+			size_t efid = rks.rfind(':');
+			const std::string& fid = rks.substr(esid, efid-esid);
+			AtomSpace* fas = getFrame(fid);
+			Handle hf = fas->add_atom(h);
+			hf->setValue(key, vp);
+		}
+		else
+		{
+			h->setValue(key, vp);
+		}
 	}
 	delete it;
 }

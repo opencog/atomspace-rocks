@@ -58,8 +58,10 @@ class RocksStorage : public StorageNode
 		// True if file contains more than one atomspace.
 		bool _multi_space;
 		std::unordered_map<AtomSpace*, const std::string> _frame_map;
+		std::unordered_map<std::string, AtomSpace*> _fid_map;
 		std::mutex _mtx_frame;
 		std::string writeFrame(AtomSpace*);
+		AtomSpace* getFrame(const std::string&);
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
