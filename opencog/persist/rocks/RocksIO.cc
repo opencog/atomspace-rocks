@@ -368,6 +368,8 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	_rfile->Get(rocksdb::ReadOptions(), "f@" + sframe, &sid);
 	if (0 < sid.size()) return sid;
 
+	_multi_space = true;
+
 	uint64_t aid = _next_aid.fetch_add(1);
 	sid = aidtostr(aid);
 

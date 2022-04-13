@@ -54,6 +54,9 @@ class RocksStorage : public StorageNode
 		std::string _uri;
 		rocksdb::DB* _rfile;
 
+		// True if file contains more than one atomspace.
+		bool _multi_space;
+
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
 		uint64_t strtoaid(const std::string&) const;
