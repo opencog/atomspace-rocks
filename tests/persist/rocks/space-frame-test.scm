@@ -72,12 +72,18 @@
 (load-atomspace)
 (cog-close storage)
 
-; Wwork on the current surface, but expect to find the deeper ListLink.
+; Work on the current surface, but expect to find the deeper ListLink.
 (define lilly (ListLink (Concept "foo") (Concept "bar")))
 
+; Verify appropriate atomspace membership
 (test-equal "link-space" mid2-space (cog-atomspace lilly))
 (test-equal "foo-space" base-space (cog-atomspace (gar lilly)))
 (test-equal "bar-space" mid1-space (cog-atomspace (gdr lilly)))
+
+; Verify appropriate values
+(test-equal "base-tv" 3 (inexact->exact (cog-count (cog-node 'Concept "foo"))))
+(test-equal "mid1-tv" 4 (inexact->exact (cog-count (cog-node 'Concept "bar"))))
+(test-equal "mid2-tv" 5 (inexact->exact (cog-count lilly)))
 
 (whack "/tmp/cog-rocks-unit-test")
 
