@@ -434,17 +434,14 @@ AtomSpace* RocksStorage::getFrame(const std::string& fid)
 
 	std::string sframe;
 	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
-#if 0
 
-	AtomSpace* as = Sexpr::foobar(sframe);
+	AtomSpace* as = Sexpr::decode_frame(_atom_space, sframe);
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({as, fid});
 	_fid_map.insert({fid, as});
 
 	_multi_space = true;
 	return as;
-#endif
-	return nullptr;
 }
 
 // =========================================================
@@ -489,6 +486,7 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 		fid += writeFrame(as) + ":";
 
 	ValuePtr vp = getValue("k@" + sid + fid + kid);
+// XXX this is adding to wrong atomspace!?
 	if (as and vp) vp = as->add_atoms(vp);
 	h->setValue(key, vp);
 }
@@ -499,8 +497,9 @@ void RocksStorage::getKeys(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-	if (as and _multi_space)
-		cid += writeFrame(as) + ":";
+// XXX FIXME later
+//	if (as and _multi_space)
+//		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
 	size_t esid = cid.size();
@@ -531,6 +530,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
+// XXX this is adding to wrong atomspace!?
 		if (as) key = as->add_atom(key);
 
 		// read-only Atomspaces will refuse insertion of keys.
@@ -550,7 +550,8 @@ void RocksStorage::getKeys(AtomSpace* as,
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-		if (vp) vp = as->add_atoms(vp); // XXX adding to the wrong atomspace???
+// XXX this is adding to wrong atomspace!?
+		if (vp) vp = as->add_atoms(vp);
 
 		// If multi-space, then the lookup is in the form of
 		// k@sid:fid:kid where fid is the AtomSpace frame. Set the frame.
@@ -1000,6 +1001,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 
 		Handle hi = getAtom(sid);
 		getKeys(as, sid, hi);
+// XXX this is adding to wrong atomspace!?
 		as->add_atom(hi);
 	}
 	delete it;
@@ -1039,7 +1041,9 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		getKeys(as, it->value().ToString(), h);
-		as->storage_add_nocheck(h);
+
+		if (not _multi_space)
+			as->storage_add_nocheck(h);
 	}
 	delete it;
 }

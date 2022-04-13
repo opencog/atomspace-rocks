@@ -22,5 +22,7 @@ ADD_CXXTEST(MultiPersistUTest)
 ADD_CXXTEST(MultiDeleteUTest)
 ADD_CXXTEST(QueryPersistUTest)
 #
+ADD_GUILE_TEST(SpaceFrame space-frame-test.scm)
+#
 ADD_CXXTEST(LargeFlatUTest)
 ADD_CXXTEST(LargeZipfUTest)

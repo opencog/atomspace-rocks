@@ -91,3 +91,6 @@
 (whack "/tmp/cog-rocks-unit-test")
 
 (test-end deep-link)
+
+; ===================================================================
+(opencog-test-end)
