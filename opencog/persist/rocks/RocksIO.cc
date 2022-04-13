@@ -100,7 +100,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "n@" satom . sid -- finds the sid associated with the Node
 // "f@" satom . sid -- finds the sid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
-// "k@" sid:kid:fid . sval -- find the Atomese Value for the Atom,Key,AtomSpace
+// "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
 // "h@" shash . sid-list -- finds all sids having a given hash
 //
@@ -326,7 +326,10 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
 	CHECK_OPEN;
 	std::string sid = writeAtom(h);
+	if (_multi_space)
+		sid += ":" + writeFrame(h->getAtomSpace());
 	std::string kid = writeAtom(key);
+
 	ValuePtr vp = h->getValue(key);
 
 	// First store the value
@@ -454,8 +457,12 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	if (0 == sid.size()) return;
 	std::string kid = findAtom(key);
 	if (0 == kid.size()) return;
-	ValuePtr vp = getValue("k@" + sid + ":" + kid);
 	AtomSpace* as = h->getAtomSpace();
+	std::string fid = ":";
+	if (as and _multi_space)
+		fid += writeFrame(as) + ":";
+
+	ValuePtr vp = getValue("k@" + sid + fid + kid);
 	if (as and vp) vp = as->add_atoms(vp);
 	h->setValue(key, vp);
 }
@@ -466,10 +473,12 @@ void RocksStorage::getKeys(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	if (as and _multi_space)
+		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
 	size_t pos = cid.size();
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 		Handle key;
