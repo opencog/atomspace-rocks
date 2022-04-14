@@ -2,7 +2,7 @@
  * RocksIO.cc
  * Save/restore of individual atoms.
  *
- * Copyright (c) 2020,2021 Linas Vepstas <linas@linas.org>
+ * Copyright (c) 2020,2022 Linas Vepstas <linas@linas.org>
  *
  * LICENSE:
  * SPDX-License-Identifier: AGPL-3.0-or-later
