@@ -1086,12 +1086,31 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	}
 	delete it;
 
-	// Instantiate the entire frame.
+	// Instantiate the entire frame. The way this is written, it assumes
+	// that there is a single top-most frame, and a single bottom-most
+	// frame, and that everything else lies between these two. If these
+	// assumptions are violated, then things will break.
 	std::string sframe;
 	std::string fid = aidtostr(fidhi);
 	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
 	Handle hbase = HandleCast(base->shared_from_this());
 	Handle frm = Sexpr::decode_frame(hbase, sframe);
+
+	// Loop again, this time to fill up the cache, so that future
+	// calls to getFrame() work correctly.
+	std::lock_guard<std::mutex> flck(_mtx_frame);
+	it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
+	{
+		const std::string& fid = it->value().ToString();
+		const std::string& sframe = it->key().ToString().substr(2);
+		Handle fas = Sexpr::decode_frame(frm, sframe);
+		AtomSpace* as = (AtomSpace*) fas.get();
+		_frame_map.insert({as, fid});
+		_fid_map.insert({fid, as});
+	}
+	delete it;
+
 	return frm;
 }
 
