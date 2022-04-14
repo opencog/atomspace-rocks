@@ -1063,6 +1063,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	loadAtoms(table, "l@");
 }
 
+/// Load the entire collection of AtomSpace frames.
 Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 {
 	if (not _multi_space)
@@ -1071,9 +1072,11 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 		return Handle::UNDEFINED;
 	}
 
+	// Find the smallest and largest frame-id's. Due to the way
+	// they are added, the lowest will not have an environ, while
+	// the highest will encompase everything.
 	size_t fidlo = UINT_MAX;
 	size_t fidhi = 0;
-
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
 	{
@@ -1083,11 +1086,12 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	}
 	delete it;
 
+	// Instantiate the entire frame.
 	std::string sframe;
 	std::string fid = aidtostr(fidhi);
-	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid, &sframe);
-printf("duuude got frame=%s\n", sframe.c_str());
-	Handle frm = Sexpr::decode_frame(Handle::UNDEFINED, sframe);
+	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
+	Handle hbase = HandleCast(base->shared_from_this());
+	Handle frm = Sexpr::decode_frame(hbase, sframe);
 	return frm;
 }
 
