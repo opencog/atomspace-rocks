@@ -31,6 +31,7 @@
 #define _ATOMSPACE_ROCKS_STORAGE_H
 
 #include <atomic>
+#include <map>
 #include <mutex>
 #include "rocksdb/db.h"
 
@@ -53,6 +54,14 @@ class RocksStorage : public StorageNode
 		void init(const char *);
 		std::string _uri;
 		rocksdb::DB* _rfile;
+
+		// True if file contains more than one atomspace.
+		bool _multi_space;
+		std::unordered_map<AtomSpace*, const std::string> _frame_map;
+		std::unordered_map<std::string, AtomSpace*> _fid_map;
+		std::mutex _mtx_frame;
+		std::string writeFrame(AtomSpace*);
+		AtomSpace* getFrame(const std::string&);
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
@@ -123,6 +132,7 @@ class RocksStorage : public StorageNode
 		void loadType(AtomSpace*, Type);
 		void loadAtomSpace(AtomSpace*); // Load entire contents
 		void storeAtomSpace(const AtomSpace*); // Store entire contents
+		Handle loadFrameDAG(AtomSpace*); // Load AtomSpace DAG
 		void barrier();
 		std::string monitor();
 

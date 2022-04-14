@@ -122,8 +122,16 @@ void RocksStorage::init(const char * uri)
 	else
 		_next_aid = strtoaid(sid) + 1; // next unused...
 
+	// Does the file contain multiple atomspaces?
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it->Seek("f@");
+	if (it->Valid() and it->key().starts_with("f@"))
+		_multi_space = true;
+	delete it;
+
+// Informational prints.
 printf("Rocks: opened=%s\n", file.c_str());
-printf("Rocks: initial aid=%lu\n", _next_aid.load());
+printf("Rocks: multi-space=%d initial aid=%lu\n", _multi_space, _next_aid.load());
 
 	// Set up a SID for the TV predicate key.
 	// This must match what the AtomSpace is using.
@@ -142,6 +150,7 @@ void RocksStorage::open()
 RocksStorage::RocksStorage(std::string uri) :
 	StorageNode(ROCKS_STORAGE_NODE, std::move(uri)),
 	_rfile(nullptr),
+	_multi_space(false),
 	_next_aid(0)
 {
 	const char *yuri = _name.c_str();

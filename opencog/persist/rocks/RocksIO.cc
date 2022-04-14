@@ -2,7 +2,7 @@
  * RocksIO.cc
  * Save/restore of individual atoms.
  *
- * Copyright (c) 2020 Linas Vepstas <linas@linas.org>
+ * Copyright (c) 2020,2022 Linas Vepstas <linas@linas.org>
  *
  * LICENSE:
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -33,7 +33,7 @@
 
 using namespace opencog;
 
-// The old incoming-list needs locks.
+// The old incoming-list needs locks; the new one does not.
 #if USE_INLIST_STRING
 	#define NEED_LIST_LOCK 1
 #endif // USE_INLIST_STRING
@@ -89,18 +89,21 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // stype == string name of Atomese Type. e.g. "ConceptNode".
 // aid == uint-64 ID. Every Atom gets one.
 // sid == aid as ASCII string.
-// kid == sid for an Atomese key (i.e. an Atom)
+// kid == sid for an Atomese key (keys must always be Atoms)
+// fid == sid for an AtomSpace frame.
 // skid == sid:kid pair of id's
 // shash == 64-bit hash of the Atom (as provided by Atom::get_hash())
-
+//
 // Prefixes and associative pairs in the Rocks DB are:
 // "a@" sid: . [shash]satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
+// "f@" satom . sid -- finds the sid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
+// "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
 // "h@" shash . sid-list -- finds all sids having a given hash
-
+//
 // General design:
 // ---------------
 // The basic representation for an Atom is its s-expression.
@@ -137,13 +140,28 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // The current code will use the space-separated list when
 // #define USE_INLIST_STRING 1 is set, otherwise it uses one key
 // per incoming.
-
+//
+// Multiple AtomSpaces
+// -------------------
+// Multiple AtomSpaces are used to define "Frames" (Kripke frames).
+// These are DAGs of AtomSpaces, one on top another, with Atoms having
+// different Values in different Spaces, or simply being absent in some
+// but not others.
+//
+// In this case, the representation is slightly more complex, for the
+// expected reasons:
+//  * Atoms must be tagged with the AtomSpace that they are in.
+//  * Values (identified by atom-key pairs) can be different in
+//    different AtomSpaces.
+//  * Atoms lower down in a stack can be hidden, when they are deleted
+//    higher up in a stack.
+//
 // Debugging
 // ---------
 // To view the database contents, use `cog-rocks-get` to fetch a range
 // of database keys. For example, (cog-rocks-get "n@(Con") will print
 // all of the ConceptNodes stored in the database.
-
+//
 // Alpha Conversion
 // ----------------
 // That's pretty much it ... except that there's one last little tricky
@@ -175,7 +193,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // being used. At this time, hashes are used only to track the alpha-
 // convertible atoms. Although every atom has a hash, we don't need it
 // for the "ordinary" case, and so don't use it.
-
+//
 // ======================================================================
 // Some notes about threading and locking.
 //
@@ -199,7 +217,10 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
 {
-	// The issueance of new sids needs to be atomic, as otherwise we
+	AtomSpace* as = h->getAtomSpace();
+	if (_atom_space and as != _atom_space) writeFrame(as);
+
+	// The issuance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
 	// two different sids issued for the same atom.
 	std::unique_lock<std::mutex> lck(_mtx_sid, std::defer_lock);
@@ -281,6 +302,8 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 
 	// Separator for keys
 	std::string cid = "k@" + sid + ":";
+	if (_multi_space)
+		cid += writeFrame(h->getAtomSpace()) + ":";
 
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
@@ -303,7 +326,10 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
 	CHECK_OPEN;
 	std::string sid = writeAtom(h);
+	if (_multi_space)
+		sid += ":" + writeFrame(h->getAtomSpace());
 	std::string kid = writeAtom(key);
+
 	ValuePtr vp = h->getValue(key);
 
 	// First store the value
@@ -322,6 +348,105 @@ void RocksStorage::appendToSidList(const std::string& klist,
 		sidlist += sid + " ";
 		_rfile->Put(rocksdb::WriteOptions(), klist, sidlist);
 	}
+}
+
+// =========================================================
+
+// Similar to writeAtom, but specifically specialized for
+// writing out AtomSpaces.
+std::string RocksStorage::writeFrame(AtomSpace* as)
+{
+	if (nullptr == as) return "0";
+
+	// Keep a map. This will be faster than the string conversion and
+	// string lookup. We expect this to be small, no larger than a few
+	// thousand entries, and so don't expect it to compete for RAM.
+	{
+		std::lock_guard<std::mutex> flck(_mtx_frame);
+		auto it = _frame_map.find(as);
+		if (it != _frame_map.end())
+			return it->second;
+	}
+
+	std::string sframe = Sexpr::encode_frame(as);
+
+	// The issuance of new sids needs to be atomic, as otherwise we
+	// risk having the Get(pfx + satom) fail in parallel, and have
+	// two different sids issued for the same AtomSpace.
+	std::unique_lock<std::mutex> lck(_mtx_sid);
+
+	std::string sid;
+	_rfile->Get(rocksdb::ReadOptions(), "f@" + sframe, &sid);
+	if (0 < sid.size())
+	{
+		std::lock_guard<std::mutex> flck(_mtx_frame);
+		_frame_map.insert({as, sid});
+		_fid_map.insert({sid, as});
+		return sid;
+	}
+
+	_multi_space = true;
+
+	// Recurse downwards first, if possible.
+	if (0 < as->get_arity())
+	{
+		lck.unlock();
+		for (const Handle& ho : as->getOutgoingSet())
+			writeFrame((AtomSpace*) ho.get());
+		lck.lock();
+	}
+
+	uint64_t aid = _next_aid.fetch_add(1);
+	sid = aidtostr(aid);
+
+	// Update immediately, in case of a future crash or badness...
+	// This isn't "really" necessary, because our dtor ~RocksStorage()
+	// updates this value. But if someone crashes before our dtor runs,
+	// we want to make sure the new bumped value is written, before we
+	// start using it in other records.  We want to avoid issueing it
+	// twice.
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+
+	{
+		std::lock_guard<std::mutex> flck(_mtx_frame);
+		_frame_map.insert({as, sid});
+		_fid_map.insert({sid, as});
+	}
+
+	// The rest is safe to do in parallel.
+	lck.unlock();
+
+	// logger().debug("Frame sid=>>%s<< for >>%s<<", sid.c_str(), sframe.c_str());
+	_rfile->Put(rocksdb::WriteOptions(), "f@" + sframe, sid);
+	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid + ":", sframe);
+
+	return sid;
+}
+
+AtomSpace* RocksStorage::getFrame(const std::string& fid)
+{
+	{
+		std::lock_guard<std::mutex> flck(_mtx_frame);
+		auto it = _fid_map.find(fid);
+		if (it != _fid_map.end())
+			return it->second;
+	}
+
+	std::string sframe;
+	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
+
+	// So, this->_atom_space is actually Atom::_atom_space
+	// It is safe to dereference fas.get() because fas is
+	// pointing to some AtomSpace in the environ of _atom_space.
+	Handle asp = HandleCast(_atom_space->shared_from_this());
+	Handle fas = Sexpr::decode_frame(asp, sframe);
+	AtomSpace* as = (AtomSpace*) fas.get();
+	std::lock_guard<std::mutex> flck(_mtx_frame);
+	_frame_map.insert({as, fid});
+	_fid_map.insert({fid, as});
+
+	_multi_space = true;
+	return as;
 }
 
 // =========================================================
@@ -360,8 +485,13 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	if (0 == sid.size()) return;
 	std::string kid = findAtom(key);
 	if (0 == kid.size()) return;
-	ValuePtr vp = getValue("k@" + sid + ":" + kid);
 	AtomSpace* as = h->getAtomSpace();
+	std::string fid = ":";
+	if (as and _multi_space)
+		fid += writeFrame(as) + ":";
+
+	ValuePtr vp = getValue("k@" + sid + fid + kid);
+// XXX this is adding to wrong atomspace!?
 	if (as and vp) vp = as->add_atoms(vp);
 	h->setValue(key, vp);
 }
@@ -372,16 +502,22 @@ void RocksStorage::getKeys(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+// XXX FIXME later
+//	if (as and _multi_space)
+//		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
-	size_t pos = cid.size();
+	size_t esid = cid.size();
+	size_t pos = esid;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
+		const std::string& rks = it->key().ToString();
 		Handle key;
 		try
 		{
-			key = getAtom(it->key().ToString().substr(pos));
+			if (_multi_space) pos = rks.rfind(':') + 1;
+			key = getAtom(rks.substr(pos));
 		}
 		catch (const IOException& ex)
 		{
@@ -399,6 +535,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
+// XXX this is adding to wrong atomspace!?
 		if (as) key = as->add_atom(key);
 
 		// read-only Atomspaces will refuse insertion of keys.
@@ -418,8 +555,23 @@ void RocksStorage::getKeys(AtomSpace* as,
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
+// XXX this is adding to wrong atomspace!?
 		if (vp) vp = as->add_atoms(vp);
-		h->setValue(key, vp);
+
+		// If multi-space, then the lookup is in the form of
+		// k@sid:fid:kid where fid is the AtomSpace frame. Set the frame.
+		if (_multi_space)
+		{
+			size_t efid = rks.rfind(':');
+			const std::string& fid = rks.substr(esid, efid-esid);
+			AtomSpace* fas = getFrame(fid);
+			Handle hf = fas->add_atom(h);
+			hf->setValue(key, vp);
+		}
+		else
+		{
+			h->setValue(key, vp);
+		}
 	}
 	delete it;
 }
@@ -854,6 +1006,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 
 		Handle hi = getAtom(sid);
 		getKeys(as, sid, hi);
+// XXX this is adding to wrong atomspace!?
 		as->add_atom(hi);
 	}
 	delete it;
@@ -893,7 +1046,9 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		getKeys(as, it->value().ToString(), h);
-		as->storage_add_nocheck(h);
+
+		if (not _multi_space)
+			as->storage_add_nocheck(h);
 	}
 	delete it;
 }
@@ -906,6 +1061,57 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	// XXX TODO - maybe load links depth-order...
 	loadAtoms(table, "n@");
 	loadAtoms(table, "l@");
+}
+
+/// Load the entire collection of AtomSpace frames.
+Handle RocksStorage::loadFrameDAG(AtomSpace* base)
+{
+	if (not _multi_space)
+	{
+		if (base) return HandleCast(base->shared_from_this());
+		return Handle::UNDEFINED;
+	}
+
+	// Find the smallest and largest frame-id's. Due to the way
+	// they are added, the lowest will not have an environ, while
+	// the highest will encompase everything.
+	size_t fidlo = UINT_MAX;
+	size_t fidhi = 0;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
+	{
+		size_t id = strtoaid(it->value().ToString());
+		if (id < fidlo) fidlo = id;
+		if (fidhi < id) fidhi = id;
+	}
+	delete it;
+
+	// Instantiate the entire frame. The way this is written, it assumes
+	// that there is a single top-most frame, and a single bottom-most
+	// frame, and that everything else lies between these two. If these
+	// assumptions are violated, then things will break.
+	std::string sframe;
+	std::string fid = aidtostr(fidhi);
+	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
+	Handle hbase = HandleCast(base->shared_from_this());
+	Handle frm = Sexpr::decode_frame(hbase, sframe);
+
+	// Loop again, this time to fill up the cache, so that future
+	// calls to getFrame() work correctly.
+	std::lock_guard<std::mutex> flck(_mtx_frame);
+	it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
+	{
+		const std::string& fid = it->value().ToString();
+		const std::string& sframe = it->key().ToString().substr(2);
+		Handle fas = Sexpr::decode_frame(frm, sframe);
+		AtomSpace* as = (AtomSpace*) fas.get();
+		_frame_map.insert({as, fid});
+		_fid_map.insert({fid, as});
+	}
+	delete it;
+
+	return frm;
 }
 
 void RocksStorage::loadType(AtomSpace* as, Type t)
