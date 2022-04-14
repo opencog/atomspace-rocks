@@ -117,14 +117,16 @@
 	(cog-set-atomspace! new-base)
 
 	; Load everything.
-	(set! storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
+(define surface (load-frames))
 	(load-atomspace)
 	(cog-close storage)
 
 	; Work on the current surface, but expect to find the deeper ListLink.
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))
 
+(format #t "duude found ~A\n" lilly)
 #! ========
 	; Verify appropriate atomspace membership
 	(test-equal "link-space" mid2-space (cog-atomspace lilly))

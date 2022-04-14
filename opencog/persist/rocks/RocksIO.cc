@@ -435,7 +435,12 @@ AtomSpace* RocksStorage::getFrame(const std::string& fid)
 	std::string sframe;
 	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
 
-	AtomSpace* as = Sexpr::decode_frame(_atom_space, sframe);
+	// So, this->_atom_space is actually Atom::_atom_space
+	// It is safe to dereference fas.get() because fas is
+	// pointing to some AtomSpace in the environ of _atom_space.
+	Handle asp = HandleCast(_atom_space->shared_from_this());
+	Handle fas = Sexpr::decode_frame(asp, sframe);
+	AtomSpace* as = (AtomSpace*) fas.get();
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({as, fid});
 	_fid_map.insert({fid, as});
@@ -1056,6 +1061,34 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	// XXX TODO - maybe load links depth-order...
 	loadAtoms(table, "n@");
 	loadAtoms(table, "l@");
+}
+
+Handle RocksStorage::loadFrameDAG(AtomSpace* base)
+{
+	if (not _multi_space)
+	{
+		if (base) return HandleCast(base->shared_from_this());
+		return Handle::UNDEFINED;
+	}
+
+	size_t fidlo = UINT_MAX;
+	size_t fidhi = 0;
+
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
+	{
+		size_t id = strtoaid(it->value().ToString());
+		if (id < fidlo) fidlo = id;
+		if (fidhi < id) fidhi = id;
+	}
+	delete it;
+
+	std::string sframe;
+	std::string fid = aidtostr(fidhi);
+	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid, &sframe);
+printf("duuude got frame=%s\n", sframe.c_str());
+	Handle frm = Sexpr::decode_frame(Handle::UNDEFINED, sframe);
+	return frm;
 }
 
 void RocksStorage::loadType(AtomSpace* as, Type t)
