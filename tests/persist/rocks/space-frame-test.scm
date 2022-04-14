@@ -119,25 +119,32 @@
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
-(define surface (load-frames))
+
+	; Load all of the AtomSpaces.
+	(define surface (load-frames))
+	(cog-set-atomspace! surface)
+
+	; Now load the AtomSpace itself
 	(load-atomspace)
 	(cog-close storage)
 
 	; Work on the current surface, but expect to find the deeper ListLink.
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))
 
-(format #t "duude found ~A\n" lilly)
-#! ========
 	; Verify appropriate atomspace membership
-	(test-equal "link-space" mid2-space (cog-atomspace lilly))
-	(test-equal "foo-space" base-space (cog-atomspace (gar lilly)))
-	(test-equal "bar-space" mid1-space (cog-atomspace (gdr lilly)))
+	; Note that the new surface corresponds to the older mid2-space.
+	; This is because the old surface-space was never actually stored
+	; and thus is never restored. The top-most space of the restored
+	; hiearchy is the old mid2-space.
+	(define mid-space (cog-outgoing-atom surface 0))
+	(test-equal "link-space" surface (cog-atomspace lilly))
+	(test-equal "foo-space" new-base (cog-atomspace (gar lilly)))
+	(test-equal "bar-space" mid-space (cog-atomspace (gdr lilly)))
 
 	; Verify appropriate values
 	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "mid1-tv" 4 (get-cnt (cog-node 'Concept "bar")))
 	(test-equal "mid2-tv" 5 (get-cnt lilly))
-===== !#
 )
 
 (define fresh-link "test fresh link restore")
