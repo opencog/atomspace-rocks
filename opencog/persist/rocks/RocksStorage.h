@@ -35,6 +35,7 @@
 #include <mutex>
 #include "rocksdb/db.h"
 
+#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/api/StorageNode.h>
 
 namespace opencog
@@ -57,11 +58,15 @@ class RocksStorage : public StorageNode
 
 		// True if file contains more than one atomspace.
 		bool _multi_space;
-		std::unordered_map<AtomSpace*, const std::string> _frame_map;
-		std::unordered_map<std::string, AtomSpace*> _fid_map;
+		// The Handles are *always* AtomSpacePtr's
+		std::unordered_map<Handle, const std::string> _frame_map;
+		std::unordered_map<std::string, Handle> _fid_map;
 		std::mutex _mtx_frame;
-		std::string writeFrame(AtomSpace*);
-		AtomSpace* getFrame(const std::string&);
+		std::string writeFrame(const Handle&);
+		std::string writeFrame(AtomSpace* as) {
+			return writeFrame(HandleCast(as));
+		}
+		Handle getFrame(const std::string&);
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;

@@ -218,7 +218,8 @@ static const char* aid_key = "*-NextUnusedAID-*";
 std::string RocksStorage::writeAtom(const Handle& h)
 {
 	AtomSpace* as = h->getAtomSpace();
-	if (_atom_space and as != _atom_space) writeFrame(as);
+	if (_atom_space and as != _atom_space)
+		writeFrame(as);
 
 	// The issuance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
@@ -353,22 +354,22 @@ void RocksStorage::appendToSidList(const std::string& klist,
 // =========================================================
 
 // Similar to writeAtom, but specifically specialized for
-// writing out AtomSpaces.
-std::string RocksStorage::writeFrame(AtomSpace* as)
+// writing out AtomSpaces. The argument is *always* an AtomSpacePtr.
+std::string RocksStorage::writeFrame(const Handle& hasp)
 {
-	if (nullptr == as) return "0";
+	if (nullptr == hasp) return "0";
 
 	// Keep a map. This will be faster than the string conversion and
 	// string lookup. We expect this to be small, no larger than a few
 	// thousand entries, and so don't expect it to compete for RAM.
 	{
 		std::lock_guard<std::mutex> flck(_mtx_frame);
-		auto it = _frame_map.find(as);
+		auto it = _frame_map.find(hasp);
 		if (it != _frame_map.end())
 			return it->second;
 	}
 
-	std::string sframe = Sexpr::encode_frame(as);
+	std::string sframe = Sexpr::encode_frame(hasp);
 
 	// The issuance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
@@ -380,19 +381,19 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	if (0 < sid.size())
 	{
 		std::lock_guard<std::mutex> flck(_mtx_frame);
-		_frame_map.insert({as, sid});
-		_fid_map.insert({sid, as});
+		_frame_map.insert({hasp, sid});
+		_fid_map.insert({sid, hasp});
 		return sid;
 	}
 
 	_multi_space = true;
 
 	// Recurse downwards first, if possible.
-	if (0 < as->get_arity())
+	if (0 < hasp->get_arity())
 	{
 		lck.unlock();
-		for (const Handle& ho : as->getOutgoingSet())
-			writeFrame((AtomSpace*) ho.get());
+		for (const Handle& ho : hasp->getOutgoingSet())
+			writeFrame(ho);
 		lck.lock();
 	}
 
@@ -409,8 +410,8 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 
 	{
 		std::lock_guard<std::mutex> flck(_mtx_frame);
-		_frame_map.insert({as, sid});
-		_fid_map.insert({sid, as});
+		_frame_map.insert({hasp, sid});
+		_fid_map.insert({sid, hasp});
 	}
 
 	// The rest is safe to do in parallel.
@@ -423,7 +424,8 @@ std::string RocksStorage::writeFrame(AtomSpace* as)
 	return sid;
 }
 
-AtomSpace* RocksStorage::getFrame(const std::string& fid)
+/// Return the AtomSpacePtr corresponding to fid.
+Handle RocksStorage::getFrame(const std::string& fid)
 {
 	{
 		std::lock_guard<std::mutex> flck(_mtx_frame);
@@ -440,13 +442,12 @@ AtomSpace* RocksStorage::getFrame(const std::string& fid)
 	// pointing to some AtomSpace in the environ of _atom_space.
 	Handle asp = HandleCast(_atom_space->shared_from_this());
 	Handle fas = Sexpr::decode_frame(asp, sframe);
-	AtomSpace* as = (AtomSpace*) fas.get();
 	std::lock_guard<std::mutex> flck(_mtx_frame);
-	_frame_map.insert({as, fid});
-	_fid_map.insert({fid, as});
+	_frame_map.insert({fas, fid});
+	_fid_map.insert({fid, fas});
 
 	_multi_space = true;
-	return as;
+	return fas;
 }
 
 // =========================================================
@@ -485,10 +486,10 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	if (0 == sid.size()) return;
 	std::string kid = findAtom(key);
 	if (0 == kid.size()) return;
-	AtomSpace* as = h->getAtomSpace();
 	std::string fid = ":";
+	AtomSpace* as = h->getAtomSpace();
 	if (as and _multi_space)
-		fid += writeFrame(as) + ":";
+		writeFrame(as);
 
 	ValuePtr vp = getValue("k@" + sid + fid + kid);
 // XXX this is adding to wrong atomspace!?
@@ -564,7 +565,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 		{
 			size_t efid = rks.rfind(':');
 			const std::string& fid = rks.substr(esid, efid-esid);
-			AtomSpace* fas = getFrame(fid);
+			const AtomSpacePtr& fas = AtomSpaceCast(getFrame(fid));
 			Handle hf = fas->add_atom(h);
 			hf->setValue(key, vp);
 		}
@@ -1105,9 +1106,8 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 		const std::string& fid = it->value().ToString();
 		const std::string& sframe = it->key().ToString().substr(2);
 		Handle fas = Sexpr::decode_frame(frm, sframe);
-		AtomSpace* as = (AtomSpace*) fas.get();
-		_frame_map.insert({as, fid});
-		_fid_map.insert({fid, as});
+		_frame_map.insert({fas, fid});
+		_fid_map.insert({fid, fas});
 	}
 	delete it;
 
