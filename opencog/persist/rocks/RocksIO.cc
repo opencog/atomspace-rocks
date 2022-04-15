@@ -218,7 +218,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 std::string RocksStorage::writeAtom(const Handle& h)
 {
 	AtomSpace* as = h->getAtomSpace();
-	if (_atom_space and as != _atom_space)
+	if (_atom_space and as and as != _atom_space)
 		writeFrame(as);
 
 	// The issuance of new sids needs to be atomic, as otherwise we
