@@ -75,18 +75,13 @@
 		(cog-atomspace-uuid left-space)
 		(cog-atomspace-uuid right-space))))
 
-(format #t "duuude left-bot=~A ~A ~A\n" left-space (cog-name
-left-space) (cog-atomspace-uuid left-space))
-(format #t "duuude right-bot=~A ~A ~A\n" right-space (cog-name
-right-space) (cog-atomspace-uuid right-space))
-
 	; Work on the current surface, but expect to find the deeper ListLink.
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))
 
 	; Verify appropriate atomspace membership
 	(test-equal "top-space" top-space (cog-atomspace lilly))
 	(test-equal "foo-space" new-base (cog-atomspace (gar lilly)))
-	(test-equal "bar-space" left-space (cog-atomspace (gdr lilly)))
+	(test-equal "bar-space" right-space (cog-atomspace (gdr lilly)))
 
 	; Verify appropriate values
 	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))

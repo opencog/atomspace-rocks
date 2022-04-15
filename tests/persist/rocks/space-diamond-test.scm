@@ -97,8 +97,8 @@
 
 	; Verify appropriate values
 	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "mid1-tv" 4 (get-cnt (cog-node 'Concept "bar")))
-	(test-equal "mid2-tv" 8 (get-cnt lilly))
+	(test-equal "left-tv" 4 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "top-tv" 8 (get-cnt lilly))
 )
 
 (define diamond "test diamond pattern")

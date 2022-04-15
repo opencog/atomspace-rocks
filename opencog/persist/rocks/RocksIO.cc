@@ -1097,8 +1097,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	std::string sframe;
 	std::string fid = aidtostr(fidhi);
 	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
-	Handle hbase = HandleCast(base);
-	Handle frm = Sexpr::decode_frame(hbase, sframe);
+	Handle frm = Sexpr::decode_frame(HandleCast(base), sframe);
 
 	// Loop again, this time to fill up the cache, so that future
 	// calls to getFrame() work correctly.
