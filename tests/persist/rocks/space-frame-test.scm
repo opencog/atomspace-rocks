@@ -1,31 +1,15 @@
 ;
 ; space-frame-test.scm
-; Test ability to store multiple atomspaces.
+; Test ability to store and retreive multiple atomspaces.
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog test-runner))
 (use-modules (opencog persist) (opencog persist-rocks))
 
-(opencog-test-runner)
-
-; Delete the directory `dirname` and everything in it.
-; I don't understand why scheme doesn't provide this, built-in.
-(define (whack dirname)
-	(define (unlink dir)
-		(define fname (readdir dir))
-		(when (not (eof-object? fname))
-			(let ((fpath (string-append dirname "/" fname)))
-				(when (equal? 'regular (stat:type (stat fpath)))
-					(delete-file fpath))
-				(unlink dir))))
-
-	(when (access? dirname F_OK)
-		(let ((dir (opendir dirname)))
-			(unlink dir)
-			(closedir dir)
-			(rmdir dirname))))
-
+(include "test-utils.scm")
 (whack "/tmp/cog-rocks-unit-test")
+
+(opencog-test-runner)
 
 ; -------------------------------------------------------------------
 ; Common setup, used by all tests.
