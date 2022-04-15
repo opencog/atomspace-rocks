@@ -440,7 +440,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	// So, this->_atom_space is actually Atom::_atom_space
 	// It is safe to dereference fas.get() because fas is
 	// pointing to some AtomSpace in the environ of _atom_space.
-	Handle asp = HandleCast(_atom_space->shared_from_this());
+	Handle asp = HandleCast(_atom_space);
 	Handle fas = Sexpr::decode_frame(asp, sframe);
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({fas, fid});
@@ -1069,7 +1069,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 {
 	if (not _multi_space)
 	{
-		if (base) return HandleCast(base->shared_from_this());
+		if (base) return HandleCast(base);
 		return Handle::UNDEFINED;
 	}
 
@@ -1094,7 +1094,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	std::string sframe;
 	std::string fid = aidtostr(fidhi);
 	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
-	Handle hbase = HandleCast(base->shared_from_this());
+	Handle hbase = HandleCast(base);
 	Handle frm = Sexpr::decode_frame(hbase, sframe);
 
 	// Loop again, this time to fill up the cache, so that future
