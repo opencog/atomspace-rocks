@@ -172,12 +172,17 @@ void RocksStorage::close()
 	delete _rfile;
 	_rfile = nullptr;
 	_next_aid = 0;
+
+	// Invalidate the local cache.
+	_multi_space = false;
+	_frame_map.clear();
+	_fid_map.clear();
 }
 
 void RocksStorage::write_aid(void)
 {
 	// We write the highest issued atom-id. This is the behavior that
-	// is compatible with writeAtom(), which also write the atom-id.
+	// is compatible with writeAtom(), which also writes the atom-id.
 	uint64_t naid = _next_aid.load();
 	naid --;
 	std::string sid = aidtostr(naid);
@@ -213,6 +218,7 @@ std::string RocksStorage::monitor(void)
 	rs += "Connected to `" + _uri + "`\n";
 	rs += "Database contents:\n";
 	rs += "  Next aid: " + std::to_string(_next_aid.load());
+	rs += "  Frames f@: " + std::to_string(count_records("f@"));
 	rs += "\n";
 	rs += "  Atoms/Links/Nodes a@: " + std::to_string(count_records("a@"));
 	rs += " l@: " + std::to_string(count_records("l@"));
