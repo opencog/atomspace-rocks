@@ -1058,6 +1058,7 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 void RocksStorage::loadAtomSpace(AtomSpace* table)
 {
 	CHECK_OPEN;
+
 	// First, load all the nodes ... then the links.
 	// XXX TODO - maybe load links depth-order...
 	loadAtoms(table, "n@");
@@ -1067,6 +1068,8 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 /// Load the entire collection of AtomSpace frames.
 Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 {
+	CHECK_OPEN;
+
 	if (not _multi_space)
 	{
 		if (base) return HandleCast(base);
