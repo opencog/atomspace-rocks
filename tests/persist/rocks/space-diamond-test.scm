@@ -73,12 +73,18 @@
 	(load-atomspace)
 	(cog-close storage)
 
+	; Verify that a diamond pattern was created.
+	(define left-space (cog-outgoing-atom top-space 0))
+	(define right-space (cog-outgoing-atom top-space 1))
+	(define left-bottom (cog-outgoing-atom left-space 0))
+	(define right-bottom (cog-outgoing-atom right-space 0))
+	(test-equal "base-equal" left-bottom right-bottom)
+	(test-equal "base-equal" left-bottom new-base)
+
 	; Work on the current surface, but expect to find the deeper ListLink.
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))
 
 	; Verify appropriate atomspace membership
-	(define left-space (cog-outgoing-atom top-space 0))
-	(define right-space (cog-outgoing-atom top-space 1))
 	(test-equal "top-space" top-space (cog-atomspace lilly))
 	(test-equal "foo-space" new-base (cog-atomspace (gar lilly)))
 	(test-equal "bar-space" left-space (cog-atomspace (gdr lilly)))
