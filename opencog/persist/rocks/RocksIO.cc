@@ -1121,6 +1121,7 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 {
 	CHECK_OPEN;
 	writeFrame(HandleCast(top));
+	_multi_space = true;
 }
 
 void RocksStorage::loadType(AtomSpace* as, Type t)

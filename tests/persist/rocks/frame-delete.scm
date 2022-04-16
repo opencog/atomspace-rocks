@@ -47,7 +47,16 @@
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
 	(store-frames surface-space)
-	(store-atom (Concept "foo"))
+	(cog-set-atomspace! base-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid1-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid2-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid3-space)
+	(store-atomspace)
+	(cog-set-atomspace! surface-space)
+	(store-atomspace)
 	(cog-close storage)
 )
 
@@ -66,10 +75,19 @@
 
 	; Load all of the AtomSpaces.
 	(define top-space (load-frames))
-	(cog-set-atomspace! top-space)
 
 	; Now load the AtomSpace itself
+	(cog-set-atomspace! top-space)
 	(load-atomspace)
+	(cog-set-atomspace! base-space)
+	(load-atomspace)
+	(cog-set-atomspace! mid1-space)
+	(load-atomspace)
+	(cog-set-atomspace! mid3-space)
+	(load-atomspace)
+	(cog-set-atomspace! mid2-space)
+	(load-atomspace)
+
 	(cog-close storage)
 
 	; Restore the inheritance hierarchy
@@ -107,6 +125,7 @@
 (test-deep-delete)
 (test-end deep-delete)
 
+(whack "/tmp/cog-rocks-unit-test")
 #! ========
 ; ===================================================================
 ; Building on the above, verify that values work
@@ -201,4 +220,5 @@
 === !#
 
 ; ===================================================================
+(whack "/tmp/cog-rocks-unit-test")
 (opencog-test-end)
