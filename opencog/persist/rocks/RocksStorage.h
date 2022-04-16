@@ -138,6 +138,7 @@ class RocksStorage : public StorageNode
 		void loadAtomSpace(AtomSpace*); // Load entire contents
 		void storeAtomSpace(const AtomSpace*); // Store entire contents
 		Handle loadFrameDAG(AtomSpace*); // Load AtomSpace DAG
+		void storeFrameDAG(AtomSpace*); // Store AtomSpace DAG
 		void barrier();
 		std::string monitor();
 

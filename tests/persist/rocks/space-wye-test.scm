@@ -43,7 +43,7 @@
 (define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
-; Test ability to restor the above.
+; Test ability to restore the above.
 
 (define (test-wye)
 	(setup-and-store)

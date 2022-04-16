@@ -1116,6 +1116,13 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	return frm;
 }
 
+/// Load the entire collection of AtomSpace frames.
+void RocksStorage::storeFrameDAG(AtomSpace* top)
+{
+	CHECK_OPEN;
+	writeFrame(HandleCast(top));
+}
+
 void RocksStorage::loadType(AtomSpace* as, Type t)
 {
 	CHECK_OPEN;
