@@ -503,9 +503,8 @@ void RocksStorage::getKeys(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-// XXX FIXME later
-//	if (as and _multi_space)
-//		cid += writeFrame(as) + ":";
+	if (as and _multi_space)
+		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
 	size_t esid = cid.size();
@@ -563,8 +562,9 @@ void RocksStorage::getKeys(AtomSpace* as,
 		// k@sid:fid:kid where fid is the AtomSpace frame. Set the frame.
 		if (_multi_space)
 		{
+			size_t sfid = rks.find(':') + 1;
 			size_t efid = rks.rfind(':');
-			const std::string& fid = rks.substr(esid, efid-esid);
+			const std::string& fid = rks.substr(sfid, efid-sfid);
 			const AtomSpacePtr& fas = AtomSpaceCast(getFrame(fid));
 			Handle hf = fas->add_atom(h);
 			hf->setValue(key, vp);
@@ -1048,8 +1048,7 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		getKeys(as, it->value().ToString(), h);
 
-		if (not _multi_space)
-			as->storage_add_nocheck(h);
+		as->storage_add_nocheck(h);
 	}
 	delete it;
 }
