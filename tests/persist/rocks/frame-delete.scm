@@ -73,8 +73,15 @@
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
 
-	; Load all of the AtomSpaces.
+	; Load all of the AtomSpace Frames.
 	(define top-space (load-frames))
+
+	; Restore the inheritance hierarchy
+	(define surface-space top-space)
+	(define mid3-space (cog-outgoing-atom surface-space 0))
+	(define mid2-space (cog-outgoing-atom mid3-space 0))
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
 
 	; Now load the AtomSpace itself
 	(cog-set-atomspace! top-space)
@@ -90,13 +97,6 @@
 
 	(cog-close storage)
 
-	; Restore the inheritance hierarchy
-	(define surface-space top-space)
-	(define mid3-space (cog-outgoing-atom surface-space 0))
-	(define mid2-space (cog-outgoing-atom mid3-space 0))
-	(define mid1-space (cog-outgoing-atom mid2-space 0))
-	(define base-space (cog-outgoing-atom mid1-space 0))
-
 	(test-equal "base-check" base-space new-base)
 
 	; Should be present in the base space.
@@ -106,14 +106,14 @@
 
 	; Should be absent in the next level.
 	(cog-set-atomspace! mid1-space)
-	(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid1-absent" (nil? (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! mid2-space)
 	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
 	(test-equal "mid2-tv" 5 (get-cnt (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! mid3-space)
-	(test-assert "mid3-space" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid3-absent" (nil? (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! surface-space)
 	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
