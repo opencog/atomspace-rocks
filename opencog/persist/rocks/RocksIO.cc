@@ -390,7 +390,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
-		_frame_order.insert({strtoaid(sid), sid});
+		_frame_order.insert({strtoaid(sid), (AtomSpace*) hasp.get()});
 		return sid;
 	}
 
@@ -420,7 +420,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
-		_frame_order.insert({aid, sid});
+		_frame_order.insert({aid, (AtomSpace*) hasp.get()});
 	}
 
 	// The rest is safe to do in parallel.
@@ -1050,15 +1050,30 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 	delete it;
 }
 
+/// Load only the indicated AtomSpace.
+void RocksStorage::loadOneFrame(AtomSpace* table)
+{
+	// First, load all the nodes ... then the links.
+	// XXX TODO - maybe load links depth-order...
+	loadAtoms(table, "n@");
+	loadAtoms(table, "l@");
+}
+
 /// Backing API - load the entire AtomSpace.
 void RocksStorage::loadAtomSpace(AtomSpace* table)
 {
 	CHECK_OPEN;
 
-	// First, load all the nodes ... then the links.
-	// XXX TODO - maybe load links depth-order...
-	loadAtoms(table, "n@");
-	loadAtoms(table, "l@");
+	if (not _multi_space)
+	{
+		loadOneFrame(table);
+		return;
+	}
+
+	// Restore frames, preservingthe partial order, so that the
+	// lowest ones are restored first.
+	for (const auto& it: _frame_order)
+		loadOneFrame(it.second);
 }
 
 /// Load the entire collection of AtomSpace frames.
@@ -1080,9 +1095,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
 	{
-		const std::string& fid = it->value().ToString();
-		size_t id = strtoaid(fid);
-		_frame_order.insert({id, fid});
+		size_t id = strtoaid(it->value().ToString());
 		if (id < fidlo) fidlo = id;
 		if (fidhi < id) fidhi = id;
 	}
@@ -1108,6 +1121,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 		Handle fas = Sexpr::decode_frame(frm, sframe);
 		_frame_map.insert({fas, fid});
 		_fid_map.insert({fid, fas});
+		_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});
 	}
 	delete it;
 
