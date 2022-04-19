@@ -177,6 +177,7 @@ void RocksStorage::close()
 	_multi_space = false;
 	_frame_map.clear();
 	_fid_map.clear();
+	_frame_order.clear();
 }
 
 void RocksStorage::write_aid(void)

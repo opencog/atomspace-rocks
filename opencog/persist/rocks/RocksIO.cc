@@ -390,6 +390,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
+		_frame_order.insert({strtoaid(sid), sid});
 		return sid;
 	}
 
@@ -419,6 +420,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
+		_frame_order.insert({aid, sid});
 	}
 
 	// The rest is safe to do in parallel.
@@ -1078,7 +1080,9 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
 	{
-		size_t id = strtoaid(it->value().ToString());
+		const std::string& fid = it->value().ToString();
+		size_t id = strtoaid(fid);
+		_frame_order.insert({id, fid});
 		if (id < fidlo) fidlo = id;
 		if (fidhi < id) fidhi = id;
 	}
