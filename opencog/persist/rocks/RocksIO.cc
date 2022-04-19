@@ -567,11 +567,14 @@ void RocksStorage::getKeys(AtomSpace* as,
 			const std::string& fid = rks.substr(sfid, efid-sfid);
 			const AtomSpacePtr& fas = AtomSpaceCast(getFrame(fid));
 			Handle hf = fas->add_atom(h);
-			hf->setValue(key, vp);
+			fas->set_value(hf, key, vp);
 		}
 		else
 		{
-			h->setValue(key, vp);
+			if (as)
+				as->set_value(h, key, vp);
+			else
+				h->setValue(key, vp);
 		}
 	}
 	delete it;
@@ -1047,7 +1050,6 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		getKeys(as, it->value().ToString(), h);
-
 		as->storage_add_nocheck(h);
 	}
 	delete it;
