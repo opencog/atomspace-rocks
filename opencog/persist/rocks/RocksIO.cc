@@ -1068,6 +1068,10 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 		return;
 	}
 
+	// The load won't work, if we don''t know what the frames are.
+	if (0 == _frame_order.size())
+		loadFrameDAG(table);
+
 	// Restore frames, preservingthe partial order, so that the
 	// lowest ones are restored first.
 	for (const auto& it: _frame_order)
