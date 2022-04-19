@@ -558,24 +558,10 @@ void RocksStorage::getKeys(AtomSpace* as,
 // XXX this is adding to wrong atomspace!?
 		if (vp) vp = as->add_atoms(vp);
 
-		// If multi-space, then the lookup is in the form of
-		// k@sid:fid:kid where fid is the AtomSpace frame. Set the frame.
-		if (_multi_space)
-		{
-			size_t sfid = rks.find(':') + 1;
-			size_t efid = rks.rfind(':');
-			const std::string& fid = rks.substr(sfid, efid-sfid);
-			const AtomSpacePtr& fas = AtomSpaceCast(getFrame(fid));
-			Handle hf = fas->add_atom(h);
-			fas->set_value(hf, key, vp);
-		}
+		if (as)
+			as->set_value(h, key, vp);
 		else
-		{
-			if (as)
-				as->set_value(h, key, vp);
-			else
-				h->setValue(key, vp);
-		}
+			h->setValue(key, vp);
 	}
 	delete it;
 }
