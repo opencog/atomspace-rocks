@@ -1038,14 +1038,12 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 /// Currently, the `pfx` must be "n@ " for Nodes or "l@" for Links.
 void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 {
-	CHECK_OPEN;
-
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+		h = as->storage_add_nocheck(h);
 		getKeys(as, it->value().ToString(), h);
-		as->storage_add_nocheck(h);
 	}
 	delete it;
 }
@@ -1136,10 +1134,8 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 	_multi_space = true;
 }
 
-void RocksStorage::loadType(AtomSpace* as, Type t)
+void RocksStorage::loadTypeOneFrame(AtomSpace* as, Type t)
 {
-	CHECK_OPEN;
-
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
 	std::string typ = pfx + nameserver().getTypeName(t);
 
@@ -1147,10 +1143,26 @@ void RocksStorage::loadType(AtomSpace* as, Type t)
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+		h = as->storage_add_nocheck(h);
 		getKeys(as, it->value().ToString(), h);
-		as->storage_add_nocheck(h);
 	}
 	delete it;
+}
+
+void RocksStorage::loadType(AtomSpace* as, Type t)
+{
+	CHECK_OPEN;
+
+	if (not _multi_space)
+	{
+		loadTypeOneFrame(as, t);
+		return;
+	}
+
+	// Restore frames, preservingthe partial order, so that the
+	// lowest ones are restored first.
+	for (const auto& it: _frame_order)
+		loadTypeOneFrame(it.second, t);
 }
 
 void RocksStorage::storeAtomSpace(const AtomSpace* table)

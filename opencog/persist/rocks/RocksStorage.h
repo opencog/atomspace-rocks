@@ -100,6 +100,7 @@ class RocksStorage : public StorageNode
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
 		void loadAtoms(AtomSpace*, const std::string& pfx);
 		void loadOneFrame(AtomSpace*); // Load entire contents
+		void loadTypeOneFrame(AtomSpace*, Type);
 		void loadInset(AtomSpace*, const std::string& ist);
 		void appendToInset(const std::string&, const std::string&);
 		void remFromInset(const std::string&, const std::string&);
