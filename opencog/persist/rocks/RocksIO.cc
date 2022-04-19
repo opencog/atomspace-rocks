@@ -353,8 +353,15 @@ void RocksStorage::appendToSidList(const std::string& klist,
 
 // =========================================================
 
-// Similar to writeAtom, but specifically specialized for
-// writing out AtomSpaces. The argument is *always* an AtomSpacePtr.
+/// Search for the indicated AtomSpace, returning it's sid (string ID).
+/// The argument must *always* be an AtomSpacePtr.  If the AtomSpace-sid
+/// pairing has not yet been written to storage, it will be; otherwise,
+/// the already-existing pairing is returned.
+///
+/// The issuance of the sid's preserves the partial order of the Frames,
+/// so that a smaller sid is always deeper in the DAG, closer to the
+/// bottom.  This is a guarantee that can be used when restoring the
+/// contents of the DAG, during a bulk load.
 std::string RocksStorage::writeFrame(const Handle& hasp)
 {
 	if (nullptr == hasp) return "0";
