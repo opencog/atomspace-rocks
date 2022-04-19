@@ -1042,7 +1042,7 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		h = as->storage_add_nocheck(h);
+		if (not _multi_space) h = as->storage_add_nocheck(h);
 		getKeys(as, it->value().ToString(), h);
 	}
 	delete it;
@@ -1147,7 +1147,7 @@ void RocksStorage::loadTypeOneFrame(AtomSpace* as, Type t)
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		h = as->storage_add_nocheck(h);
+		if (not _multi_space) h = as->storage_add_nocheck(h);
 		getKeys(as, it->value().ToString(), h);
 	}
 	delete it;
