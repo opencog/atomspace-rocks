@@ -315,6 +315,22 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		storeValue(cid + writeAtom(key), h->getValue(key));
 }
 
+void RocksStorage::storeMissingAtom(const Handle& h)
+{
+	std::string sid = writeAtom(h);
+
+	// Separator for keys
+	std::string skid = "k@" + sid + ":"
+		+ writeFrame(h->getAtomSpace()) + ":";
+
+	// Always clobber the TV, set it back to default.
+	// The below will revise as needed.
+	_rfile->Delete(rocksdb::WriteOptions(), skid + tv_pred_sid);
+
+	// Store an intentionally invalid key.
+	_rfile->Put(rocksdb::WriteOptions(), skid + "-1", "");
+}
+
 void RocksStorage::storeValue(const std::string& skid,
                               const ValuePtr& vp)
 {
@@ -1176,6 +1192,14 @@ void RocksStorage::storeAtomSpace(const AtomSpace* table)
 	table->get_handles_by_type(all_atoms, ATOM, true);
 	for (const Handle& h : all_atoms)
 		storeAtom(h);
+
+	if (_multi_space)
+	{
+		HandleSeq missing;
+		get_absent_atoms(table, missing);
+		for (const Handle& h : missing)
+			storeMissingAtom(h);
+	}
 
 	// Make sure that the latest atomid has been stored!
 	write_aid();

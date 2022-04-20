@@ -88,6 +88,7 @@ class RocksStorage : public StorageNode
 		void remFromSidList(const std::string&, const std::string&);
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
+		void storeMissingAtom(const Handle&);
 
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
