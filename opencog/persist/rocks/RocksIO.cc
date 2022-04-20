@@ -546,7 +546,9 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// in the corresponding AtomSpace as well.
 			if ('-' == rks[pos])
 			{
-				as->extract_atom(h);
+				bool extracted = as->extract_atom(h);
+				if (not extracted)
+					throw IOException(TRACE_INFO, "Internal Error!");
 				return;
 			}
 		}
