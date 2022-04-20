@@ -44,13 +44,8 @@ namespace opencog
  *  @{
  */
 
-class RocksSatisfyingSet;
-
 class RocksStorage : public StorageNode
 {
-	friend class RocksImplicator;
-	friend class RocksSatisfyingSet;
-	friend class RocksJoinCallback;
 	private:
 		void init(const char *);
 		std::string _uri;
