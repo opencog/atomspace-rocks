@@ -66,6 +66,12 @@
 (define (test-deep-delete)
 
 	(setup-and-store)
+
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
+
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
 
@@ -76,26 +82,17 @@
 	; Load all of the AtomSpace Frames.
 	(define top-space (load-frames))
 
-	; Restore the inheritance hierarchy
+	; Load all atoms in all frames
+	(cog-set-atomspace! top-space)
+	(load-atomspace)
+	(cog-close storage)
+
+	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)
 	(define mid3-space (cog-outgoing-atom surface-space 0))
 	(define mid2-space (cog-outgoing-atom mid3-space 0))
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
-
-	; Now load the AtomSpace itself
-	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-set-atomspace! base-space)
-	(load-atomspace)
-	(cog-set-atomspace! mid1-space)
-	(load-atomspace)
-	(cog-set-atomspace! mid3-space)
-	(load-atomspace)
-	(cog-set-atomspace! mid2-space)
-	(load-atomspace)
-
-	(cog-close storage)
 
 	(test-equal "base-check" base-space new-base)
 
