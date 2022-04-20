@@ -25,6 +25,7 @@ ADD_CXXTEST(QueryPersistUTest)
 ADD_GUILE_TEST(SpaceFrame space-frame-test.scm)
 ADD_GUILE_TEST(SpaceDiamond space-diamond-test.scm)
 ADD_GUILE_TEST(SpaceWye space-wye-test.scm)
+ADD_GUILE_TEST(FrameDelete frame-delete-test.scm)
 #
 ADD_CXXTEST(LargeFlatUTest)
 ADD_CXXTEST(LargeZipfUTest)

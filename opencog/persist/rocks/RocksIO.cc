@@ -315,6 +315,22 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		storeValue(cid + writeAtom(key), h->getValue(key));
 }
 
+void RocksStorage::storeMissingAtom(const Handle& h)
+{
+	std::string sid = writeAtom(h);
+
+	// Separator for keys
+	std::string skid = "k@" + sid + ":"
+		+ writeFrame(h->getAtomSpace()) + ":";
+
+	// Always clobber the TV, set it back to default.
+	// The below will revise as needed.
+	_rfile->Delete(rocksdb::WriteOptions(), skid + tv_pred_sid);
+
+	// Store an intentionally invalid key.
+	_rfile->Put(rocksdb::WriteOptions(), skid + "-1", "");
+}
+
 void RocksStorage::storeValue(const std::string& skid,
                               const ValuePtr& vp)
 {
@@ -353,8 +369,15 @@ void RocksStorage::appendToSidList(const std::string& klist,
 
 // =========================================================
 
-// Similar to writeAtom, but specifically specialized for
-// writing out AtomSpaces. The argument is *always* an AtomSpacePtr.
+/// Search for the indicated AtomSpace, returning it's sid (string ID).
+/// The argument must *always* be an AtomSpacePtr.  If the AtomSpace-sid
+/// pairing has not yet been written to storage, it will be; otherwise,
+/// the already-existing pairing is returned.
+///
+/// The issuance of the sid's preserves the partial order of the Frames,
+/// so that a smaller sid is always deeper in the DAG, closer to the
+/// bottom.  This is a guarantee that can be used when restoring the
+/// contents of the DAG, during a bulk load.
 std::string RocksStorage::writeFrame(const Handle& hasp)
 {
 	if (nullptr == hasp) return "0";
@@ -383,6 +406,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
+		_frame_order.insert({strtoaid(sid), (AtomSpace*) hasp.get()});
 		return sid;
 	}
 
@@ -412,6 +436,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
+		_frame_order.insert({aid, (AtomSpace*) hasp.get()});
 	}
 
 	// The rest is safe to do in parallel.
@@ -503,9 +528,8 @@ void RocksStorage::getKeys(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-// XXX FIXME later
-//	if (as and _multi_space)
-//		cid += writeFrame(as) + ":";
+	if (as and _multi_space)
+		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
 	size_t esid = cid.size();
@@ -514,10 +538,24 @@ void RocksStorage::getKeys(AtomSpace* as,
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 		const std::string& rks = it->key().ToString();
+		if (_multi_space)
+		{
+			pos = rks.rfind(':') + 1;
+
+			// Check for Atoms marked as deleted. Mark them up
+			// in the corresponding AtomSpace as well.
+			if ('-' == rks[pos])
+			{
+				bool extracted = as->extract_atom(h);
+				if (not extracted)
+					throw IOException(TRACE_INFO, "Internal Error!");
+				return;
+			}
+		}
+
 		Handle key;
 		try
 		{
-			if (_multi_space) pos = rks.rfind(':') + 1;
 			key = getAtom(rks.substr(pos));
 		}
 		catch (const IOException& ex)
@@ -559,20 +597,10 @@ void RocksStorage::getKeys(AtomSpace* as,
 // XXX this is adding to wrong atomspace!?
 		if (vp) vp = as->add_atoms(vp);
 
-		// If multi-space, then the lookup is in the form of
-		// k@sid:fid:kid where fid is the AtomSpace frame. Set the frame.
-		if (_multi_space)
-		{
-			size_t efid = rks.rfind(':');
-			const std::string& fid = rks.substr(esid, efid-esid);
-			const AtomSpacePtr& fas = AtomSpaceCast(getFrame(fid));
-			Handle hf = fas->add_atom(h);
-			hf->setValue(key, vp);
-		}
+		if (as)
+			as->set_value(h, key, vp);
 		else
-		{
 			h->setValue(key, vp);
-		}
 	}
 	delete it;
 }
@@ -1040,18 +1068,23 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 /// Currently, the `pfx` must be "n@ " for Nodes or "l@" for Links.
 void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 {
-	CHECK_OPEN;
-
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+		if (not _multi_space) h = add_nocheck(as, h);
 		getKeys(as, it->value().ToString(), h);
-
-		if (not _multi_space)
-			as->storage_add_nocheck(h);
 	}
 	delete it;
+}
+
+/// Load only the indicated AtomSpace.
+void RocksStorage::loadOneFrame(AtomSpace* table)
+{
+	// First, load all the nodes ... then the links.
+	// XXX TODO - maybe load links depth-order...
+	loadAtoms(table, "n@");
+	loadAtoms(table, "l@");
 }
 
 /// Backing API - load the entire AtomSpace.
@@ -1059,10 +1092,20 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 {
 	CHECK_OPEN;
 
-	// First, load all the nodes ... then the links.
-	// XXX TODO - maybe load links depth-order...
-	loadAtoms(table, "n@");
-	loadAtoms(table, "l@");
+	if (not _multi_space)
+	{
+		loadOneFrame(table);
+		return;
+	}
+
+	// The load won't work, if we don''t know what the frames are.
+	if (0 == _frame_order.size())
+		loadFrameDAG(table);
+
+	// Restore frames, preservingthe partial order, so that the
+	// lowest ones are restored first.
+	for (const auto& it: _frame_order)
+		loadOneFrame(it.second);
 }
 
 /// Load the entire collection of AtomSpace frames.
@@ -1110,16 +1153,23 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 		Handle fas = Sexpr::decode_frame(frm, sframe);
 		_frame_map.insert({fas, fid});
 		_fid_map.insert({fid, fas});
+		_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});
 	}
 	delete it;
 
 	return frm;
 }
 
-void RocksStorage::loadType(AtomSpace* as, Type t)
+/// Load the entire collection of AtomSpace frames.
+void RocksStorage::storeFrameDAG(AtomSpace* top)
 {
 	CHECK_OPEN;
+	writeFrame(HandleCast(top));
+	_multi_space = true;
+}
 
+void RocksStorage::loadTypeOneFrame(AtomSpace* as, Type t)
+{
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
 	std::string typ = pfx + nameserver().getTypeName(t);
 
@@ -1127,10 +1177,26 @@ void RocksStorage::loadType(AtomSpace* as, Type t)
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+		if (not _multi_space) h = add_nocheck(as, h);
 		getKeys(as, it->value().ToString(), h);
-		as->storage_add_nocheck(h);
 	}
 	delete it;
+}
+
+void RocksStorage::loadType(AtomSpace* as, Type t)
+{
+	CHECK_OPEN;
+
+	if (not _multi_space)
+	{
+		loadTypeOneFrame(as, t);
+		return;
+	}
+
+	// Restore frames, preservingthe partial order, so that the
+	// lowest ones are restored first.
+	for (const auto& it: _frame_order)
+		loadTypeOneFrame(it.second, t);
 }
 
 void RocksStorage::storeAtomSpace(const AtomSpace* table)
@@ -1140,6 +1206,14 @@ void RocksStorage::storeAtomSpace(const AtomSpace* table)
 	table->get_handles_by_type(all_atoms, ATOM, true);
 	for (const Handle& h : all_atoms)
 		storeAtom(h);
+
+	if (_multi_space)
+	{
+		HandleSeq missing;
+		get_absent_atoms(table, missing);
+		for (const Handle& h : missing)
+			storeMissingAtom(h);
+	}
 
 	// Make sure that the latest atomid has been stored!
 	write_aid();

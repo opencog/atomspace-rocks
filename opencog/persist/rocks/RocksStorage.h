@@ -44,13 +44,8 @@ namespace opencog
  *  @{
  */
 
-class RocksSatisfyingSet;
-
 class RocksStorage : public StorageNode
 {
-	friend class RocksImplicator;
-	friend class RocksSatisfyingSet;
-	friend class RocksJoinCallback;
 	private:
 		void init(const char *);
 		std::string _uri;
@@ -61,6 +56,7 @@ class RocksStorage : public StorageNode
 		// The Handles are *always* AtomSpacePtr's
 		std::unordered_map<Handle, const std::string> _frame_map;
 		std::unordered_map<std::string, Handle> _fid_map;
+		std::map<uint64_t, AtomSpace*> _frame_order;
 		std::mutex _mtx_frame;
 		std::string writeFrame(const Handle&);
 		std::string writeFrame(AtomSpace* as) {
@@ -92,12 +88,15 @@ class RocksStorage : public StorageNode
 		void remFromSidList(const std::string&, const std::string&);
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
+		void storeMissingAtom(const Handle&);
 
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
 		Handle findAlpha(const Handle&, const std::string&, std::string&);
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
 		void loadAtoms(AtomSpace*, const std::string& pfx);
+		void loadOneFrame(AtomSpace*); // Load entire contents
+		void loadTypeOneFrame(AtomSpace*, Type);
 		void loadInset(AtomSpace*, const std::string& ist);
 		void appendToInset(const std::string&, const std::string&);
 		void remFromInset(const std::string&, const std::string&);
@@ -138,6 +137,7 @@ class RocksStorage : public StorageNode
 		void loadAtomSpace(AtomSpace*); // Load entire contents
 		void storeAtomSpace(const AtomSpace*); // Store entire contents
 		Handle loadFrameDAG(AtomSpace*); // Load AtomSpace DAG
+		void storeFrameDAG(AtomSpace*); // Store AtomSpace DAG
 		void barrier();
 		std::string monitor();
 

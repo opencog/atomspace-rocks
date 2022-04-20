@@ -43,10 +43,15 @@
 (define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
-; Test ability to restor the above.
+; Test ability to restore the above.
 
 (define (test-wye)
 	(setup-and-store)
+
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
 
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
