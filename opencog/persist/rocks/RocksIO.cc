@@ -542,11 +542,11 @@ void RocksStorage::getKeys(AtomSpace* as,
 		{
 			pos = rks.rfind(':') + 1;
 
-			// Check for Atoms marked as deleted. Mark them up in the
-			// corresponding AtomSpace as well.
+			// Check for Atoms marked as deleted. Mark them up
+			// in the corresponding AtomSpace as well.
 			if ('-' == rks[pos])
 			{
-				setAbsent(as->add_atom(h));
+				as->extract_atom(h);
 				return;
 			}
 		}
