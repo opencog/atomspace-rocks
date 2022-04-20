@@ -538,10 +538,22 @@ void RocksStorage::getKeys(AtomSpace* as,
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 		const std::string& rks = it->key().ToString();
+		if (_multi_space)
+		{
+			pos = rks.rfind(':') + 1;
+
+			// Check for Atoms marked as deleted. Mark them up in the
+			// corresponding AtomSpace as well.
+			if ('-' == rks[pos])
+			{
+				setAbsent(as->add_atom(h));
+				return;
+			}
+		}
+
 		Handle key;
 		try
 		{
-			if (_multi_space) pos = rks.rfind(':') + 1;
 			key = getAtom(rks.substr(pos));
 		}
 		catch (const IOException& ex)
@@ -1058,7 +1070,7 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		if (not _multi_space) h = as->storage_add_nocheck(h);
+		if (not _multi_space) h = add_nocheck(as, h);
 		getKeys(as, it->value().ToString(), h);
 	}
 	delete it;
@@ -1163,7 +1175,7 @@ void RocksStorage::loadTypeOneFrame(AtomSpace* as, Type t)
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		if (not _multi_space) h = as->storage_add_nocheck(h);
+		if (not _multi_space) h = add_nocheck(as, h);
 		getKeys(as, it->value().ToString(), h);
 	}
 	delete it;
