@@ -1,5 +1,5 @@
 ;
-; frame-delete.scm
+; frame-delete-test.scm
 ;
 ; Verify that deleted atoms will cover underlying atoms in nested
 ; atomspaces. Variant of the `cover-delete-test.scm` from the atomspace
@@ -20,11 +20,19 @@
 ; Common setup, used by all tests.
 
 (define (setup-and-store)
+
+	; The base space is the current space.
 	(define base-space (cog-atomspace))
 	(define mid1-space (cog-new-atomspace base-space))
 	(define mid2-space (cog-new-atomspace mid1-space))
 	(define mid3-space (cog-new-atomspace mid2-space))
 	(define surface-space (cog-new-atomspace mid3-space))
+
+	; (format #t "setup space top ~A\n" (cog-name surface-space))
+	; (format #t "setup space mid ~A\n" (cog-name mid3-space))
+	; (format #t "setup space mid ~A\n" (cog-name mid2-space))
+	; (format #t "setup space mid ~A\n" (cog-name mid1-space))
+	; (format #t "setup space base ~A\n" (cog-name base-space))
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
@@ -58,12 +66,19 @@
 	(cog-set-atomspace! surface-space)
 	(store-atomspace)
 	(cog-close storage)
+
+	; Return the surface space
+	surface-space
 )
 
 ; ===================================================================
 
-; Test that deep deletions work correctly.
+; Test that changes to deep deletions work correctly.
 (define (test-deep-delete)
+
+	; Set a brand new current space
+	(define new-base (cog-new-atomspace))
+	(cog-set-atomspace! new-base)
 
 	(setup-and-store)
 
@@ -71,9 +86,6 @@
 	; (cog-rocks-stats)
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
-
-	(define new-base (cog-new-atomspace))
-	(cog-set-atomspace! new-base)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
@@ -123,98 +135,212 @@
 (test-end deep-delete)
 
 (whack "/tmp/cog-rocks-unit-test")
-#! ========
+
 ; ===================================================================
 ; Building on the above, verify that values work
 
+(define (setup-deep-change)
+
+	; This uses the spaces built prviously.
+	; The previous spaces were built on the current space.
+	(define surface-space (setup-and-store))
+	(define mid3-space (cog-outgoing-atom surface-space 0))
+	(define mid2-space (cog-outgoing-atom mid3-space 0))
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
+
+	; Repeatedly add and remove the same atom
+	(cog-set-atomspace! base-space)
+	(cog-set-tv! (Concept "foo") (ctv 1 0 2))
+
+	(cog-set-atomspace! mid2-space)
+	(cog-set-tv! (Concept "foo") (ctv 1 0 4))
+
+	(cog-set-atomspace! surface-space)
+	(cog-set-tv! (Concept "foo") (ctv 1 0 6))
+
+	; Store the changed content. Toggle through all the atomspaces,
+	; as otherwise, the TV's on the Concepts aren't stored.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+	; Do NOT store frames a second time! This will mess it up.
+	; (store-frames surface-space)
+	(cog-set-atomspace! base-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid1-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid2-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid3-space)
+	(store-atomspace)
+	(cog-set-atomspace! surface-space)
+	(store-atomspace)
+	(cog-close storage)
+)
+
+(define (test-deep-change)
+
+	; Define a brand new space on which the other
+	; atomspaces will be built.
+	(define new-base (cog-new-atomspace))
+	(cog-set-atomspace! new-base)
+
+	(setup-deep-change)
+
+	; Load everything.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+
+	; Load all of the AtomSpace Frames.
+	(define top-space (load-frames))
+
+	; Load all atoms in all frames
+	(cog-set-atomspace! top-space)
+	(load-atomspace)
+	(cog-close storage)
+
+	; Grab references into the inheritance hierarchy
+	(define surface-space top-space)
+	(define mid3-space (cog-outgoing-atom surface-space 0))
+	(define mid2-space (cog-outgoing-atom mid3-space 0))
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
+
+	(test-equal "base-check" base-space new-base)
+
+	; -----------------------------------
+	; Should be present in the base space.
+	(cog-set-atomspace! base-space)
+	(test-assert "base-space" (cog-atom? (cog-node 'Concept "foo")))
+	(test-equal "base-tv" 2 (get-cnt (cog-node 'Concept "foo")))
+
+	; Should be absent in the next level.
+	(cog-set-atomspace! mid1-space)
+	(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
+
+	(cog-set-atomspace! mid2-space)
+	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
+	(test-equal "mid2-tv" 4 (get-cnt (cog-node 'Concept "foo")))
+
+	(cog-set-atomspace! mid3-space)
+	(test-assert "mid3-space" (nil? (cog-node 'Concept "foo")))
+
+	(cog-set-atomspace! surface-space)
+	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
+	(test-equal "surface-tv" 6 (get-cnt (cog-node 'Concept "foo")))
+)
+
 (define deep-change "test deep change-delete")
 (test-begin deep-change)
-
-; Repeatedly add and remove the same atom
-(cog-set-atomspace! base-space)
-(cog-set-tv! (Concept "foo") (ctv 1 0 2))
-
-(cog-set-atomspace! mid2-space)
-(cog-set-tv! (Concept "foo") (ctv 1 0 4))
-
-(cog-set-atomspace! surface-space)
-(cog-set-tv! (Concept "foo") (ctv 1 0 6))
-
-; -----------------------------------
-; Should be present in the base space.
-(cog-set-atomspace! base-space)
-(test-assert "base-space" (cog-atom? (cog-node 'Concept "foo")))
-(test-equal "base-tv" 2 (inexact->exact (cog-count (cog-node 'Concept "foo"))))
-
-; Should be absent in the next level.
-(cog-set-atomspace! mid1-space)
-(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
-
-(cog-set-atomspace! mid2-space)
-(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
-(test-equal "mid2-tv" 4 (inexact->exact (cog-count (cog-node 'Concept "foo"))))
-
-(cog-set-atomspace! mid3-space)
-(test-assert "mid3-space" (nil? (cog-node 'Concept "foo")))
-
-(cog-set-atomspace! surface-space)
-(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
-(test-equal "surface-tv" 6 (inexact->exact (cog-count (cog-node 'Concept "foo"))))
-
+(test-deep-change)
 (test-end deep-change)
 
 ; ===================================================================
 ; Test that deep link deletions work correctly.
 
+(define (setup-link-check)
+
+	; Grab references into the inheritance hierarchy
+	(define surface-space (cog-atomspace))
+	(define mid3-space (cog-outgoing-atom surface-space 0))
+	(define mid2-space (cog-outgoing-atom mid3-space 0))
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
+
+	; Repeatedly add and remove the same atom
+	(cog-set-atomspace! base-space)
+	(Concept "bar")
+	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 10))
+
+	(cog-set-atomspace! mid1-space)
+	(cog-extract-recursive! (Concept "foo"))
+
+	(cog-set-atomspace! mid2-space)
+	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 20))
+
+	(cog-set-atomspace! mid3-space)
+	(cog-extract-recursive! (Concept "foo"))
+
+	(cog-set-atomspace! surface-space)
+	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 30))
+
+	; Store the changed content. Toggle through all the atomspaces,
+	; as otherwise, the TV's on the Atoms aren't stored.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+	; Do NOT store frames a second time! This will mess it up.
+	; (store-frames surface-space)
+	(cog-set-atomspace! base-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid1-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid2-space)
+	(store-atomspace)
+	(cog-set-atomspace! mid3-space)
+	(store-atomspace)
+	(cog-set-atomspace! surface-space)
+	(store-atomspace)
+	(cog-close storage)
+)
+
+(define (test-deep-link)
+
+	; Assume that we start the test with the same
+	; top atomspace as before.
+	; We are merely making delts to it.
+	(setup-link-check)
+
+	; Load everything.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+
+	; Load all of the AtomSpace Frames.
+	(define top-space (load-frames))
+
+	; Load all atoms in all frames
+	(cog-set-atomspace! top-space)
+	(load-atomspace)
+	(cog-close storage)
+
+	; Grab references into the inheritance hierarchy
+	(define surface-space top-space)
+	(define mid3-space (cog-outgoing-atom surface-space 0))
+	(define mid2-space (cog-outgoing-atom mid3-space 0))
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
+
+	; -----------------------------------
+	; Should be present in the base space.
+	(cog-set-atomspace! base-space)
+	(test-assert "base-space" (cog-atom? (cog-node 'Concept "foo")))
+	(test-equal "base-tv" 2 (get-cnt (Concept "foo")))
+	(test-equal "base-litv" 10 (get-cnt
+		(ListLink (Concept "foo") (Concept "bar"))))
+
+	; Should be absent in the next level.
+	(cog-set-atomspace! mid1-space)
+	(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
+
+	(cog-set-atomspace! mid2-space)
+	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
+	(test-equal "mid2-tv" 4 (get-cnt (Concept "foo")))
+	(test-equal "mid2-litv" 20 (get-cnt
+		(ListLink (Concept "foo") (Concept "bar"))))
+
+	(cog-set-atomspace! mid3-space)
+	(test-assert "mid3-space" (nil? (cog-node 'Concept "foo")))
+
+	(cog-set-atomspace! surface-space)
+	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
+	(test-equal "surface-tv" 6 (get-cnt (Concept "foo")))
+	(test-equal "surface-litv" 30 (get-cnt
+		(ListLink (Concept "foo") (Concept "bar"))))
+)
+
 (define deep-link-delete "test deep link-delete")
 (test-begin deep-link-delete)
-
-; Repeatedly add and remove the same atom
-(cog-set-atomspace! base-space)
-(Concept "bar")
-(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 10))
-
-(cog-set-atomspace! mid1-space)
-(cog-extract-recursive! (Concept "foo"))
-
-(cog-set-atomspace! mid2-space)
-(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 20))
-
-(cog-set-atomspace! mid3-space)
-(cog-extract-recursive! (Concept "foo"))
-
-(cog-set-atomspace! surface-space)
-(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 30))
-
-; -----------------------------------
-; Should be present in the base space.
-(cog-set-atomspace! base-space)
-(test-assert "base-space" (cog-atom? (cog-node 'Concept "foo")))
-(test-equal "base-tv" 2 (inexact->exact (cog-count (Concept "foo"))))
-(test-equal "base-litv" 10 (inexact->exact (cog-count
-    (ListLink (Concept "foo") (Concept "bar")))))
-
-; Should be absent in the next level.
-(cog-set-atomspace! mid1-space)
-(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
-
-(cog-set-atomspace! mid2-space)
-(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
-(test-equal "mid2-tv" 4 (inexact->exact (cog-count (Concept "foo"))))
-(test-equal "mid2-litv" 20 (inexact->exact (cog-count
-    (ListLink (Concept "foo") (Concept "bar")))))
-
-(cog-set-atomspace! mid3-space)
-(test-assert "mid3-space" (nil? (cog-node 'Concept "foo")))
-
-(cog-set-atomspace! surface-space)
-(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
-(test-equal "surface-tv" 6 (inexact->exact (cog-count (Concept "foo"))))
-(test-equal "surface-litv" 30 (inexact->exact (cog-count
-    (ListLink (Concept "foo") (Concept "bar")))))
-
+(test-deep-link)
 (test-end deep-link-delete)
-=== !#
 
 ; ===================================================================
 (whack "/tmp/cog-rocks-unit-test")
