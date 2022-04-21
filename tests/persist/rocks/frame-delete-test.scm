@@ -285,11 +285,9 @@
 
 (define (test-deep-link)
 
-	; Define a brand new space on which the other
-	; atomspaces will be built.
-	(define new-base (cog-new-atomspace))
-	(cog-set-atomspace! new-base)
-
+	; Assume that we start the test with the same
+	; top atomspace as before.
+	; We are merely making delts to it.
 	(setup-link-check)
 
 	; Load everything.
@@ -310,8 +308,6 @@
 	(define mid2-space (cog-outgoing-atom mid3-space 0))
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
-
-	(test-equal "base-check" base-space new-base)
 
 	; -----------------------------------
 	; Should be present in the base space.
