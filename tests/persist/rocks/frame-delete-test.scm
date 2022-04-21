@@ -20,11 +20,19 @@
 ; Common setup, used by all tests.
 
 (define (setup-and-store)
+
+	; The base space is the current space.
 	(define base-space (cog-atomspace))
 	(define mid1-space (cog-new-atomspace base-space))
 	(define mid2-space (cog-new-atomspace mid1-space))
 	(define mid3-space (cog-new-atomspace mid2-space))
 	(define surface-space (cog-new-atomspace mid3-space))
+
+	; (format #t "setup space top ~A\n" (cog-name surface-space))
+	; (format #t "setup space mid ~A\n" (cog-name mid3-space))
+	; (format #t "setup space mid ~A\n" (cog-name mid2-space))
+	; (format #t "setup space mid ~A\n" (cog-name mid1-space))
+	; (format #t "setup space base ~A\n" (cog-name base-space))
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
@@ -68,15 +76,16 @@
 ; Test that changes to deep deletions work correctly.
 (define (test-deep-delete)
 
+	; Set a brand new current space
+	(define new-base (cog-new-atomspace))
+	(cog-set-atomspace! new-base)
+
 	(setup-and-store)
 
 	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
 	; (cog-rocks-stats)
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
-
-	(define new-base (cog-new-atomspace))
-	(cog-set-atomspace! new-base)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
@@ -126,10 +135,14 @@
 (test-end deep-delete)
 
 (whack "/tmp/cog-rocks-unit-test")
+
 ; ===================================================================
 ; Building on the above, verify that values work
 
 (define (setup-deep-change)
+
+	; This uses the spaces built prviously.
+	; The previous spaces were built on the current space.
 	(define surface-space (setup-and-store))
 	(define mid3-space (cog-outgoing-atom surface-space 0))
 	(define mid2-space (cog-outgoing-atom mid3-space 0))
@@ -150,7 +163,7 @@
 	; as otherwise, the TV's on the Concepts aren't stored.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
-	(store-frames surface-space)
+	; (store-frames surface-space)
 	(cog-set-atomspace! base-space)
 	(store-atomspace)
 	(cog-set-atomspace! mid1-space)
@@ -165,10 +178,13 @@
 )
 
 (define (test-deep-change)
-	(setup-deep-change)
 
+	; Define a brand new space on which the other
+	; atomspaces will be built.
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
+
+	(setup-deep-change)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
