@@ -48,8 +48,8 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is **Version 1.0.2**.  All unit tests pass.  It has been used in
-at least one "serious" project to process many millions of Atoms.
+This is **Version 1.1.0**.  All unit tests pass.  It has been used in
+at least one major project, to process tens of millions of Atoms.
 
 This code is 2x or 3x faster than Postgres on synthetic benchmarks,
 and has been observed to run 12x faster in a real-world application.
@@ -84,3 +84,9 @@ it. This does nothing at all fancy/sophisticated with RocksDB, and it
 might be possible to improve performance and squeeze out some air.
 However, the code is not sloppy, so it might be hard to make it go
 faster.
+
+If you are creating a new StorageNode to some other kind of database,
+using the code here as a starting point would make an excellent design
+choice.  All the hard problems have been solved, and yet the overall
+design remains fairly simple.  All you'd need to do is to replace all
+of the references to RocksDB to your favorite, desired DB.
