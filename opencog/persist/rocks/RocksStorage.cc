@@ -201,7 +201,7 @@ bool RocksStorage::connected(void)
 /// barrier really are performed before before all the writes after
 /// the barrier.
 ///
-void RocksStorage::barrier()
+void RocksStorage::barrier(AtomSpace* as)
 {
 	// belt and suspenders.
 	write_aid();
