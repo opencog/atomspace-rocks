@@ -2,8 +2,9 @@
 ; frame-delete-test.scm
 ;
 ; Verify that deleted atoms will cover underlying atoms in nested
-; atomspaces. Variant of the `cover-delete-test.scm` from the atomspace
-; repo, modified to test storage.
+; atomspaces. Tests both `cog-extract!` and `cog-delete!` Variant of
+; the `cover-delete-test.scm` from the atomspace repo, modified to
+; test storage.
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog test-runner))
