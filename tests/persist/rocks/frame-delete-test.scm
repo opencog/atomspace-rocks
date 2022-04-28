@@ -34,6 +34,10 @@
 	; (format #t "setup space mid ~A\n" (cog-name mid1-space))
 	; (format #t "setup space base ~A\n" (cog-name base-space))
 
+	(cog-set-atomspace! surface-space)
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
 	(Concept "foo" (ctv 1 0 3))
@@ -52,8 +56,6 @@
 
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
-	(cog-open storage)
 	(store-frames surface-space)
 	(cog-set-atomspace! base-space)
 	(store-atomspace)
@@ -156,6 +158,10 @@
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
 
+	(cog-set-atomspace! surface-space)
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
 	(cog-set-tv! (Concept "foo") (ctv 1 0 2))
@@ -168,8 +174,6 @@
 
 	; Store the changed content. Toggle through all the atomspaces,
 	; as otherwise, the TV's on the Concepts aren't stored.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
-	(cog-open storage)
 	; Do NOT store frames a second time! This will mess it up.
 	; (store-frames surface-space)
 	(cog-set-atomspace! base-space)
@@ -262,6 +266,10 @@
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
 
+	(cog-set-atomspace! surface-space)
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
 	(Concept "bar")
@@ -281,8 +289,6 @@
 
 	; Store the changed content. Toggle through all the atomspaces,
 	; as otherwise, the TV's on the Atoms aren't stored.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
-	(cog-open storage)
 	; Do NOT store frames a second time! This will mess it up.
 	; (store-frames surface-space)
 	(cog-set-atomspace! base-space)
