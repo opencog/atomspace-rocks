@@ -698,7 +698,7 @@ Handle RocksStorage::findAlpha(const Handle& h, const std::string& shash,
 // =========================================================
 // Remove-related stuff...
 
-void RocksStorage::removeAtom(const Handle& h, bool recursive)
+void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 {
 	// Multi-space Atom remove is done via hiding...
 	if (_multi_space) return;
