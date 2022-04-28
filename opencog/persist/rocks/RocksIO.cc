@@ -706,6 +706,11 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 	// Multi-space Atom remove is done via hiding...
 	if (_multi_space)
 	{
+		if (recursive)
+		{
+			for (const Handle& hi: h->getIncomingSet())
+				removeAtom(frame, hi, true);
+		}
 		storeMissingAtom(frame, h);
 		return;
 	}
