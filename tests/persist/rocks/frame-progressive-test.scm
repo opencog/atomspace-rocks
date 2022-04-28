@@ -22,15 +22,15 @@
 (define (store-stuff N)
 	(define x (Concept "foo"))
 	(cog-set-value! x (Predicate "gee") (ctv 1 0 N))
-	(cog-store x)
+	(store-atom x)
 
 	(define y (Concept "bar"))
 	(cog-set-value! y (Predicate "gosh") (ctv 1 0 (+ 1 N)))
-	(cog-store y)
+	(store-atom y)
 
 	(define z (Link x y))
 	(cog-set-value! z (Predicate "bang") (ctv 1 0 (+ 2 N)))
-	(cog-store z)
+	(store-atom z)
 )
 
 ; Recursive calls to above
