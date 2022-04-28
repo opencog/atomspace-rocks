@@ -38,8 +38,10 @@
 ; Recursive calls to above
 (define (recompute N NLOOP)
 	(when (< 0 NLOOP)
+(format #t "duude space with stuff=~A\n" (cog-name (cog-atomspace)))
 		(store-stuff N)
 		(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
+(format #t "duude space w/o stuff=~A\n" (cog-name (cog-atomspace)))
 		(cog-delete-recursive! (Concept "bar"))
 		(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
 		(recompute (+ N 3) (- NLOOP 1)))
@@ -86,11 +88,11 @@
 	(define y2 (cog-node 'Concept "bar"))
 	(test-equal "foo-as-before" x x2)
 	(test-assert "bar-present" (cog-atom? y2))
-	(test-equal "bar-tv" (+ (* 3 N) 2) (get-val y "gosh"))
+	(test-equal "bar-tv" (+ (* 3 N) 2) (get-val y2 "gosh"))
 
 	(define z2 (cog-link 'List x2 y2))
 	(test-assert "link-present" (cog-atom? z2))
-	(test-equal "link-tv" (+ (* 3 N) 3) (get-val z "bang"))
+	(test-equal "link-tv" (+ (* 3 N) 3) (get-val z2 "bang"))
 
 	; Recurse downwards
 	(define downext (cog-atomspace-env))
@@ -114,10 +116,10 @@
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
 
-	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	; (cog-rocks-stats)
-	; (cog-rocks-get "")
-	; (cog-rocks-close)
+	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	(cog-rocks-stats)
+	(cog-rocks-get "")
+	(cog-rocks-close)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
@@ -131,8 +133,29 @@
 	(load-atomspace)
 	(cog-close storage)
 
-	; Check from the top, down.
-	(progressive-check (- STACK-DEPTH 1))
+	; We created an even number of spaces, but restored only
+	; an odd number of spaces, because the last space was empty
+	; and thus not recorded.
+	; top-most space should have all three atoms in it.
+	(define x (cog-node 'Concept "foo"))
+	(define y (cog-node 'Concept "bar"))
+	(test-assert "top-foo-present" (cog-atom? x))
+	(test-assert "top-bar-present" (cog-atom? y))
+	(define N (- STACK-DEPTH 1))
+	(test-equal "top-foo-tv" (+ (* 3 N) 1) (get-val x "gee"))
+	(test-equal "top-bar-tv" (+ (* 3 N) 2) (get-val y "gosh"))
+
+	(define z (cog-link 'List x y))
+	(test-assert "top-link-present" (cog-atom? z))
+	(test-equal "top-link-tv" (+ (* 3 N) 3) (get-val z "bang"))
+
+	; Recurse downwards
+	(define downli (cog-atomspace-env))
+	(test-equal "top-num-childs" 1 (length downli))
+	(cog-set-atomspace! (car downli))
+
+	; Check the rest of them, recursing downwards.
+	(progressive-check (- STACK-DEPTH 2))
 )
 
 (define progressive-work "test progressive work")
