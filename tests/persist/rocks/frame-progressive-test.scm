@@ -64,29 +64,33 @@
 (define (progressive-check N)
 
 (format #t "duuude start aaspace=~A uu=~A\n" (cog-name (cog-atomspace)) (cog-atomspace-uuid))
+
+	; In the top space, foo should be present, but bar and link absent.
 	(define x (cog-node 'Concept "foo"))
 	(define y (cog-node 'Concept "bar"))
 	(test-assert "foo-present" (cog-atom? x))
-	(test-assert "bar-present" (cog-atom? y))
+	(test-assert "bar-absent" (not (cog-atom? y)))
 
-	(define M (- N 1))
-(format #t "duuude foo=~A ex=~A\n" (get-val x "gee") (* 3 M))
-	(test-equal "foo-tv" (+ (* 3 M) 1) (get-val x "gee"))
-	(test-equal "bar-tv" (+ (* 3 M) 2) (get-val y "gosh"))
+(format #t "duuude foo=~A ex=~A\n" (get-val x "gee") (* 3 N))
+	(test-equal "foo-tv" (+ (* 3 N) 1) (get-val x "gee"))
 
-	(define z (cog-link 'List x y))
-	(test-assert "link-present" (cog-atom? z))
-	(test-equal "link-tv" (+ (* 3 M) 3) (get-val z "bang"))
+	(define z (cog-link 'List (Concept "foo") (Concept "bar")))
+	(test-assert "link-absent" (not (cog-atom? z)))
 
-	; Next one down shuld be missing atoms.
+	; Next one down should have all three atoms
 	(define downli (cog-atomspace-env))
 	(test-equal "num-childs" 1 (length downli))
 	(cog-set-atomspace! (car downli))
-	(define y2 (cog-node 'Concept "bar"))
-	(test-assert "bar-absent" (nil? y2))
 
-	(define z2 (cog-link 'List (Concept "foo") (Concept "bar")))
-	(test-assert "link-absent" (nil? z2))
+	(define x2 (cog-node 'Concept "foo"))
+	(define y2 (cog-node 'Concept "bar"))
+	(test-equal "foo-as-before" x x2)
+	(test-assert "bar-present" (cog-atom? y2))
+	(test-equal "bar-tv" (+ (* 3 N) 2) (get-val y "gosh"))
+
+	(define z2 (cog-link 'List x2 y2))
+	(test-assert "link-present" (cog-atom? z2))
+	(test-equal "link-tv" (+ (* 3 N) 3) (get-val z "bang"))
 
 	; Recurse downwards
 	(define downext (cog-atomspace-env))
@@ -127,7 +131,8 @@
 	(load-atomspace)
 	(cog-close storage)
 
-	(progressive-check STACK-DEPTH)
+	; Check from the top, down.
+	(progressive-check (- STACK-DEPTH 1))
 )
 
 (define progressive-work "test progressive work")
