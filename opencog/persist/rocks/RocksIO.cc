@@ -701,7 +701,11 @@ Handle RocksStorage::findAlpha(const Handle& h, const std::string& shash,
 void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 {
 	AtomSpace* has = h->getAtomSpace();
-	if (has and has != frame) _multi_space = true;
+	if (has and has != frame and not _multi_space)
+		throw IOException(TRACE_INFO,
+			"Attempting to delete %s from %s, "
+			"Did you forget to say `store-frames` first?",
+			h->to_string().c_str(), frame->get_name().c_str());
 
 	// Multi-space Atom remove is done via hiding...
 	if (_multi_space)
