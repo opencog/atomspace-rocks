@@ -51,10 +51,14 @@
 
 	; The base space is the current space.
 	(define base-space (cog-atomspace))
-	; Open storage immediately.
 
+	; Open storage immediately.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
+
+	; We plan to store multiple atomspaces.
+	; Let this be stated in advance.
+	(store-frames base-space)
 
 	; Repeatedly add and remove the same atom
 	(recompute 1 N)
