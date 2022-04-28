@@ -13,7 +13,7 @@
 
 (define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 (define (get-val ATOM NAME) (inexact->exact
-	(cog-value-ref (cog-value ATOM (Predicate NAME)) 0)))
+	(cog-value-ref (cog-value ATOM (Predicate NAME)) 2)))
 
 (opencog-test-runner)
 
@@ -63,27 +63,36 @@
 ; Verify expected contents
 (define (progressive-check N)
 
+(format #t "duuude start aaspace=~A uu=~A\n" (cog-name (cog-atomspace)) (cog-atomspace-uuid))
 	(define x (cog-node 'Concept "foo"))
 	(define y (cog-node 'Concept "bar"))
 	(test-assert "foo-present" (cog-atom? x))
 	(test-assert "bar-present" (cog-atom? y))
-(format #t "duuude ~A\n" (get-val x "gee"))
-(format #t "duuude ~A\n" (get-val y "gee"))
-	(test-equal "foo-tv" (+ (* 3 N) 1) (get-val x "gee"))
-	(test-equal "bar-tv" (+ (* 3 N) 2) (get-val y "gosh"))
+
+	(define M (- N 1))
+(format #t "duuude foo=~A ex=~A\n" (get-val x "gee") (* 3 M))
+	(test-equal "foo-tv" (+ (* 3 M) 1) (get-val x "gee"))
+	(test-equal "bar-tv" (+ (* 3 M) 2) (get-val y "gosh"))
 
 	(define z (cog-link 'List x y))
 	(test-assert "link-present" (cog-atom? z))
-	(test-equal "link-tv" (+ (* 3 N) 3) (get-val z "bang"))
+	(test-equal "link-tv" (+ (* 3 M) 3) (get-val z "bang"))
 
+	; Next one down shuld be missing atoms.
 	(define downli (cog-atomspace-env))
 	(test-equal "num-childs" 1 (length downli))
 	(cog-set-atomspace! (car downli))
 	(define y2 (cog-node 'Concept "bar"))
 	(test-assert "bar-absent" (nil? y2))
 
-	(define z2 (cog-link 'List (Concept "foo") (Concpet "bar")))
+	(define z2 (cog-link 'List (Concept "foo") (Concept "bar")))
 	(test-assert "link-absent" (nil? z2))
+
+	; Recurse downwards
+	(define downext (cog-atomspace-env))
+	(when (equal? 1 (length downext))
+		(cog-set-atomspace! (car downext))
+		(progressive-check (- N 1)))
 )
 
 ; ===================================================================
@@ -92,7 +101,7 @@
 (define (test-progressive)
 
 	; Number of AtomSpaces to create.
-	(define STACK-DEPTH 500)
+	(define STACK-DEPTH 2)
 
 	; Write a bunch of atoms
 	(progressive-store STACK-DEPTH)
