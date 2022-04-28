@@ -315,13 +315,13 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		storeValue(cid + writeAtom(key), h->getValue(key));
 }
 
-void RocksStorage::storeMissingAtom(const Handle& h)
+void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 {
 	std::string sid = writeAtom(h);
 
 	// Separator for keys
 	std::string skid = "k@" + sid + ":"
-		+ writeFrame(h->getAtomSpace()) + ":";
+		+ writeFrame(as) + ":";
 
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
@@ -704,7 +704,11 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 	if (has and has != frame) _multi_space = true;
 
 	// Multi-space Atom remove is done via hiding...
-	if (_multi_space) return;
+	if (_multi_space)
+	{
+		storeMissingAtom(frame, h);
+		return;
+	}
 
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
@@ -1217,7 +1221,7 @@ void RocksStorage::storeAtomSpace(const AtomSpace* table)
 		HandleSeq missing;
 		get_absent_atoms(table, missing);
 		for (const Handle& h : missing)
-			storeMissingAtom(h);
+			storeMissingAtom(h->getAtomSpace(), h);
 	}
 
 	// Make sure that the latest atomid has been stored!

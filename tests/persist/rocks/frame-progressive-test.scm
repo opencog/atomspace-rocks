@@ -133,29 +133,8 @@
 	(load-atomspace)
 	(cog-close storage)
 
-	; We created an even number of spaces, but restored only
-	; an odd number of spaces, because the last space was empty
-	; and thus not recorded.
-	; top-most space should have all three atoms in it.
-	(define x (cog-node 'Concept "foo"))
-	(define y (cog-node 'Concept "bar"))
-	(test-assert "top-foo-present" (cog-atom? x))
-	(test-assert "top-bar-present" (cog-atom? y))
-	(define N (- STACK-DEPTH 1))
-	(test-equal "top-foo-tv" (+ (* 3 N) 1) (get-val x "gee"))
-	(test-equal "top-bar-tv" (+ (* 3 N) 2) (get-val y "gosh"))
-
-	(define z (cog-link 'List x y))
-	(test-assert "top-link-present" (cog-atom? z))
-	(test-equal "top-link-tv" (+ (* 3 N) 3) (get-val z "bang"))
-
-	; Recurse downwards
-	(define downli (cog-atomspace-env))
-	(test-equal "top-num-childs" 1 (length downli))
-	(cog-set-atomspace! (car downli))
-
 	; Check the rest of them, recursing downwards.
-	(progressive-check (- STACK-DEPTH 2))
+	(progressive-check (- STACK-DEPTH 1))
 )
 
 (define progressive-work "test progressive work")
