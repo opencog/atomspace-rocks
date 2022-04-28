@@ -19,7 +19,7 @@
 ; -------------------------------------------------------------------
 ; Common setup, used by all tests.
 
-(define (setup-and-store)
+(define (setup-and-store DELETE)
 
 	; The base space is the current space.
 	(define base-space (cog-atomspace))
@@ -39,13 +39,13 @@
 	(Concept "foo" (ctv 1 0 3))
 
 	(cog-set-atomspace! mid1-space)
-	(cog-extract! (Concept "foo"))
+	(DELETE (Concept "foo"))
 
 	(cog-set-atomspace! mid2-space)
 	(Concept "foo" (ctv 1 0 5))
 
 	(cog-set-atomspace! mid3-space)
-	(cog-extract! (Concept "foo"))
+	(DELETE (Concept "foo"))
 
 	(cog-set-atomspace! surface-space)
 	(Concept "foo" (ctv 1 0 7))
@@ -74,13 +74,13 @@
 ; ===================================================================
 
 ; Test that changes to deep deletions work correctly.
-(define (test-deep-delete)
+(define (test-deep DELETE)
 
 	; Set a brand new current space
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
 
-	(setup-and-store)
+	(setup-and-store DELETE)
 
 	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
 	; (cog-rocks-stats)
@@ -129,9 +129,16 @@
 	(test-equal "surface-tv" 7 (get-cnt (cog-node 'Concept "foo")))
 )
 
+(define deep-extract "test deep extract")
+(test-begin deep-extract)
+(test-deep cog-extract!)
+(test-end deep-extract)
+
+(whack "/tmp/cog-rocks-unit-test")
+
 (define deep-delete "test deep delete")
 (test-begin deep-delete)
-(test-deep-delete)
+(test-deep cog-delete!)
 (test-end deep-delete)
 
 (whack "/tmp/cog-rocks-unit-test")
@@ -139,11 +146,11 @@
 ; ===================================================================
 ; Building on the above, verify that values work
 
-(define (setup-deep-change)
+(define (setup-deep-change DELETE)
 
 	; This uses the spaces built prviously.
 	; The previous spaces were built on the current space.
-	(define surface-space (setup-and-store))
+	(define surface-space (setup-and-store DELETE))
 	(define mid3-space (cog-outgoing-atom surface-space 0))
 	(define mid2-space (cog-outgoing-atom mid3-space 0))
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
@@ -178,14 +185,14 @@
 	(cog-close storage)
 )
 
-(define (test-deep-change)
+(define (test-deep-change DELETE)
 
 	; Define a brand new space on which the other
 	; atomspaces will be built.
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
 
-	(setup-deep-change)
+	(setup-deep-change DELETE)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
@@ -230,15 +237,23 @@
 	(test-equal "surface-tv" 6 (get-cnt (cog-node 'Concept "foo")))
 )
 
-(define deep-change "test deep change-delete")
-(test-begin deep-change)
-(test-deep-change)
-(test-end deep-change)
+(define deep-change-extract "test deep change-extract")
+(test-begin deep-change-extract)
+(test-deep-change cog-extract!)
+(test-end deep-change-extract)
 
+(whack "/tmp/cog-rocks-unit-test")
+
+(define deep-change-delete "test deep change-delete")
+(test-begin deep-change-delete)
+(test-deep-change cog-delete!)
+(test-end deep-change-delete)
+
+(whack "/tmp/cog-rocks-unit-test")
 ; ===================================================================
 ; Test that deep link deletions work correctly.
 
-(define (setup-link-check)
+(define (setup-link-check DELETE-REC)
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space (cog-atomspace))
@@ -253,13 +268,13 @@
 	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 10))
 
 	(cog-set-atomspace! mid1-space)
-	(cog-extract-recursive! (Concept "foo"))
+	(DELETE-REC (Concept "foo"))
 
 	(cog-set-atomspace! mid2-space)
 	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 20))
 
 	(cog-set-atomspace! mid3-space)
-	(cog-extract-recursive! (Concept "foo"))
+	(DELETE-REC (Concept "foo"))
 
 	(cog-set-atomspace! surface-space)
 	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 30))
@@ -283,12 +298,12 @@
 	(cog-close storage)
 )
 
-(define (test-deep-link)
+(define (test-deep-link DELETE-REC)
 
 	; Assume that we start the test with the same
 	; top atomspace as before.
 	; We are merely making delts to it.
-	(setup-link-check)
+	(setup-link-check DELETE-REC)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
@@ -337,9 +352,16 @@
 		(ListLink (Concept "foo") (Concept "bar"))))
 )
 
+(whack "/tmp/cog-rocks-unit-test")
+(define deep-link-extract "test deep link-extract")
+(test-begin deep-link-extract)
+(test-deep-link cog-extract-recursive!)
+(test-end deep-link-extract)
+
+(whack "/tmp/cog-rocks-unit-test")
 (define deep-link-delete "test deep link-delete")
 (test-begin deep-link-delete)
-(test-deep-link)
+(test-deep-link cog-delete-recursive!)
 (test-end deep-link-delete)
 
 ; ===================================================================
