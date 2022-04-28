@@ -700,6 +700,9 @@ Handle RocksStorage::findAlpha(const Handle& h, const std::string& shash,
 
 void RocksStorage::removeAtom(const Handle& h, bool recursive)
 {
+	// Multi-space Atom remove is done via hiding...
+	if (_multi_space) return;
+
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
 	rocksdb::Slice start, end;
@@ -820,7 +823,6 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// So first, iterate up to the top, chopping away the incoming set.
 	// It's stored with prefixes according to type, so this is a loop...
 	std::string ist = "i@" + sid + ":";
-
 #if USE_INLIST_STRING
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
