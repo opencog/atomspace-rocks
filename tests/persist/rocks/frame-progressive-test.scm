@@ -12,6 +12,8 @@
 (whack "/tmp/cog-rocks-unit-test")
 
 (define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
+(define (get-val ATOM NAME) (inexact->exact
+	(cog-value-ref (cog-value ATOM (Predicate NAME)) 0)))
 
 (opencog-test-runner)
 
@@ -28,7 +30,7 @@
 	(cog-set-value! y (Predicate "gosh") (ctv 1 0 (+ 1 N)))
 	(store-atom y)
 
-	(define z (Link x y))
+	(define z (List x y))
 	(cog-set-value! z (Predicate "bang") (ctv 1 0 (+ 2 N)))
 	(store-atom z)
 )
@@ -43,7 +45,7 @@
 		(recompute (+ N 3) (- NLOOP 1)))
 )
 
-(define (progressive-store)
+(define (progressive-store N)
 
 	; The base space is the current space.
 	(define base-space (cog-atomspace))
@@ -53,9 +55,35 @@
 	(cog-open storage)
 
 	; Repeatedly add and remove the same atom
-	(recompute 1 500)
+	(recompute 1 N)
 
 	(cog-close storage)
+)
+
+; Verify expected contents
+(define (progressive-check N)
+
+	(define x (cog-node 'Concept "foo"))
+	(define y (cog-node 'Concept "bar"))
+	(test-assert "foo-present" (cog-atom? x))
+	(test-assert "bar-present" (cog-atom? y))
+(format #t "duuude ~A\n" (get-val x "gee"))
+(format #t "duuude ~A\n" (get-val y "gee"))
+	(test-equal "foo-tv" (+ (* 3 N) 1) (get-val x "gee"))
+	(test-equal "bar-tv" (+ (* 3 N) 2) (get-val y "gosh"))
+
+	(define z (cog-link 'List x y))
+	(test-assert "link-present" (cog-atom? z))
+	(test-equal "link-tv" (+ (* 3 N) 3) (get-val z "bang"))
+
+	(define downli (cog-atomspace-env))
+	(test-equal "num-childs" 1 (length downli))
+	(cog-set-atomspace! (car downli))
+	(define y2 (cog-node 'Concept "bar"))
+	(test-assert "bar-absent" (nil? y2))
+
+	(define z2 (cog-link 'List (Concept "foo") (Concpet "bar")))
+	(test-assert "link-absent" (nil? z2))
 )
 
 ; ===================================================================
@@ -63,8 +91,11 @@
 ; Test that progressive changes work correctly.
 (define (test-progressive)
 
+	; Number of AtomSpaces to create.
+	(define STACK-DEPTH 500)
+
 	; Write a bunch of atoms
-	(progressive-store)
+	(progressive-store STACK-DEPTH)
 
 	; Set a brand new current space
 	(define new-base (cog-new-atomspace))
@@ -87,29 +118,7 @@
 	(load-atomspace)
 	(cog-close storage)
 
-#! =======
-	(test-equal "base-check" base-space new-base)
-
-	; Should be present in the base space.
-	(cog-set-atomspace! base-space)
-	(test-assert "base-space" (cog-atom? (cog-node 'Concept "foo")))
-	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
-
-	; Should be absent in the next level.
-	(cog-set-atomspace! mid1-space)
-	(test-assert "mid1-absent" (nil? (cog-node 'Concept "foo")))
-
-	(cog-set-atomspace! mid2-space)
-	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
-	(test-equal "mid2-tv" 5 (get-cnt (cog-node 'Concept "foo")))
-
-	(cog-set-atomspace! mid3-space)
-	(test-assert "mid3-absent" (nil? (cog-node 'Concept "foo")))
-
-	(cog-set-atomspace! surface-space)
-	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
-	(test-equal "surface-tv" 7 (get-cnt (cog-node 'Concept "foo")))
-=== !#
+	(progressive-check STACK-DEPTH)
 )
 
 (define progressive-work "test progressive work")
