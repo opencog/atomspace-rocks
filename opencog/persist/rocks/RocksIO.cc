@@ -23,6 +23,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <iomanip>
+
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/base/Link.h>
@@ -407,7 +409,11 @@ void RocksStorage::appendToSidList(const std::string& klist,
 /// where the numbers are the string sid's of the outgoing set.
 std::string RocksStorage::encodeFrame(const Handle& hasp)
 {
-	std::string txt = "(" + nameserver().getTypeName(hasp->get_type()) + " ";
+	// We should say `getTypeName()` as below, expect that today,
+	// this will always be `AtomSpace`, 100% of the time. So the
+	// fancier type lookup is not needed.
+	// std::string txt = "(" + nameserver().getTypeName(hasp->get_type()) + " ";
+	std::string txt = "(as ";
 
 	std::stringstream ss;
 	ss << std::quoted(hasp->get_name());
@@ -492,6 +498,30 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 	return sid;
 }
 
+/// Decode the string encoding of the Frame
+Handle RocksStorage::decodeFrame(const std::string& senc)
+{
+	if (0 != senc.compare(0, 5, "(as \""))
+		throw IOException(TRACE_INFO, "Internal Error!");
+
+	size_t pos = 4;
+	size_t ros = -1;
+	std::string name = Sexpr::get_node_name(senc, pos, ros, FRAME);
+
+	pos = ros;
+	HandleSeq oset;
+	while (' ' == senc[pos])
+	{
+		pos++;
+		ros = senc.find_first_of(" )", pos);
+		oset.push_back(getFrame(senc.substr(pos, ros-pos)));
+		pos = ros;
+	}
+	AtomSpacePtr asp = createAtomSpace(oset);
+	asp->set_name(name);
+	return HandleCast(asp);
+}
+
 /// Return the AtomSpacePtr corresponding to fid.
 Handle RocksStorage::getFrame(const std::string& fid)
 {
@@ -508,8 +538,9 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	// So, this->_atom_space is actually Atom::_atom_space
 	// It is safe to dereference fas.get() because fas is
 	// pointing to some AtomSpace in the environ of _atom_space.
-	Handle asp = HandleCast(_atom_space);
-	Handle fas = Sexpr::decode_frame(asp, sframe);
+	// Handle asp = HandleCast(_atom_space);
+	// Handle fas = Sexpr::decode_frame(asp, sframe);
+	Handle fas = decodeFrame(sframe);
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({fas, fid});
 	_fid_map.insert({fid, fas});
@@ -1201,17 +1232,20 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	std::string sframe;
 	std::string fid = aidtostr(fidhi);
 	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
-	Handle frm = Sexpr::decode_frame(HandleCast(base), sframe);
+	// Handle frm = Sexpr::decode_frame(HandleCast(base), sframe);
+	Handle frm = decodeFrame(sframe);
 
 	// Loop again, this time to fill up the cache, so that future
 	// calls to getFrame() work correctly.
-	std::lock_guard<std::mutex> flck(_mtx_frame);
 	it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
 	{
 		const std::string& fid = it->value().ToString();
 		const std::string& sframe = it->key().ToString().substr(2);
-		Handle fas = Sexpr::decode_frame(frm, sframe);
+		// Handle fas = Sexpr::decode_frame(frm, sframe);
+		Handle fas = decodeFrame(sframe);
+
+		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({fas, fid});
 		_fid_map.insert({fid, fas});
 		_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});

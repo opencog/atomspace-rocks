@@ -63,6 +63,7 @@ class RocksStorage : public StorageNode
 		std::string writeFrame(AtomSpace* as) {
 			return writeFrame(HandleCast(as));
 		}
+		Handle decodeFrame(const std::string&);
 		Handle getFrame(const std::string&);
 
 		// unique ID's
