@@ -1235,9 +1235,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	// assumptions are violated, then things will break.
 	std::string sframe;
 	std::string fid = aidtostr(fidhi);
-	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
-	// Handle frm = Sexpr::decode_frame(HandleCast(base), sframe);
-	return decodeFrame(sframe, base);
+	return getFrame(fid); // XXX base ???
 }
 
 /// Load the entire collection of AtomSpace frames.
