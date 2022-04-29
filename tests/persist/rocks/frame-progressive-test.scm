@@ -21,27 +21,28 @@
 ; Common setup, used by all tests.
 
 ;; Modify and store some atoms.
+;; These atoms are in COW spaces, and thus, in order for the store
+;; to work correctly, we must store the COW atom, returned by the
+;; value setter.  This is unintuitive to the casual user!
 (define (store-stuff N)
 	(define x (Concept "foo"))
-	(cog-set-value! x (Predicate "gee") (ctv 1 0 N))
-	(store-atom x)
+	(define x1 (cog-set-value! x (Predicate "gee") (ctv 1 0 N)))
+	(store-atom x1)
 
 	(define y (Concept "bar"))
-	(cog-set-value! y (Predicate "gosh") (ctv 1 0 (+ 1 N)))
-	(store-atom y)
+	(define y1 (cog-set-value! y (Predicate "gosh") (ctv 1 0 (+ 1 N))))
+	(store-atom y1)
 
 	(define z (List x y))
-	(cog-set-value! z (Predicate "bang") (ctv 1 0 (+ 2 N)))
-	(store-atom z)
+	(define z1 (cog-set-value! z (Predicate "bang") (ctv 1 0 (+ 2 N))))
+	(store-atom z1)
 )
 
 ; Recursive calls to above
 (define (recompute N NLOOP)
 	(when (< 0 NLOOP)
-(format #t "duude space with stuff=~A\n" (cog-name (cog-atomspace)))
 		(store-stuff N)
 		(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
-(format #t "duude space w/o stuff=~A\n" (cog-name (cog-atomspace)))
 		(cog-delete-recursive! (Concept "bar"))
 		(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
 		(recompute (+ N 3) (- NLOOP 1)))
@@ -58,6 +59,7 @@
 
 	; We plan to store multiple atomspaces.
 	; Let this be stated in advance.
+	(cog-atomspace-cow! #t)
 	(store-frames base-space)
 
 	; Repeatedly add and remove the same atom
@@ -69,15 +71,12 @@
 ; Verify expected contents
 (define (progressive-check N)
 
-(format #t "duuude start aaspace=~A uu=~A\n" (cog-name (cog-atomspace)) (cog-atomspace-uuid))
-
 	; In the top space, foo should be present, but bar and link absent.
 	(define x (cog-node 'Concept "foo"))
 	(define y (cog-node 'Concept "bar"))
 	(test-assert "foo-present" (cog-atom? x))
 	(test-assert "bar-absent" (not (cog-atom? y)))
 
-(format #t "duuude foo=~A ex=~A\n" (get-val x "gee") (* 3 N))
 	(test-equal "foo-tv" (+ (* 3 N) 1) (get-val x "gee"))
 
 	(define z (cog-link 'List (Concept "foo") (Concept "bar")))
@@ -111,7 +110,7 @@
 (define (test-progressive)
 
 	; Number of AtomSpaces to create.
-	(define STACK-DEPTH 2)
+	(define STACK-DEPTH 500)
 
 	; Write a bunch of atoms
 	(progressive-store STACK-DEPTH)
