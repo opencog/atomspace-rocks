@@ -110,7 +110,7 @@
 (define (test-progressive)
 
 	; Number of AtomSpaces to create.
-	; Currently limited to about 4800 due to the C stack
+	; Currently limited to about 3500 due to the C stack
 	(define STACK-DEPTH 500)
 
 	; Write a bunch of atoms
