@@ -110,6 +110,7 @@
 (define (test-progressive)
 
 	; Number of AtomSpaces to create.
+	; Currently limited to about 4800 due to the C stack
 	(define STACK-DEPTH 500)
 
 	; Write a bunch of atoms
@@ -119,10 +120,10 @@
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
 
-	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	(cog-rocks-stats)
-	(cog-rocks-get "")
-	(cog-rocks-close)
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
