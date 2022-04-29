@@ -38,6 +38,7 @@
 	(cog-set-atomspace! surface-space)
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
+	(store-frames surface-space)
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
@@ -57,7 +58,6 @@
 
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
-	(store-frames surface-space)
 	(cog-set-atomspace! base-space)
 	(store-atomspace)
 	(cog-set-atomspace! mid1-space)
