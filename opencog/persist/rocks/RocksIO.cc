@@ -499,7 +499,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 }
 
 /// Decode the string encoding of the Frame
-Handle RocksStorage::decodeFrame(const std::string& senc)
+Handle RocksStorage::decodeFrame(const std::string& senc, AtomSpace* base)
 {
 	if (0 != senc.compare(0, 5, "(as \""))
 		throw IOException(TRACE_INFO, "Internal Error!");
@@ -517,7 +517,11 @@ Handle RocksStorage::decodeFrame(const std::string& senc)
 		oset.push_back(getFrame(senc.substr(pos, ros-pos)));
 		pos = ros;
 	}
-	AtomSpacePtr asp = createAtomSpace(oset);
+	AtomSpacePtr asp;
+	if (base and 0 == base->get_arity() and 0 == oset.size())
+		asp = AtomSpaceCast(base);
+	else
+		asp = createAtomSpace(oset);
 	asp->set_name(name);
 	return HandleCast(asp);
 }
@@ -540,7 +544,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	// pointing to some AtomSpace in the environ of _atom_space.
 	// Handle asp = HandleCast(_atom_space);
 	// Handle fas = Sexpr::decode_frame(asp, sframe);
-	Handle fas = decodeFrame(sframe);
+	Handle fas = decodeFrame(sframe, _atom_space);
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({fas, fid});
 	_fid_map.insert({fid, fas});
@@ -1233,26 +1237,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 	std::string fid = aidtostr(fidhi);
 	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
 	// Handle frm = Sexpr::decode_frame(HandleCast(base), sframe);
-	Handle frm = decodeFrame(sframe);
-
-	// Loop again, this time to fill up the cache, so that future
-	// calls to getFrame() work correctly.
-	it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
-	{
-		const std::string& fid = it->value().ToString();
-		const std::string& sframe = it->key().ToString().substr(2);
-		// Handle fas = Sexpr::decode_frame(frm, sframe);
-		Handle fas = decodeFrame(sframe);
-
-		std::lock_guard<std::mutex> flck(_mtx_frame);
-		_frame_map.insert({fas, fid});
-		_fid_map.insert({fid, fas});
-		_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});
-	}
-	delete it;
-
-	return frm;
+	return decodeFrame(sframe, base);
 }
 
 /// Load the entire collection of AtomSpace frames.
