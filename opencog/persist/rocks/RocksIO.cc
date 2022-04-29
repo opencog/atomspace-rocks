@@ -86,6 +86,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // ---------------------
 // satom == string s-expression for an Atom.
 // sval == string s-expression for a Value.
+// senc == string s-expression for an AtomSpace (Frame).
 // stype == string name of Atomese Type. e.g. "ConceptNode".
 // aid == uint-64 ID. Every Atom gets one.
 // sid == aid as ASCII string.
@@ -98,7 +99,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "a@" sid: . [shash]satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
-// "f@" satom . sid -- finds the sid associated with the AtomSpace
+// "f@" senc . sid -- finds the sid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
 // "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
@@ -155,6 +156,37 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //    different AtomSpaces.
 //  * Atoms lower down in a stack can be hidden, when they are deleted
 //    higher up in a stack.
+//
+// S-expression Encodings
+// ----------------------
+// Atoms and Values are stored directly as UTF-8 string S-expresions,
+// without any further encoding. This works well, for several reasons:
+//  * RocksDB has buiult-in compression, that will run as-needed, to
+//    compact these down to a smaller size.
+//  * All Atoms are shallow: viewed as trees, the trees are very rarely
+//    more than 5 or 6 deep. This means that there are relatively few
+//    duplicated elements of the s-expressions, even when there is a
+//    Link with millions of atoms in it.
+//
+// The second assumption above is violated for AtomSpace Frames. These
+// can be thousands deep, and the naive s-expression encoding then
+// becomes megabytes in size.  Thus, a modified encoding is used for
+// frames. It takes the form:
+//      `(TypeName "frammy name" sida sidb ... sid)`
+// where `TypeName` is `AtomSpace`, `"frammy name"` is the name of the
+// AtomSpace, and `sida sidb ... sid` is a white-space separated list
+// of the sid's of the outgoing set of the frame.
+//
+// This encoding is far more compact than an s-expression encoding.
+// However, it has a downside: one must maintain a local in-RAM cache
+// of sid-to-frame mappings. Since the grand-total number of AtomSpaces
+// is unlikely to ever exceeed a few ten-thousand, the RAM footprint of
+// this lookup remains tolerably small.
+//
+// The downside explains why this same encoding is not used for Atoms.
+// It would require an in-RAM cache, and it would compete with the
+// AtomSpace for RAM. Given that AtomSpaces contain tens of millions of
+// Atoms, it does not seem prudent to splurge on RAM like this.
 //
 // Debugging
 // ---------
