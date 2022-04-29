@@ -470,6 +470,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({fas, fid});
 	_fid_map.insert({fid, fas});
+	_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});
 
 	_multi_space = true;
 	return fas;
