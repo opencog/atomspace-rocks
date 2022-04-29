@@ -110,7 +110,8 @@
 (define (test-progressive)
 
 	; Number of AtomSpaces to create.
-	; Currently limited to about 3500 due to the C stack
+	; Currently limited by the excessively verbose frame-storage
+	; format, which eats way too much disk space for deep stacks.
 	(define STACK-DEPTH 500)
 
 	; Write a bunch of atoms
