@@ -58,6 +58,7 @@ class RocksStorage : public StorageNode
 		std::unordered_map<std::string, Handle> _fid_map;
 		std::map<uint64_t, AtomSpace*> _frame_order;
 		std::mutex _mtx_frame;
+		std::string encodeFrame(const Handle&);
 		std::string writeFrame(const Handle&);
 		std::string writeFrame(AtomSpace* as) {
 			return writeFrame(HandleCast(as));

@@ -401,6 +401,25 @@ void RocksStorage::appendToSidList(const std::string& klist,
 
 // =========================================================
 
+/// Convert an AtomSpace to an encoded s-expression string.
+/// It will have the form:
+///    `(AtomSpace "space name" 42 55 66)`
+/// where the numbers are the string sid's of the outgoing set.
+std::string RocksStorage::encodeFrame(const Handle& hasp)
+{
+	std::string txt = "(" + nameserver().getTypeName(hasp->get_type()) + " ";
+
+	std::stringstream ss;
+	ss << std::quoted(hasp->get_name());
+	txt += ss.str();
+
+	for (const Handle& ho : hasp->getOutgoingSet())
+		txt += " " + writeFrame(ho);
+
+	txt += ")";
+	return txt;
+}
+
 /// Search for the indicated AtomSpace, returning it's sid (string ID).
 /// The argument must *always* be an AtomSpacePtr.  If the AtomSpace-sid
 /// pairing has not yet been written to storage, it will be; otherwise,
@@ -424,7 +443,8 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 			return it->second;
 	}
 
-	std::string sframe = Sexpr::encode_frame(hasp);
+	// std::string sframe = Sexpr::encode_frame(hasp);
+	std::string sframe = encodeFrame(hasp);
 
 	// The issuance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
@@ -443,15 +463,6 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 	}
 
 	_multi_space = true;
-
-	// Recurse downwards first, if possible.
-	if (0 < hasp->get_arity())
-	{
-		lck.unlock();
-		for (const Handle& ho : hasp->getOutgoingSet())
-			writeFrame(ho);
-		lck.lock();
-	}
 
 	uint64_t aid = _next_aid.fetch_add(1);
 	sid = aidtostr(aid);
