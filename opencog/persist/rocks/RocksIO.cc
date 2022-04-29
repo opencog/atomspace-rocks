@@ -23,7 +23,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <iomanip>
+#include <iomanip> // for std::quote
 
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Node.h>
@@ -548,6 +548,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({fas, fid});
 	_fid_map.insert({fid, fas});
+	_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});
 
 	_multi_space = true;
 	return fas;
@@ -1187,18 +1188,17 @@ void RocksStorage::loadOneFrame(AtomSpace* table)
 void RocksStorage::loadAtomSpace(AtomSpace* table)
 {
 	CHECK_OPEN;
-
 	if (not _multi_space)
 	{
 		loadOneFrame(table);
 		return;
 	}
 
-	// The load won't work, if we don''t know what the frames are.
+	// The load won't work, if we don't know what the frames are.
 	if (0 == _frame_order.size())
 		loadFrameDAG(table);
 
-	// Restore frames, preservingthe partial order, so that the
+	// Restore frames, preserving the partial order, so that the
 	// lowest ones are restored first.
 	for (const auto& it: _frame_order)
 		loadOneFrame(it.second);
