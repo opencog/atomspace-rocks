@@ -99,9 +99,10 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //
 // Prefixes and associative pairs in the Rocks DB are:
 // "a@" sid: . [shash]satom -- finds the satom associated with sid
+// "a@" fid:sid . [shash]satom -- as above, when frames are used.
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
-// "f@" senc . sid -- finds the sid associated with the AtomSpace
+// "f@" senc . fid -- finds the sid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
 // "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
@@ -306,7 +307,17 @@ std::string RocksStorage::writeAtom(const Handle& h)
 
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
-	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid + ":", shash+satom);
+
+	std::string afx = "a@";
+	if (_multi_space)
+	{
+		const auto& it = _frame_map.find(HandleCast(as));
+		if (_frame_map.end() == it)
+			throw IOException(TRACE_INFO, "Internal Error!");
+
+		afx += it->second + ":"; // it->second is the fid frame id.
+	}
+	_rfile->Put(rocksdb::WriteOptions(), afx + sid + ":", shash+satom);
 
 	if (convertible)
 		appendToSidList(shash, sid);
