@@ -102,7 +102,8 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "a@" fid:sid . [shash]satom -- as above, when frames are used.
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
-// "f@" senc . fid -- finds the sid associated with the AtomSpace
+// "d@" fid . senc -- finds the AtomSpace frame (delta) for fid
+// "f@" senc . fid -- finds the fid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
 // "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
@@ -504,7 +505,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 
 	// logger().debug("Frame sid=>>%s<< for >>%s<<", sid.c_str(), sframe.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), "f@" + sframe, sid);
-	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid + ":", sframe);
+	_rfile->Put(rocksdb::WriteOptions(), "d@" + sid, sframe);
 
 	return sid;
 }
@@ -544,7 +545,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	}
 
 	std::string sframe;
-	_rfile->Get(rocksdb::ReadOptions(), "a@" + fid + ":", &sframe);
+	_rfile->Get(rocksdb::ReadOptions(), "d@" + fid, &sframe);
 
 	// So, this->_atom_space is actually Atom::_atom_space
 	// It is safe to dereference fas.get() because fas is
