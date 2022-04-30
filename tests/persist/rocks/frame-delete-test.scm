@@ -80,8 +80,7 @@
 (define (test-deep DELETE)
 
 	; Set a brand new current space
-	(define new-base (cog-new-atomspace))
-	(cog-set-atomspace! new-base)
+	(cog-set-atomspace! (cog-new-atomspace))
 
 	(setup-and-store DELETE)
 
@@ -108,8 +107,6 @@
 	(define mid2-space (cog-outgoing-atom mid3-space 0))
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
-
-	(test-equal "base-check" base-space new-base)
 
 	; Should be present in the base space.
 	(cog-set-atomspace! base-space)
@@ -194,8 +191,7 @@
 
 	; Define a brand new space on which the other
 	; atomspaces will be built.
-	(define new-base (cog-new-atomspace))
-	(cog-set-atomspace! new-base)
+	(cog-set-atomspace! (cog-new-atomspace))
 
 	(setup-deep-change DELETE)
 
@@ -217,8 +213,6 @@
 	(define mid2-space (cog-outgoing-atom mid3-space 0))
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
-
-	(test-equal "base-check" base-space new-base)
 
 	; -----------------------------------
 	; Should be present in the base space.
