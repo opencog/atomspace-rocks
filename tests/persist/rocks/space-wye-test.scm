@@ -71,11 +71,7 @@
 	; Verify that a wye pattern was created.
 	(define left-space (cog-outgoing-atom top-space 0))
 	(define right-space (cog-outgoing-atom top-space 1))
-	(test-equal "base-expect" left-space new-base)
 	(test-assert "wye-unequal" (not (equal? left-space right-space)))
-	(test-equal "base-uuid"
-		(cog-atomspace-uuid left-space)
-		(cog-atomspace-uuid new-base))
 	(test-assert "wye-uuid" (not (equal?
 		(cog-atomspace-uuid left-space)
 		(cog-atomspace-uuid right-space))))
@@ -85,7 +81,7 @@
 
 	; Verify appropriate atomspace membership
 	(test-equal "top-space" top-space (cog-atomspace lilly))
-	(test-equal "foo-space" new-base (cog-atomspace (gar lilly)))
+	(test-equal "foo-space" left-space (cog-atomspace (gar lilly)))
 	(test-equal "bar-space" right-space (cog-atomspace (gdr lilly)))
 
 	; Verify appropriate values

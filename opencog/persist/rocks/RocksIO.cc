@@ -499,7 +499,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 }
 
 /// Decode the string encoding of the Frame
-Handle RocksStorage::decodeFrame(const std::string& senc, AtomSpace* base)
+Handle RocksStorage::decodeFrame(const std::string& senc)
 {
 	if (0 != senc.compare(0, 5, "(as \""))
 		throw IOException(TRACE_INFO, "Internal Error!");
@@ -517,11 +517,7 @@ Handle RocksStorage::decodeFrame(const std::string& senc, AtomSpace* base)
 		oset.push_back(getFrame(senc.substr(pos, ros-pos)));
 		pos = ros;
 	}
-	AtomSpacePtr asp;
-	if (base and 0 == base->get_arity() and 0 == oset.size())
-		asp = AtomSpaceCast(base);
-	else
-		asp = createAtomSpace(oset);
+	AtomSpacePtr asp = createAtomSpace(oset);
 	asp->set_name(name);
 	return HandleCast(asp);
 }
@@ -544,7 +540,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	// pointing to some AtomSpace in the environ of _atom_space.
 	// Handle asp = HandleCast(_atom_space);
 	// Handle fas = Sexpr::decode_frame(asp, sframe);
-	Handle fas = decodeFrame(sframe, _atom_space);
+	Handle fas = decodeFrame(sframe);
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({fas, fid});
 	_fid_map.insert({fid, fas});
