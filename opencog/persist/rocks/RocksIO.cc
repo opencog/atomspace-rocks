@@ -98,7 +98,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // shash == 64-bit hash of the Atom (as provided by Atom::get_hash())
 //
 // Prefixes and associative pairs in the Rocks DB are:
-// "a@" sid: . [shash]satom -- finds the satom associated with sid
+// "a@" sid . [shash]satom -- finds the satom associated with sid
 // "a@" fid:sid . [shash]satom -- as above, when frames are used.
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
@@ -318,7 +318,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 
 		afx += it->second + ":"; // it->second is the fid frame id.
 	}
-	_rfile->Put(rocksdb::WriteOptions(), afx + sid + ":", shash+satom);
+	_rfile->Put(rocksdb::WriteOptions(), afx + sid, shash+satom);
 
 	if (convertible)
 		appendToSidList(shash, sid);
@@ -570,7 +570,7 @@ Handle RocksStorage::getAtom(const std::string& sid)
 {
 	std::string satom;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(),
-		"a@" + sid + ":", &satom);
+		"a@" + sid, &satom);
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Internal Error!");
 
@@ -826,7 +826,7 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 
 		// Get the matching satom string.
 		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(),
-			"a@" + sid + ":", &satom);
+			"a@" + sid, &satom);
 		if (not s.ok())
 			throw IOException(TRACE_INFO, "Internal Error!");
 	}
@@ -950,7 +950,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 			// Get the matching atom.
 			const std::string& isid = inset.substr(nsk, last-nsk);
 			std::string isatom;
-			_rfile->Get(rocksdb::ReadOptions(), "a@" + isid + ":", &isatom);
+			_rfile->Get(rocksdb::ReadOptions(), "a@" + isid, &isatom);
 
 			// Its possible its been already removed. For example,
 			// delete a in (Link (Link a b) a)
@@ -984,7 +984,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		size_t offset = frag.find('-') + 1;
 		const std::string& isid = frag.substr(offset);
 		std::string isatom;
-		_rfile->Get(rocksdb::ReadOptions(), "a@" + isid + ":", &isatom);
+		_rfile->Get(rocksdb::ReadOptions(), "a@" + isid, &isatom);
 
 		// Its possible its been already removed. For example,
 		// delete a in (Link (Link a b) a)
@@ -1048,7 +1048,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 				{
 					std::string satom;
 					rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(),
-						"a@" + sid + ":", &satom);
+						"a@" + sid, &satom);
 					if (s.ok()) throw;
 				}
 			}
@@ -1058,7 +1058,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// Delete the Atom, next.
 	std::string pfx = is_node ? "n@" : "l@";
 	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom.substr(paren));
-	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid + ":");
+	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid);
 
 	// Delete all values hanging on the atom ...
 	pfx = "k@" + sid + ":";
@@ -1173,12 +1173,13 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 /// Currently, the `pfx` must be "a@" or "a@" + fid:
 void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 {
+	size_t off = pfx.length();
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->value().ToString());
 		if (not _multi_space) h = add_nocheck(as, h);
-		getKeys(as, it->value().ToString(), h);
+		getKeys(as, it->key().ToString().substr(off), h);
 	}
 	delete it;
 }
@@ -1350,7 +1351,7 @@ void RocksStorage::checkdb()
 	CHECK_OPEN;
 
 	// Look for orphaned Values -- Values not attached to any Atom.
-	// These are in the form of "k@sid:" which have no matching "a@sid:"
+	// These are in the form of "k@sid:" which have no matching "a@sid"
 	// Note the use of the colon to terminate te sid!
 	std::string pfx = "k@";
 	size_t cnt = 0;
