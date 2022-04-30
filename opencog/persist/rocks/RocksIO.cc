@@ -1196,7 +1196,9 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 
 	// The load won't work, if we don't know what the frames are.
 	if (0 == _frame_order.size())
-		loadFrameDAG(table);
+		throw IOException(TRACE_INFO,
+			"Attempting to load multiple AtomSpaces without known DAG. "
+			"Did you forget to say `load-frames` first?");
 
 	// Restore frames, preserving the partial order, so that the
 	// lowest ones are restored first.
