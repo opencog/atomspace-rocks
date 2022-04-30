@@ -1170,26 +1170,17 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 // Load and store everything in bulk.
 
 /// Load all the Atoms starting with the prefix.
-/// Currently, the `pfx` must be "n@ " for Nodes or "l@" for Links.
+/// Currently, the `pfx` must be "a@" or "a@" + fid:
 void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 {
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
-		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+		Handle h = Sexpr::decode_atom(it->value().ToString());
 		if (not _multi_space) h = add_nocheck(as, h);
 		getKeys(as, it->value().ToString(), h);
 	}
 	delete it;
-}
-
-/// Load only the indicated AtomSpace.
-void RocksStorage::loadOneFrame(AtomSpace* table)
-{
-	// First, load all the nodes ... then the links.
-	// XXX TODO - maybe load links depth-order...
-	loadAtoms(table, "n@");
-	loadAtoms(table, "l@");
 }
 
 /// Backing API - load the entire AtomSpace.
@@ -1198,7 +1189,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	CHECK_OPEN;
 	if (not _multi_space)
 	{
-		loadOneFrame(table);
+		loadAtoms(table, "a@");
 		return;
 	}
 
@@ -1211,7 +1202,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	// Restore frames, preserving the partial order, so that the
 	// lowest ones are restored first.
 	for (const auto& it: _frame_order)
-		loadOneFrame(it.second);
+		loadAtoms(it.second, "a@" + aidtostr(it.first) + ":");
 }
 
 /// Load the entire collection of AtomSpace frames.
