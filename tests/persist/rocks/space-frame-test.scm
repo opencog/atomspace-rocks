@@ -14,12 +14,12 @@
 ; -------------------------------------------------------------------
 ; Common setup, used by all tests.
 
-(define base-space (cog-atomspace))
-(define mid1-space (cog-new-atomspace base-space))
-(define mid2-space (cog-new-atomspace mid1-space))
-(define surface-space (cog-new-atomspace mid2-space))
-
 (define (setup-and-store)
+	(define base-space (cog-atomspace))
+	(define mid1-space (cog-new-atomspace base-space))
+	(define mid2-space (cog-new-atomspace mid1-space))
+	(define surface-space (cog-new-atomspace mid2-space))
+
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
 	(Concept "foo" (ctv 1 0 3))
@@ -48,14 +48,6 @@
 	(cog-atomspace-clear base-space)
 )
 
-; Destroy the atomspaces
-(define (zap-spaces)
-	(set! surface-space #f)
-	(set! mid2-space #f)
-	(set! mid1-space #f)
-	(set! base-space #f)
-)
-
 (define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
@@ -64,14 +56,26 @@
 (define (test-deep-link)
 	(setup-and-store)
 
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
+
 	; Load everything.
-	(cog-set-atomspace! surface-space)
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
+	(define top-space (load-frames))
 	(load-atomspace)
 	(cog-close storage)
 
-	; Work on the current surface, but expect to find the deeper ListLink.
+	; Grab references into the inheritance hierarchy
+	; The surface space was never stored; current top is old mid2.
+	(define mid2-space top-space)
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
+
+	; Verify the ListLink is as expected.
+	(cog-set-atomspace! mid2-space)
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))
 
 	; Verify appropriate atomspace membership
@@ -89,52 +93,6 @@
 (test-begin deep-link)
 (test-deep-link)
 (test-end deep-link)
-
-; -------------------------------------------------------------------
-; Same as above, except without the pre-existing atomspace hierachty.
-
-(define (test-fresh-link)
-	(setup-and-store)
-	(zap-spaces)
-
-	(define new-base (cog-new-atomspace))
-	(cog-set-atomspace! new-base)
-
-	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
-	(cog-open storage)
-
-	; Load all of the AtomSpaces.
-	(define surface (load-frames))
-	(cog-set-atomspace! surface)
-
-	; Now load the AtomSpace itself
-	(load-atomspace)
-	(cog-close storage)
-
-	; Work on the current surface, but expect to find the deeper ListLink.
-	(define lilly (ListLink (Concept "foo") (Concept "bar")))
-
-	; Verify appropriate atomspace membership
-	; Note that the new surface corresponds to the older mid2-space.
-	; This is because the old surface-space was never actually stored
-	; and thus is never restored. The top-most space of the restored
-	; hiearchy is the old mid2-space.
-	(define mid-space (cog-outgoing-atom surface 0))
-	(test-equal "link-space" surface (cog-atomspace lilly))
-	(test-equal "foo-space" new-base (cog-atomspace (gar lilly)))
-	(test-equal "bar-space" mid-space (cog-atomspace (gdr lilly)))
-
-	; Verify appropriate values
-	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "mid1-tv" 4 (get-cnt (cog-node 'Concept "bar")))
-	(test-equal "mid2-tv" 5 (get-cnt lilly))
-)
-
-(define fresh-link "test fresh link restore")
-(test-begin fresh-link)
-(test-fresh-link)
-(test-end fresh-link)
 
 ; ===================================================================
 (whack "/tmp/cog-rocks-unit-test")
