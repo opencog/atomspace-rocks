@@ -61,6 +61,9 @@
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
 
+	(define new-base (cog-new-atomspace))
+	(cog-set-atomspace! new-base)
+
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
@@ -73,6 +76,8 @@
 	(define mid2-space top-space)
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
+
+	(test-equal "base-space" base-space new-base)
 
 	; Verify the ListLink is as expected.
 	(cog-set-atomspace! mid2-space)
