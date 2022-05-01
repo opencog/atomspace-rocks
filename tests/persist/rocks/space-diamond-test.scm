@@ -38,6 +38,7 @@
 	; as otherwise, the TV's on the Concepts aren't stored.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
+	(store-frames top-space)
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 	(store-atom (Concept "foo"))
 
