@@ -1208,7 +1208,9 @@ void RocksStorage::loadAtomsInFrame(AtomSpace* as, size_t ifid)
 			bool extracted = as->extract_atom(h, true);
 			if (not extracted)
 				throw IOException(TRACE_INFO, "Internal Error!");
-			return;
+			prevsid = "";
+			h = nullptr;
+			continue;
 		}
 
 		// Else, we have a valid key. Decode it and stick it on the atom.
