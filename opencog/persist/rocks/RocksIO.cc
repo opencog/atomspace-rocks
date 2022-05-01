@@ -105,7 +105,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // "d@" fid . senc -- finds the AtomSpace frame (delta) for fid
 // "f@" senc . fid -- finds the fid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
-// "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
+// "k@" fid:sid:kid . sval -- find the Value for the Atom,AtomSpace,Key
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
 // "h@" shash . sid-list -- finds all sids having a given hash
 //
@@ -348,9 +348,10 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 	std::string sid = writeAtom(h);
 
 	// Separator for keys
-	std::string cid = "k@" + sid + ":";
+	std::string cid = "k@";
 	if (_multi_space)
 		cid += writeFrame(h->getAtomSpace()) + ":";
+	cid += sid + ":";
 
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
@@ -366,8 +367,7 @@ void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 	std::string sid = writeAtom(h);
 
 	// Separator for keys
-	std::string skid = "k@" + sid + ":"
-		+ writeFrame(as) + ":";
+	std::string skid = "k@" + writeFrame(as) + ":" + sid + ":";
 
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
@@ -388,15 +388,17 @@ void RocksStorage::storeValue(const std::string& skid,
 void RocksStorage::storeValue(const Handle& h, const Handle& key)
 {
 	CHECK_OPEN;
-	std::string sid = writeAtom(h);
+
+	// k@fid:sid:kid
+	std::string pfx = "k@";
 	if (_multi_space)
-		sid += ":" + writeFrame(h->getAtomSpace());
-	std::string kid = writeAtom(key);
+		pfx += writeFrame(h->getAtomSpace()) + ":";
+	pfx += writeAtom(h) + ":" + writeAtom(key);
 
 	ValuePtr vp = h->getValue(key);
 
 	// First store the value
-	storeValue("k@" + sid + ":" + kid, vp);
+	storeValue(pfx, vp);
 }
 
 /// Append to incoming set.
@@ -605,7 +607,7 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	if (as and _multi_space)
 		writeFrame(as);
 
-	ValuePtr vp = getValue("k@" + sid + fid + kid);
+	ValuePtr vp = getValue("k@" + fid + sid + kid);
 // XXX this is adding to wrong atomspace!?
 	if (as and vp) vp = as->add_atoms(vp);
 	h->setValue(key, vp);
@@ -616,9 +618,10 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 void RocksStorage::getKeys(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
-	std::string cid = "k@" + sid + ":";
+	std::string cid = "k@";
 	if (as and _multi_space)
 		cid += writeFrame(as) + ":";
+	cid += sid + ":";
 
 	// Iterate over all the keys on the Atom.
 	size_t esid = cid.size();
