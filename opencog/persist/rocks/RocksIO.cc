@@ -602,12 +602,12 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	if (0 == sid.size()) return;
 	std::string kid = findAtom(key);
 	if (0 == kid.size()) return;
-	std::string fid = ":";
+	std::string fid;
 	AtomSpace* as = h->getAtomSpace();
 	if (as and _multi_space)
-		writeFrame(as);
+		fid = writeFrame(as) + ":";
 
-	ValuePtr vp = getValue("k@" + fid + sid + kid);
+	ValuePtr vp = getValue("k@" + fid + sid + ":" + kid);
 // XXX this is adding to wrong atomspace!?
 	if (as and vp) vp = as->add_atoms(vp);
 	h->setValue(key, vp);
