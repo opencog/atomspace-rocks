@@ -84,10 +84,10 @@
 
 	(setup-and-store DELETE)
 
-	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	(cog-rocks-stats)
-	(cog-rocks-get "")
-	(cog-rocks-close)
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
@@ -224,6 +224,14 @@
 	(cog-set-atomspace! mid1-space)
 	(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
 
+	; Test deleted atom fetch
+	(define sage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open sage)
+	(fetch-atom (Concept "foo"))
+	(cog-close sage)
+	(test-assert "mid1-fetch" (nil? (cog-node 'Concept "foo")))
+
+	; Resume testing other frames.
 	(cog-set-atomspace! mid2-space)
 	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
 	(test-equal "mid2-tv" 4 (get-cnt (cog-node 'Concept "foo")))
