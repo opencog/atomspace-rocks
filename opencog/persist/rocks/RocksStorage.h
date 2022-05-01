@@ -96,7 +96,8 @@ class RocksStorage : public StorageNode
 		Handle getAtom(const std::string&);
 		Handle findAlpha(const Handle&, const std::string&, std::string&);
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
-		void loadAtoms(AtomSpace*, size_t = 0);
+		void loadAtoms(AtomSpace*);
+		void loadAtomsInFrame(AtomSpace*, size_t);
 		void loadTypeOneFrame(AtomSpace*, Type);
 		void loadInset(AtomSpace*, const std::string& ist);
 		void appendToInset(const std::string&, const std::string&);

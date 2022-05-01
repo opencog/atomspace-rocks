@@ -1163,18 +1163,61 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 // =========================================================
 // Load and store everything in bulk.
 
-/// Load all the Atoms ...
-void RocksStorage::loadAtoms(AtomSpace* as, size_t ifid)
+/// Load all the Atoms in the AtomSpace. Simple version, for handling
+/// a single AtomSpace.
+void RocksStorage::loadAtoms(AtomSpace* as)
 {
-	if (0 < ifid)
-	{
-	}
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek("a@"); it->Valid() and it->key().starts_with("a@"); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->value().ToString());
-		if (not _multi_space) h = add_nocheck(as, h);
+		h = add_nocheck(as, h);
 		getKeys(as, it->key().ToString().substr(2), h);
+	}
+	delete it;
+}
+
+/// Load all Atoms in a specific frame.
+void RocksStorage::loadAtomsInFrame(AtomSpace* as, size_t ifid)
+{
+	std::string pfx = "k@" + aidtostr(ifid) + ":";
+	size_t off = pfx.length();
+
+	Handle h;
+	std::string prevsid;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+	{
+		const std::string& rks = it->key().ToString();
+		size_t koff = rks.rfind(':');
+
+		// The above loop should loop from one key to the next,
+		// occasionally changing sid's. As it does so, grab the
+		// the Atom corresponding to that sid.
+		const std::string& sid = rks.substr(off, koff-off);
+		if (prevsid.compare(sid))
+		{
+			prevsid = sid;
+			h = getAtom(sid);
+		}
+
+		// Check for Atoms marked as deleted. Mark them up
+		// in the corresponding AtomSpace as well.
+		if ('-' == rks[koff+1])
+		{
+			bool extracted = as->extract_atom(h, true);
+			if (not extracted)
+				throw IOException(TRACE_INFO, "Internal Error!");
+			return;
+		}
+
+		// Else, we have a valid key. Decode it and stick it on the atom.
+		Handle key = getAtom(rks.substr(koff+1));
+		size_t junk = 0;
+		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
+		if (vp) vp = as->add_atoms(vp);
+
+		h = as->set_value(h, key, vp);
 	}
 	delete it;
 }
@@ -1198,7 +1241,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	// Restore frames, preserving the partial order, so that the
 	// lowest ones are restored first.
 	for (const auto& it: _frame_order)
-		loadAtoms(it.second, it.first);
+		loadAtomsInFrame(it.second, it.first);
 }
 
 /// Load the entire collection of AtomSpace frames.
