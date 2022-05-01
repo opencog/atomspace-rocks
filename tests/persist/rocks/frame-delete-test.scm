@@ -264,6 +264,7 @@
 	(cog-set-atomspace! surface-space)
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
+	(store-frames surface-space)
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
