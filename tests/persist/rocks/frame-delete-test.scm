@@ -84,10 +84,10 @@
 
 	(setup-and-store DELETE)
 
-	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	; (cog-rocks-stats)
-	; (cog-rocks-get "")
-	; (cog-rocks-close)
+	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	(cog-rocks-stats)
+	(cog-rocks-get "")
+	(cog-rocks-close)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
