@@ -99,7 +99,6 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //
 // Prefixes and associative pairs in the Rocks DB are:
 // "a@" sid . [shash]satom -- finds the satom associated with sid
-// "a@" fid:sid . [shash]satom -- as above, when frames are used.
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
 // "d@" fid . senc -- finds the AtomSpace frame (delta) for fid
@@ -308,17 +307,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
-
-	std::string afx = "a@";
-	if (_multi_space)
-	{
-		const auto& it = _frame_map.find(HandleCast(as));
-		if (_frame_map.end() == it)
-			throw IOException(TRACE_INFO, "Internal Error!");
-
-		afx += it->second + ":"; // it->second is the fid frame id.
-	}
-	_rfile->Put(rocksdb::WriteOptions(), afx + sid, shash+satom);
+	_rfile->Put(rocksdb::WriteOptions(), "a@" + sid, shash+satom);
 
 	if (convertible)
 		appendToSidList(shash, sid);
@@ -1174,17 +1163,18 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 // =========================================================
 // Load and store everything in bulk.
 
-/// Load all the Atoms starting with the prefix.
-/// Currently, the `pfx` must be "a@" or "a@" + fid:
-void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
+/// Load all the Atoms ...
+void RocksStorage::loadAtoms(AtomSpace* as, size_t ifid)
 {
-	size_t off = pfx.length();
+	if (0 < ifid)
+	{
+	}
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+	for (it->Seek("a@"); it->Valid() and it->key().starts_with("a@"); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->value().ToString());
 		if (not _multi_space) h = add_nocheck(as, h);
-		getKeys(as, it->key().ToString().substr(off), h);
+		getKeys(as, it->key().ToString().substr(2), h);
 	}
 	delete it;
 }
@@ -1195,7 +1185,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	CHECK_OPEN;
 	if (not _multi_space)
 	{
-		loadAtoms(table, "a@");
+		loadAtoms(table);
 		return;
 	}
 
@@ -1208,7 +1198,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	// Restore frames, preserving the partial order, so that the
 	// lowest ones are restored first.
 	for (const auto& it: _frame_order)
-		loadAtoms(it.second, "a@" + aidtostr(it.first) + ":");
+		loadAtoms(it.second, it.first);
 }
 
 /// Load the entire collection of AtomSpace frames.
