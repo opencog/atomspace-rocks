@@ -480,7 +480,10 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		return sid;
 	}
 
-	_multi_space = true;
+	if (not _multi_space)
+		throw IOException(TRACE_INFO,
+			"Attempting to store Atoms from multiple AtomSpaces. "
+			"Did you forget to say `store-frames` first?");
 
 	uint64_t aid = _next_aid.fetch_add(1);
 	sid = aidtostr(aid);
@@ -558,7 +561,6 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	_fid_map.insert({fid, fas});
 	_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});
 
-	_multi_space = true;
 	return fas;
 }
 
@@ -1211,11 +1213,7 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 {
 	CHECK_OPEN;
 
-	if (not _multi_space)
-	{
-		if (base) return HandleCast(base);
-		return Handle::UNDEFINED;
-	}
+	_multi_space = true;
 
 	// Find the smallest and largest frame-id's. Due to the way
 	// they are added, the lowest will not have an environ, while
@@ -1244,8 +1242,8 @@ Handle RocksStorage::loadFrameDAG(AtomSpace* base)
 void RocksStorage::storeFrameDAG(AtomSpace* top)
 {
 	CHECK_OPEN;
-	writeFrame(HandleCast(top));
 	_multi_space = true;
+	writeFrame(HandleCast(top));
 }
 
 void RocksStorage::loadTypeOneFrame(AtomSpace* as, Type t)
