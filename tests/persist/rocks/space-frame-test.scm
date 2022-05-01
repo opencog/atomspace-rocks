@@ -73,8 +73,8 @@
 	(cog-close storage)
 
 	; Grab references into the inheritance hierarchy
-	; The surface space was never stored; current top is old mid2.
-	(define mid2-space top-space)
+	(define surface-space top-space)
+	(define mid2-space (cog-outgoing-atom surface-space 0))
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
 
