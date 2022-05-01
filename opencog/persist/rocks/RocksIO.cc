@@ -613,19 +613,16 @@ void RocksStorage::getKeys(AtomSpace* as,
 	cid += sid + ":";
 
 	// Iterate over all the keys on the Atom.
-	size_t esid = cid.size();
-	size_t pos = esid;
+	size_t kidoff = cid.size();
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 		const std::string& rks = it->key().ToString();
 		if (_multi_space)
 		{
-			pos = rks.rfind(':') + 1;
-
 			// Check for Atoms marked as deleted. Mark them up
 			// in the corresponding AtomSpace as well.
-			if ('-' == rks[pos])
+			if ('-' == rks[kidoff])
 			{
 				bool extracted = as->extract_atom(h, true);
 				if (not extracted)
@@ -637,7 +634,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 		Handle key;
 		try
 		{
-			key = getAtom(rks.substr(pos));
+			key = getAtom(rks.substr(kidoff));
 		}
 		catch (const IOException& ex)
 		{
@@ -664,7 +661,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 		// is not in the AtomSpace. Argh! That's an old design flaw.
 		if (nullptr == key)
 		{
-			if (0 == tv_pred_sid.compare(it->key().ToString().substr(pos)))
+			if (0 == tv_pred_sid.compare(rks.substr(kidoff)))
 			{
 				size_t junk = 0;
 				ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
