@@ -467,7 +467,6 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
-		_frame_order.insert({strtoaid(sid), (AtomSpace*) hasp.get()});
 		return sid;
 	}
 
@@ -491,7 +490,6 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});
 		_fid_map.insert({sid, hasp});
-		_frame_order.insert({aid, (AtomSpace*) hasp.get()});
 	}
 
 	// The rest is safe to do in parallel.
@@ -550,7 +548,6 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({fas, fid});
 	_fid_map.insert({fid, fas});
-	_frame_order.insert({strtoaid(fid), (AtomSpace*) fas.get()});
 
 	return fas;
 }
@@ -1221,6 +1218,29 @@ void RocksStorage::loadAtomsInFrame(AtomSpace* as, size_t ifid)
 	delete it;
 }
 
+/// Create a total order out of a partial order, such that earlier
+/// AtomSpaces *always* appear before later ones.
+/// `hasp` is an AtomSpacePtr.
+/// `order` is the total order being created.
+void RocksStorage::makeOrder(Handle hasp,
+                             std::map<uint64_t, Handle>& order)
+{
+	// As long as there's a stack of Frames, just loop.
+	while (true)
+	{
+		const auto& pr = _frame_map.find(hasp);
+		order.insert({strtoaid(pr->second), hasp});
+		size_t nas = hasp->get_arity();
+		if (0 == nas) return;
+		if (1 < nas) break;
+		hasp = hasp->getOutgoingAtom(0);
+	}
+
+	// Recurse if there are more than one.
+	for (const Handle& ho: hasp->getOutgoingSet())
+		makeOrder(ho, order);
+}
+
 /// Backing API - load the entire AtomSpace.
 void RocksStorage::loadAtomSpace(AtomSpace* table)
 {
@@ -1231,16 +1251,17 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 		return;
 	}
 
-	// The load won't work, if we don't know what the frames are.
-	if (0 == _frame_order.size())
+	if (0 == _fid_map.size())
 		throw IOException(TRACE_INFO,
 			"Attempting to load multiple AtomSpaces without known DAG. "
 			"Did you forget to say `load-frames` first?");
 
 	// Restore frames, preserving the partial order, so that the
 	// lowest ones are restored first.
-	for (const auto& it: _frame_order)
-		loadAtomsInFrame(it.second, it.first);
+	std::map<uint64_t, Handle> frame_order;
+	makeOrder(HandleCast(table), frame_order);
+	for (const auto& it: frame_order)
+		loadAtomsInFrame((AtomSpace*) it.second.get(), it.first);
 }
 
 /// Load the entire collection of AtomSpace frames.
@@ -1302,10 +1323,13 @@ void RocksStorage::loadTypeMonospace(AtomSpace* as, Type t)
 
 /// Load all atoms of type `t` in all frames. Not suitable for
 /// single-space loading.
-void RocksStorage::loadTypeAllFrames(Type t)
+void RocksStorage::loadTypeAllFrames(AtomSpace* as, Type t)
 {
 	if (not _multi_space)
 		throw IOException(TRACE_INFO, "Internal Error!");
+
+	std::map<uint64_t, Handle> frame_order;
+	makeOrder(HandleCast(as), frame_order);
 
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
 	std::string typ = pfx + nameserver().getTypeName(t);
@@ -1318,9 +1342,9 @@ void RocksStorage::loadTypeAllFrames(Type t)
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		const std::string& sid = it->value().ToString();
-		for (const auto& frit: _frame_order)
+		for (const auto& frit: frame_order)
 		{
-			AtomSpace* as = frit.second;
+			AtomSpace* as = (AtomSpace*) frit.second.get();
 			getKeys(as, sid, h);
 		}
 	}
@@ -1337,7 +1361,7 @@ void RocksStorage::loadType(AtomSpace* as, Type t)
 		return;
 	}
 
-	loadTypeAllFrames(t);
+	loadTypeAllFrames(as, t);
 }
 
 void RocksStorage::storeAtomSpace(const AtomSpace* table)

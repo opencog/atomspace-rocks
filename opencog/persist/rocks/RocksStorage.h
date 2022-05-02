@@ -56,7 +56,8 @@ class RocksStorage : public StorageNode
 		// The Handles are *always* AtomSpacePtr's
 		std::unordered_map<Handle, const std::string> _frame_map;
 		std::unordered_map<std::string, Handle> _fid_map;
-		std::map<uint64_t, AtomSpace*> _frame_order;
+		void makeOrder(Handle, std::map<uint64_t, Handle>&);
+
 		std::mutex _mtx_frame;
 		std::string encodeFrame(const Handle&);
 		std::string writeFrame(const Handle&);
@@ -99,7 +100,7 @@ class RocksStorage : public StorageNode
 		void loadAtoms(AtomSpace*);
 		void loadAtomsInFrame(AtomSpace*, size_t);
 		void loadTypeMonospace(AtomSpace*, Type);
-		void loadTypeAllFrames(Type);
+		void loadTypeAllFrames(AtomSpace*, Type);
 		void loadInset(AtomSpace*, const std::string& ist);
 		void appendToInset(const std::string&, const std::string&);
 		void remFromInset(const std::string&, const std::string&);
