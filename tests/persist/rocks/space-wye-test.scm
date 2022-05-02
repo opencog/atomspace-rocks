@@ -62,7 +62,7 @@
 	(cog-open storage)
 
 	; Load all of the AtomSpaces.
-	(define top-space (load-frames))
+	(define top-space (car (load-frames)))
 	(cog-set-atomspace! top-space)
 
 	; Now load the AtomSpace itself

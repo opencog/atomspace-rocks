@@ -75,7 +75,7 @@
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
-	(define top-space (load-frames))
+	(define top-space (car (load-frames)))
 	(cog-set-atomspace! top-space)
 	(load-atoms-of-type 'Concept)
 	(cog-close storage)
