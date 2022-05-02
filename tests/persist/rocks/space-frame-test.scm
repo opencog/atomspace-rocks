@@ -69,6 +69,7 @@
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open storage)
 	(define top-space (load-frames))
+	(cog-set-atomspace! top-space)
 	(load-atomspace)
 	(cog-close storage)
 
