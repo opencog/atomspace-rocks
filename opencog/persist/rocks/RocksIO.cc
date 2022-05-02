@@ -1265,33 +1265,38 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 }
 
 /// Load the entire collection of AtomSpace frames.
-Handle RocksStorage::loadFrameDAG(AtomSpace* base)
+HandleSeq RocksStorage::loadFrameDAG(void)
 {
 	CHECK_OPEN;
 
 	_multi_space = true;
 
-	// Find the smallest and largest frame-id's. Due to the way
-	// they are added, the lowest will not have an environ, while
-	// the highest will encompase everything.
-	size_t fidlo = UINT_MAX;
-	size_t fidhi = 0;
+	// Load all frames.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek("f@"); it->Valid() and it->key().starts_with("f@"); it->Next())
+	for (it->Seek("d@"); it->Valid() and it->key().starts_with("d@"); it->Next())
 	{
-		size_t id = strtoaid(it->value().ToString());
-		if (id < fidlo) fidlo = id;
-		if (fidhi < id) fidhi = id;
+		const std::string& fid = it->key().ToString().substr(2);
+		getFrame(fid);
 	}
 	delete it;
 
-	// Instantiate the entire frame. The way this is written, it assumes
-	// that there is a single top-most frame, and a single bottom-most
-	// frame, and that everything else lies between these two. If these
-	// assumptions are violated, then things will break.
-	std::string sframe;
-	std::string fid = aidtostr(fidhi);
-	return getFrame(fid); // XXX base ???
+	// Get all spaces that are subspaces
+	HandleSet all;
+	HandleSet subs;
+	for (const auto& pr : _frame_map)
+	{
+		const Handle& hasp = pr.first;
+		all.insert(hasp);
+		for (const Handle& ho : hasp->getOutgoingSet())
+			subs.insert(ho);
+	}
+
+	// The tops of the DAG are all the spaces that are not subspaces.
+	HandleSeq tops;
+	std::set_difference(all.begin(), all.end(),
+	                    subs.begin(), subs.end(),
+	                    std::back_inserter(tops));
+	return tops;
 }
 
 /// Load the entire collection of AtomSpace frames.
