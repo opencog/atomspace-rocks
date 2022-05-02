@@ -25,9 +25,11 @@
 	(Concept "foo" (ctv 1 0 3))
 
 	(cog-set-atomspace! mid1-space)
+	(Concept "foo" (ctv 1 0 33))
 	(Concept "bar" (ctv 1 0 4))
 
 	(cog-set-atomspace! mid2-space)
+	(Concept "foo" (ctv 1 0 333))
 	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 5))
 
 	(cog-set-atomspace! surface-space)
@@ -38,8 +40,13 @@
 	(cog-open storage)
 	(store-frames surface-space)
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
-	(store-atom (Concept "foo"))
 	(store-atom (Concept "bar"))
+	(store-atom (Concept "foo"))
+	(cog-set-atomspace! mid1-space)
+	(store-atom (Concept "foo"))
+	(cog-set-atomspace! base-space)
+	(store-atom (Concept "foo"))
+
 	(cog-close storage)
 
 	; Clear out the spaces, start with a clean slate.
@@ -85,12 +92,18 @@
 
 	; Verify appropriate atomspace membership
 	(test-equal "link-space" mid2-space (cog-atomspace lilly))
-	(test-equal "foo-space" base-space (cog-atomspace (gar lilly)))
+	(test-equal "foo-space" mid2-space (cog-atomspace (gar lilly)))
 	(test-equal "bar-space" mid1-space (cog-atomspace (gdr lilly)))
 
 	; Verify appropriate values
-	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "mid1-tv" 4 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "foo-mid2-tv" 333 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "bar-tv" 4 (get-cnt (cog-node 'Concept "bar")))
+
+	(cog-set-atomspace! mid1-space)
+	(test-equal "foo-mid1-tv" 33 (get-cnt (cog-node 'Concept "foo")))
+
+	(cog-set-atomspace! base-space)
+	(test-equal "foo-base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
 )
 
 (define load-of-type "test load-of-type")
