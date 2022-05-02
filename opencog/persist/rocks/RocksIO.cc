@@ -1300,18 +1300,29 @@ void RocksStorage::loadTypeMonospace(AtomSpace* as, Type t)
 	delete it;
 }
 
-// XXX TODO: This is horribly inefficient! The decode_atom happens
-// pointlessly, when there are no keys for it, in this frame.
-void RocksStorage::loadTypeOneFrame(AtomSpace* as, Type t)
+/// Load all atoms of type `t` in all frames. Not suitable for
+/// single-space loading.
+void RocksStorage::loadTypeAllFrames(Type t)
 {
+	if (not _multi_space)
+		throw IOException(TRACE_INFO, "Internal Error!");
+
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
 	std::string typ = pfx + nameserver().getTypeName(t);
 
+	// Outer loop: loop over all atoms of the given type.
+	// Inner loop: loop over all atomspace that atom might
+	// belong to.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		getKeys(as, it->value().ToString(), h);
+		const std::string& sid = it->value().ToString();
+		for (const auto& frit: _frame_order)
+		{
+			AtomSpace* as = frit.second;
+			getKeys(as, sid, h);
+		}
 	}
 	delete it;
 }
@@ -1326,11 +1337,7 @@ void RocksStorage::loadType(AtomSpace* as, Type t)
 		return;
 	}
 
-	// Restore frames, preservingthe partial order, so that the
-	// lowest ones are restored first.
-	// XXX FIXME this is horribly inefficient!
-	for (const auto& it: _frame_order)
-		loadTypeOneFrame(it.second, t);
+	loadTypeAllFrames(t);
 }
 
 void RocksStorage::storeAtomSpace(const AtomSpace* table)
