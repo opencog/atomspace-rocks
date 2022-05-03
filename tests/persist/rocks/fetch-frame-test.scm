@@ -59,7 +59,59 @@
 (define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
-; Test that deep links are found correctly.
+; Test that load of a single atom is done correctly.
+
+(define (test-load-single)
+	(setup-and-store)
+
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
+
+	; Start with a blank slate.
+	(cog-set-atomspace! (cog-new-atomspace))
+
+	; Load everything.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+	(define top-space (car (load-frames)))
+	(cog-set-atomspace! top-space)
+	(fetch-atom (Concept "foo"))
+	(cog-close storage)
+
+	; Grab references into the inheritance hierarchy
+	(define surface-space top-space)
+	(define mid2-space (cog-outgoing-atom surface-space 0))
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
+
+	; Verify appropriate atomspace membership
+	; It's in top-space, not mid2-space, because
+	; the fetch, above, put it in the top space.
+	(test-equal "foo-space" top-space (Concept "foo"))
+
+	; Verify appropriate values
+	(test-equal "foo-mid2-tv" 333 (get-cnt (cog-node 'Concept "foo")))
+
+#! ===
+	(cog-set-atomspace! mid1-space)
+	(test-equal "foo-mid1-tv" 33 (get-cnt (cog-node 'Concept "foo")))
+
+	(cog-set-atomspace! base-space)
+	(test-equal "foo-base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
+=== !#
+)
+
+(define load-single "test load-single")
+(test-begin load-single)
+(test-load-single)
+(test-end load-single)
+
+(whack "/tmp/cog-rocks-unit-test")
+
+; -------------------------------------------------------------------
+; Test that load of types is done correctly.
 
 (define (test-load-of-type)
 	(setup-and-store)
