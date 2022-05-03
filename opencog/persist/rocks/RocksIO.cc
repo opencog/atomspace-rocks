@@ -1127,9 +1127,8 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		const std::string& sid = frag.substr(offset);
 
 		Handle hi = getAtom(sid);
+		hi = as->add_atom(hi);
 		getKeys(as, sid, hi);
-// XXX this is adding to wrong atomspace!?
-		as->add_atom(hi);
 	}
 	delete it;
 #endif
