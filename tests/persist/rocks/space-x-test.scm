@@ -48,9 +48,9 @@
 	(store-atom (Concept "bar"))
 	(cog-set-atomspace! top2-space)
 	(store-atom (Concept "bar"))
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 	(store-atom (Concept "foo"))
 	(cog-set-atomspace! mid-space)
+	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 	(store-atom (Concept "bar"))
 	(cog-close storage)
 )
@@ -63,10 +63,10 @@
 (define (test-exe)
 	(setup-and-store)
 
-	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	(cog-rocks-stats)
-	(cog-rocks-get "")
-	(cog-rocks-close)
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
 
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
@@ -102,9 +102,9 @@
 		(cog-atomspace-uuid top1-space)
 		(cog-atomspace-uuid top2-space))))
 
-	(cog-set-atomspace! top2-space)
+	(cog-set-atomspace! mid2-space)
 	; Work on the current surface, but expect to find the deeper ListLink.
-	(define lilly (ListLink (Concept "foo") (Concept "bar")))
+	(define lilly (cog-link 'ListLink (Concept "foo") (Concept "bar")))
 
 	; Verify appropriate atomspace membership
 	(test-equal "mid-space" mid1-space (cog-atomspace lilly))
@@ -113,14 +113,15 @@
 
 	; Verify appropriate values
 	(test-equal "left-tv" 3 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "right-tv" 4 (get-cnt (cog-node 'Concept "bar")))
 	(test-equal "mid-tv" 8 (get-cnt lilly))
 
-	(test-equal "top2-tv" 6 (get-cnt (cog-node 'Concept "bar")))
 	(cog-set-atomspace! top1-space)
 	(test-equal "top1-tv" 5 (get-cnt (cog-node 'Concept "bar")))
+	(cog-set-atomspace! top2-space)
+	(test-equal "top2-tv" 6 (get-cnt (cog-node 'Concept "bar")))
 
 	(cog-set-atomspace! mid1-space)
-	(test-equal "right-tv" 4 (get-cnt (cog-node 'Concept "bar")))
 )
 
 (define exe "test exe pattern")
