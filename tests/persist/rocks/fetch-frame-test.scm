@@ -89,9 +89,9 @@
 	; Verify appropriate atomspace membership
 	; It's in top-space, not mid2-space, because
 	; the fetch, above, put it in the top space.
-	(test-equal "foo-space" top-space (Concept "foo"))
+	(test-equal "foo-space" top-space (cog-atomspace (Concept "foo")))
 
-	; Verify appropriate values
+	; The shadowed value should be the top-most value.
 	(test-equal "foo-mid2-tv" 333 (get-cnt (cog-node 'Concept "foo")))
 
 #! ===
