@@ -111,6 +111,49 @@
 (test-load-of-type)
 (test-end load-of-type)
 
+(whack "/tmp/cog-rocks-unit-test")
+
+; -------------------------------------------------------------------
+; Test that incoming-set fetches work correctly.
+
+(define (test-load-incoming)
+	(setup-and-store)
+
+	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	(cog-rocks-stats)
+	(cog-rocks-get "")
+	(cog-rocks-close)
+
+	; Start with a blank slate.
+	(cog-set-atomspace! (cog-new-atomspace))
+
+	; Load incoming set of just one atom.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+	(define top-space (car (load-frames)))
+	(cog-set-atomspace! top-space)
+	(fetch-incoming-set (Concept "foo"))
+
+	(cog-close storage)
+
+	; Grab references into the inheritance hierarchy
+	(define surface-space top-space)
+	(define mid2-space (cog-outgoing-atom surface-space 0))
+	(define mid1-space (cog-outgoing-atom mid2-space 0))
+	(define base-space (cog-outgoing-atom mid1-space 0))
+
+(format #t "duuude space=~A\n" (cog-get-all-roots))
+
+	(define lilly (ListLink (Concept "foo") (Concept "bar")))
+(format #t "duuude lully=~A\n" lilly)
+	(test-equal "lilly-tv" 5 (get-cnt lilly))
+)
+
+(define load-incoming "test load-incoming")
+(test-begin load-incoming)
+(test-load-incoming)
+(test-end load-incoming)
+
 ; ===================================================================
 (whack "/tmp/cog-rocks-unit-test")
 (opencog-test-end)
