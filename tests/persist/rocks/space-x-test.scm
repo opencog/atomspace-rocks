@@ -121,7 +121,17 @@
 	(cog-set-atomspace! top2-space)
 	(test-equal "top2-tv" 6 (get-cnt (cog-node 'Concept "bar")))
 
-	(cog-set-atomspace! mid1-space)
+	; Verify that the shadowed TV's are getting copied.
+	(define lill2 (ListLink (Concept "foo") (Concept "bar")))
+
+	(test-equal "top2-link-space" top2-space (cog-atomspace lill2))
+	(test-equal "foo-space" left-space (cog-atomspace (gar lill2)))
+	(test-equal "top2-bar-space" top2-space (cog-atomspace (gdr lill2)))
+
+	; Verify appropriate values
+	(test-equal "bot-left-tv" 3 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "top2-bar-tv" 6 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "top2-link-tv" 8 (get-cnt lill2))
 )
 
 (define exe "test exe pattern")
