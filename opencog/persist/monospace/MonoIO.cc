@@ -517,7 +517,7 @@ Handle MonoStorage::findAlpha(const Handle& h, const std::string& shash,
 // =========================================================
 // Remove-related stuff...
 
-void MonoStorage::removeAtom(const Handle& h, bool recursive)
+void MonoStorage::removeAtom(AtomSpace* as, const Handle& h, bool recursive)
 {
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
