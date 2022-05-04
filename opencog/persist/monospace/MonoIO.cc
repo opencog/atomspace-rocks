@@ -1,5 +1,5 @@
 /*
- * RocksIO.cc
+ * MonoIO.cc
  * Save/restore of individual atoms.
  *
  * Copyright (c) 2020 Linas Vepstas <linas@linas.org>
@@ -29,7 +29,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/sexpr/Sexpr.h>
 
-#include "RocksStorage.h"
+#include "MonoStorage.h"
 
 using namespace opencog;
 
@@ -40,7 +40,7 @@ using namespace opencog;
 
 /// int to base-62 We use base62 not base64 because we
 /// want to reserve punctuation "just in case" as special chars.
-std::string RocksStorage::aidtostr(uint64_t aid) const
+std::string MonoStorage::aidtostr(uint64_t aid) const
 {
 	std::string s;
 	do
@@ -57,7 +57,7 @@ std::string RocksStorage::aidtostr(uint64_t aid) const
 }
 
 /// base-62 to int
-uint64_t RocksStorage::strtoaid(const std::string& sid) const
+uint64_t MonoStorage::strtoaid(const std::string& sid) const
 {
 	uint64_t aid = 0;
 
@@ -93,7 +93,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // skid == sid:kid pair of id's
 // shash == 64-bit hash of the Atom (as provided by Atom::get_hash())
 
-// Prefixes and associative pairs in the Rocks DB are:
+// Prefixes and associative pairs in the Mono DB are:
 // "a@" sid: . [shash]satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
@@ -105,22 +105,22 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // ---------------
 // The basic representation for an Atom is its s-expression.
 // Because this is verbose, each s-expression is associated with a
-// unique integer, the "aid" or "atom id". Since Rocks works with
+// unique integer, the "aid" or "atom id". Since Mono works with
 // strings, the aid is converted to a base-62 string, the "sid".
 // Base-62 is used because its fairly compact but still leaves
 // punctuation symbols free for other uses.
 //
 // The main lookups involve converting s-expressions aka "satoms"
 // to sids, and back again. This is done with the `a@`, `n@` and `l@`
-// prefixes. These are "prefixes" because RocksDB stores keys in
+// prefixes. These are "prefixes" because MonoDB stores keys in
 // lexical order, so one can quickly find all keys starting with `n@`,
 // which is useful for rapid load of entire AtomSpaces. Similarly,
 // all ConceptNodes will have the prefix `n@(Concept` and likewise
-// can be rapidly traversed by RocksDB.
+// can be rapidly traversed by MonoDB.
 //
 // Value lookups (e.g. TruthValue) is also handled with this prefix
 // trick, so that, for example, all Values on a given Atom will be
-// next to each-other in the Rocks DB, because all of them will appear
+// next to each-other in the Mono DB, because all of them will appear
 // next to each-other, in order, under the prefix `k@sid:`. If only
 // one value is needed, it can be found at `k@sid:key`.
 //
@@ -131,7 +131,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // long space-separated list of sids, or by encoding each sid into
 // it's own key. The former style seems to cause issues when the
 // incoming set is large: the update of the large string seems to
-// drive RocksDB just crazy, leading to RAM and disk-usage issues.
+// drive MonoDB just crazy, leading to RAM and disk-usage issues.
 // See https://github.com/facebook/rocksdb/issues/3216 for more.
 //
 // The current code will use the space-separated list when
@@ -155,7 +155,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //    (Lambda (Variable "X") (Concept "A"))
 // and
 //    (Lambda (Variable "Y") (Concept "A"))
-// are alpha-equivalent. The problem here is that Rocks might be
+// are alpha-equivalent. The problem here is that Mono might be
 // holding the first satom, while the user is asking for the second,
 // and we have to find the first, whenever the user asks for the second.
 // This is handled by using the Atom hashes.  The C++ method
@@ -191,13 +191,13 @@ static const char* aid_key = "*-NextUnusedAID-*";
 
 #define CHECK_OPEN \
 	if (nullptr == _rfile) \
-		throw IOException(TRACE_INFO, "RocksDB is not open! %s", \
+		throw IOException(TRACE_INFO, "MonoDB is not open! %s", \
 			_name.c_str());
 
 // ======================================================================
 /// Place Atom into storage.
 /// Return the matching sid.
-std::string RocksStorage::writeAtom(const Handle& h)
+std::string MonoStorage::writeAtom(const Handle& h)
 {
 	// The issueance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
@@ -230,7 +230,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	sid = aidtostr(aid);
 
 	// Update immediately, in case of a future crash or badness...
-	// This isn't "really" necessary, because our dtor ~RocksStorage()
+	// This isn't "really" necessary, because our dtor ~MonoStorage()
 	// updates this value. But if someone crashes before our dtor runs,
 	// we want to make sure the new bumped value is written, before we
 	// start using it in other records.  We want to avoid issueing it
@@ -274,7 +274,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	return sid;
 }
 
-void RocksStorage::storeAtom(const Handle& h, bool synchronous)
+void MonoStorage::storeAtom(const Handle& h, bool synchronous)
 {
 	CHECK_OPEN;
 	std::string sid = writeAtom(h);
@@ -291,7 +291,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		storeValue(cid + writeAtom(key), h->getValue(key));
 }
 
-void RocksStorage::storeValue(const std::string& skid,
+void MonoStorage::storeValue(const std::string& skid,
                               const ValuePtr& vp)
 {
 	std::string sval = Sexpr::encode_value(vp);
@@ -299,7 +299,7 @@ void RocksStorage::storeValue(const std::string& skid,
 }
 
 /// Backing-store API.
-void RocksStorage::storeValue(const Handle& h, const Handle& key)
+void MonoStorage::storeValue(const Handle& h, const Handle& key)
 {
 	CHECK_OPEN;
 	std::string sid = writeAtom(h);
@@ -312,7 +312,7 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 
 /// Append to incoming set.
 /// Add `sid` to the list of other sids stored at key `klist`.
-void RocksStorage::appendToSidList(const std::string& klist,
+void MonoStorage::appendToSidList(const std::string& klist,
                                    const std::string& sid)
 {
 	std::string sidlist;
@@ -328,7 +328,7 @@ void RocksStorage::appendToSidList(const std::string& klist,
 
 /// Return the Atom located at sid.
 /// This only gets the Atom, it does NOT get any Values for it.
-Handle RocksStorage::getAtom(const std::string& sid)
+Handle MonoStorage::getAtom(const std::string& sid)
 {
 	std::string satom;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(),
@@ -341,7 +341,7 @@ Handle RocksStorage::getAtom(const std::string& sid)
 }
 
 /// Return the Value located at skid.
-ValuePtr RocksStorage::getValue(const std::string& skid)
+ValuePtr MonoStorage::getValue(const std::string& skid)
 {
 	std::string sval;
 	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), skid, &sval);
@@ -353,7 +353,7 @@ ValuePtr RocksStorage::getValue(const std::string& skid)
 }
 
 /// Backend callback
-void RocksStorage::loadValue(const Handle& h, const Handle& key)
+void MonoStorage::loadValue(const Handle& h, const Handle& key)
 {
 	CHECK_OPEN;
 	std::string sid = findAtom(h);
@@ -368,7 +368,7 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 
 /// Get all of the keys for the Atom at `sid`, and attach them to `h`.
 /// Place the keys into the AtomSpace.
-void RocksStorage::getKeys(AtomSpace* as,
+void MonoStorage::getKeys(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
@@ -425,7 +425,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 }
 
 /// Backend callback - get the Atom
-void RocksStorage::getAtom(const Handle& h)
+void MonoStorage::getAtom(const Handle& h)
 {
 	CHECK_OPEN;
 	std::string sid = findAtom(h);
@@ -434,7 +434,7 @@ void RocksStorage::getAtom(const Handle& h)
 }
 
 /// Backend callback - find the Link
-Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
+Handle MonoStorage::getLink(Type t, const HandleSeq& hs)
 {
 	CHECK_OPEN;
 	// If it's alpha-convertible, then look for equivalents.
@@ -467,7 +467,7 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 // =========================================================
 
 /// Find the sid of Atom. Return empty string if its not there.
-std::string RocksStorage::findAtom(const Handle& h)
+std::string MonoStorage::findAtom(const Handle& h)
 {
 	CHECK_OPEN;
 	// If it's alpha-convertible, maybe we already know about
@@ -491,7 +491,7 @@ std::string RocksStorage::findAtom(const Handle& h)
 /// If an Atom is an ALPHA_CONVERTIBLE_LINK, then we have to look
 /// for it's hash, and figure out if we already know it in a different
 /// but alpha-equivalent form. Return the sid of that form, if found.
-Handle RocksStorage::findAlpha(const Handle& h, const std::string& shash,
+Handle MonoStorage::findAlpha(const Handle& h, const std::string& shash,
                                std::string& sid)
 {
 	// Get a list of all atoms with the same hash...
@@ -517,7 +517,7 @@ Handle RocksStorage::findAlpha(const Handle& h, const std::string& shash,
 // =========================================================
 // Remove-related stuff...
 
-void RocksStorage::removeAtom(const Handle& h, bool recursive)
+void MonoStorage::removeAtom(const Handle& h, bool recursive)
 {
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
@@ -566,7 +566,7 @@ void RocksStorage::removeAtom(const Handle& h, bool recursive)
 /// Assumes that `sid` references an Atom that has `osatom`
 /// in it's outgoing set.   Assumes that `stype` is the type
 /// of `sid`.
-void RocksStorage::remIncoming(const std::string& sid,
+void MonoStorage::remIncoming(const std::string& sid,
                                const std::string& stype,
                                const std::string& osatom)
 {
@@ -590,7 +590,7 @@ void RocksStorage::remIncoming(const std::string& sid,
 /// Remove `sid` from the list of sids stored at `klist`.
 /// Write out the revised `klist` or just delete `klist` if
 /// the result is empty.
-void RocksStorage::remFromSidList(const std::string& klist,
+void MonoStorage::remFromSidList(const std::string& klist,
                                   const std::string& sid)
 {
 	std::string sidlist;
@@ -631,7 +631,7 @@ void RocksStorage::remFromSidList(const std::string& klist,
 /// and also as `sid` (the matching Atom ID).
 /// The flag `is_node` should be true, if the Atom is a Node.
 /// The flag `recursive` should be set to perform recursive deletes.
-void RocksStorage::removeSatom(const std::string& satom,
+void MonoStorage::removeSatom(const std::string& satom,
                                const std::string& sid,
                                bool is_node,
                                bool recursive)
@@ -785,7 +785,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 // =========================================================
 // Work with the incoming set
 
-void RocksStorage::appendToInset(const std::string& klist,
+void MonoStorage::appendToInset(const std::string& klist,
                                  const std::string& sid)
 {
 #if USE_INLIST_STRING
@@ -798,7 +798,7 @@ void RocksStorage::appendToInset(const std::string& klist,
 #endif
 }
 
-void RocksStorage::remFromInset(const std::string& klist,
+void MonoStorage::remFromInset(const std::string& klist,
                                 const std::string& sid)
 {
 #if USE_INLIST_STRING
@@ -812,7 +812,7 @@ void RocksStorage::remFromInset(const std::string& klist,
 }
 
 /// Load the incoming set based on the key prefix `ist`.
-void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
+void MonoStorage::loadInset(AtomSpace* as, const std::string& ist)
 {
 #if USE_INLIST_STRING
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -861,7 +861,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 }
 
 /// Backing API - get the incoming set.
-void RocksStorage::fetchIncomingSet(AtomSpace* as, const Handle& h)
+void MonoStorage::fetchIncomingSet(AtomSpace* as, const Handle& h)
 {
 	CHECK_OPEN;
 	std::string sid = findAtom(h);
@@ -870,7 +870,7 @@ void RocksStorage::fetchIncomingSet(AtomSpace* as, const Handle& h)
 	loadInset(as, ist);
 }
 
-void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
+void MonoStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 {
 	CHECK_OPEN;
 	std::string sid = findAtom(h);
@@ -884,7 +884,7 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 
 /// Load all the Atoms starting with the prefix.
 /// Currently, the `pfx` must be "n@ " for Nodes or "l@" for Links.
-void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
+void MonoStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 {
 	CHECK_OPEN;
 
@@ -899,7 +899,7 @@ void RocksStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 }
 
 /// Backing API - load the entire AtomSpace.
-void RocksStorage::loadAtomSpace(AtomSpace* table)
+void MonoStorage::loadAtomSpace(AtomSpace* table)
 {
 	CHECK_OPEN;
 	// First, load all the nodes ... then the links.
@@ -908,7 +908,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	loadAtoms(table, "l@");
 }
 
-void RocksStorage::loadType(AtomSpace* as, Type t)
+void MonoStorage::loadType(AtomSpace* as, Type t)
 {
 	CHECK_OPEN;
 
@@ -925,7 +925,7 @@ void RocksStorage::loadType(AtomSpace* as, Type t)
 	delete it;
 }
 
-void RocksStorage::storeAtomSpace(const AtomSpace* table)
+void MonoStorage::storeAtomSpace(const AtomSpace* table)
 {
 	CHECK_OPEN;
 	HandleSeq all_atoms;
@@ -938,7 +938,7 @@ void RocksStorage::storeAtomSpace(const AtomSpace* table)
 }
 
 /// Kill everything in the database ... everything.
-void RocksStorage::kill_data(void)
+void MonoStorage::kill_data(void)
 {
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
@@ -958,7 +958,7 @@ void RocksStorage::kill_data(void)
 }
 
 /// Dump database contents to stdout.
-void RocksStorage::print_range(const std::string& pfx)
+void MonoStorage::print_range(const std::string& pfx)
 {
 	CHECK_OPEN;
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -971,7 +971,7 @@ void RocksStorage::print_range(const std::string& pfx)
 }
 
 /// Return a count of the number of records with the indicated prefix
-size_t RocksStorage::count_records(const std::string& pfx)
+size_t MonoStorage::count_records(const std::string& pfx)
 {
 	CHECK_OPEN;
 	size_t cnt = 0;
@@ -984,7 +984,7 @@ size_t RocksStorage::count_records(const std::string& pfx)
 }
 
 /// Perform some consistency checks
-void RocksStorage::checkdb()
+void MonoStorage::checkdb()
 {
 	CHECK_OPEN;
 

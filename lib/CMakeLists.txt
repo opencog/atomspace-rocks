@@ -3,15 +3,15 @@
 
 include(CMakePackageConfigHelpers)
 
-set(ConfigPackageLocation lib/cmake/AtomSpaceRocks)
+set(ConfigPackageLocation lib/cmake/AtomSpaceMonoSpace)
 
-install(EXPORT AtomSpaceRocksTargets
-	FILE AtomSpaceRocksTargets.cmake
+install(EXPORT AtomSpaceMonoSpaceTargets
+	FILE AtomSpaceMonoSpaceTargets.cmake
 	DESTINATION ${ConfigPackageLocation}
 )
 
-configure_package_config_file(AtomSpaceRocksConfig.cmake.in
-	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfig.cmake
+configure_package_config_file(AtomSpaceMonoSpaceConfig.cmake.in
+	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceMonoSpaceConfig.cmake
 	INSTALL_DESTINATION ${ConfigPackageLocation}
 	PATH_VARS CMAKE_INSTALL_PREFIX
 )
@@ -19,13 +19,13 @@ configure_package_config_file(AtomSpaceRocksConfig.cmake.in
 SET(SEMANTIC_VERSION 0.9.1)
 
 write_basic_package_version_file(
-	"${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfigVersion.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceMonoSpaceConfigVersion.cmake"
 	VERSION ${SEMANTIC_VERSION}
 	COMPATIBILITY SameMajorVersion
 )
 
 INSTALL(FILES
-	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfigVersion.cmake
-	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfig.cmake
+	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceMonoSpaceConfigVersion.cmake
+	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceMonoSpaceConfig.cmake
 	DESTINATION ${ConfigPackageLocation}
 )

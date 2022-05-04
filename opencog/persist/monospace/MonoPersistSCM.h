@@ -1,5 +1,5 @@
 /*
- * opencog/persist/rocks/RocksPersistSCM.h
+ * opencog/persist/mono/MonoPersistSCM.h
  *
  * Copyright (c) 2020 Linas Vepstas <linasvepstas@gmail.com>
  *
@@ -22,13 +22,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOG_ROCKS_PERSIST_SCM_H
-#define _OPENCOG_ROCKS_PERSIST_SCM_H
+#ifndef _OPENCOG_MONO_PERSIST_SCM_H
+#define _OPENCOG_MONO_PERSIST_SCM_H
 
 #include <string>
 
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/mono/MonoStorage.h>
 
 namespace opencog
 {
@@ -36,19 +36,19 @@ namespace opencog
  *  @{
  */
 
-class RocksPersistSCM
+class MonoPersistSCM
 {
 private:
 	static void* init_in_guile(void*);
 	static void init_in_module(void*);
 	void init(void);
 
-	RocksStorageNodePtr _storage;
+	MonoStorageNodePtr _storage;
 	AtomSpace *_as;
 
 public:
-	RocksPersistSCM(AtomSpace*);
-	~RocksPersistSCM();
+	MonoPersistSCM(AtomSpace*);
+	~MonoPersistSCM();
 
 	void do_open(const std::string&);
 	void do_close(void);
@@ -69,4 +69,4 @@ extern "C" {
 void opencog_persist_rocks_init(void);
 };
 
-#endif // _OPENCOG_ROCKS_PERSIST_SCM_H
+#endif // _OPENCOG_MONO_PERSIST_SCM_H
