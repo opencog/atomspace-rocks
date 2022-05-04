@@ -28,7 +28,7 @@
 #include <string>
 
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/persist/mono/MonoStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 namespace opencog
 {

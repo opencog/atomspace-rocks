@@ -117,7 +117,7 @@ class MonoStorage : public StorageNode
 		void fetchIncomingSet(AtomSpace*, const Handle&);
 		void fetchIncomingByType(AtomSpace*, const Handle&, Type t);
 		void storeAtom(const Handle&, bool synchronous = false);
-		void removeAtom(const Handle&, bool recursive);
+		void removeAtom(AtomSpace*, const Handle&, bool recursive);
 		void storeValue(const Handle& atom, const Handle& key);
 		void loadValue(const Handle& atom, const Handle& key);
 		void loadType(AtomSpace*, Type);
