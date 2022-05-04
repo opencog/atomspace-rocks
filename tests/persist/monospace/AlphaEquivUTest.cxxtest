@@ -197,7 +197,7 @@ void AlphaEquivUTest::test_remove(void)
 
 	// Remove the alpha-equivalent lambda link.
 	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
-	store->remove_atom(ly);
+	store->remove_atom(_as, ly);
 	store->barrier();
 	ly = Handle::UNDEFINED;
 
@@ -237,7 +237,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 
 	// Recursive remove Concept "A".
 	Handle ca = an(CONCEPT, "A");
-	store->remove_atom(ca, true);
+	store->remove_atom(_as, ca, true);
 	store->barrier();
 
 	// What happens if we look for the original?
