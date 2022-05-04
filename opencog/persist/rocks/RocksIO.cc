@@ -1171,48 +1171,29 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 }
 
 /// Load all Atoms in a specific frame.
-void RocksStorage::loadAtomsInFrame(AtomSpace* as, size_t ifid)
+void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 {
-	std::string pfx = "k@" + aidtostr(ifid) + ":";
-	size_t off = pfx.length();
+	if (not _multi_space)
+		throw IOException(TRACE_INFO, "Internal Error!");
 
-	Handle h;
-	std::string prevsid;
+	std::map<uint64_t, Handle> frame_order;
+	makeOrder(HandleCast(as), frame_order);
+
+	std::string pfx = "a@";
+
+	// Outer loop: loop over all atoms.
+	// Inner loop: loop over all atomspaces that atom might
+	// belong to.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
-		const std::string& rks = it->key().ToString();
-		size_t koff = rks.rfind(':');
-
-		// The above loop should loop from one key to the next,
-		// occasionally changing sid's. As it does so, grab the
-		// the Atom corresponding to that sid.
-		const std::string& sid = rks.substr(off, koff-off);
-		if (prevsid.compare(sid))
+		Handle h = Sexpr::decode_atom(it->value().ToString());
+		const std::string& sid = it->key().ToString().substr(2);
+		for (const auto& frit: frame_order)
 		{
-			prevsid = sid;
-			h = getAtom(sid);
+			AtomSpace* as = (AtomSpace*) frit.second.get();
+			getKeys(as, sid, h);
 		}
-
-		// Check for Atoms marked as deleted. Mark them up
-		// in the corresponding AtomSpace as well.
-		if ('-' == rks[koff+1])
-		{
-			bool extracted = as->extract_atom(h, true);
-			if (not extracted)
-				throw IOException(TRACE_INFO, "Internal Error!");
-			prevsid = "";
-			h = nullptr;
-			continue;
-		}
-
-		// Else, we have a valid key. Decode it and stick it on the atom.
-		Handle key = getAtom(rks.substr(koff+1));
-		size_t junk = 0;
-		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-		if (vp) vp = as->add_atoms(vp);
-
-		h = as->set_value(h, key, vp);
 	}
 	delete it;
 }
@@ -1255,12 +1236,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 			"Attempting to load multiple AtomSpaces without known DAG. "
 			"Did you forget to say `load-frames` first?");
 
-	// Restore frames, preserving the partial order, so that the
-	// lowest ones are restored first.
-	std::map<uint64_t, Handle> frame_order;
-	makeOrder(HandleCast(table), frame_order);
-	for (const auto& it: frame_order)
-		loadAtomsInFrame((AtomSpace*) it.second.get(), it.first);
+	loadAtomsAllFrames(table);
 }
 
 /// Load the entire collection of AtomSpace frames.
@@ -1339,7 +1315,7 @@ void RocksStorage::loadTypeAllFrames(AtomSpace* as, Type t)
 	std::string typ = pfx + nameserver().getTypeName(t);
 
 	// Outer loop: loop over all atoms of the given type.
-	// Inner loop: loop over all atomspace that atom might
+	// Inner loop: loop over all atomspaces that atom might
 	// belong to.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
