@@ -1,2 +1,2 @@
 
-ADD_SUBDIRECTORY (rocks)
+ADD_SUBDIRECTORY(monospace)
