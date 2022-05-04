@@ -1,5 +1,5 @@
 /*
- * opencog/persist/cog-simple/RocksPersistSCM.cc
+ * opencog/persist/rocks/RocksPersistSCM.cc
  * Scheme Guile API wrappers for the backend.
  *
  * Copyright (c) 2020 Linas Vepstas <linasvepstas@gmail.com>
