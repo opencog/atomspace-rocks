@@ -7,7 +7,7 @@
 (use-modules (opencog))
 (use-modules (opencog rocks-config))
 (load-extension
-	(string-append opencog-ext-path-persist-rocks "libpersist-monospace")
+	(string-append opencog-ext-path-persist-mono "libpersist-monospace")
 	"opencog_persist_mono_init")
 
 (export cog-mono-clear-stats cog-mono-close cog-mono-open
