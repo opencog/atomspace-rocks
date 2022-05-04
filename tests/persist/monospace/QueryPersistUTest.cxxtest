@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/QueryPersistUTest.cxxtest
+ * tests/persist/mono/QueryPersistUTest.cxxtest
  *
  * Test persistance queries.  Assumes PerisistUTest and ValueSaveUTest
  * are passing.
@@ -32,7 +32,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 #include <opencog/atoms/value/LinkValue.h>
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
 #include <opencog/util/Config.h>
@@ -69,7 +69,7 @@ QueryPersistUTest:: QueryPersistUTest(void)
 	logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
 
-	uri = "rocks:///tmp/cog-rocks-unit-test";
+	uri = "monospace:///tmp/cog-mono-unit-test";
 }
 
 /*
@@ -90,11 +90,11 @@ void QueryPersistUTest::tearDown(void)
 
 void QueryPersistUTest::kill_data(void)
 {
-	RocksStorage *astore = new RocksStorage(uri);
+	MonoStorage *astore = new MonoStorage(uri);
 	astore->open();
 	if (!astore->connected())
 	{
-		logger().info("setUp: RocksStorage cannot connect to database");
+		logger().info("setUp: MonoStorage cannot connect to database");
 		exit(1);
 	}
 
@@ -117,7 +117,7 @@ void QueryPersistUTest::setup_data(void)
 
 	_as = createAtomSpace();
 
-	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -164,7 +164,7 @@ void QueryPersistUTest::test_meet(void)
 	setup_data();
 
 	_as = createAtomSpace();
-	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -225,7 +225,7 @@ void QueryPersistUTest::test_join(void)
 	setup_data();
 
 	_as = createAtomSpace();
-	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())

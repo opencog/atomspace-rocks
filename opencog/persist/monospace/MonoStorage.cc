@@ -51,9 +51,9 @@ void MonoStorage::init(const char * uri)
 {
 	_uri = uri;
 
-#define URIX_LEN (sizeof("rocks://") - 1)  // Should be 8
+#define URIX_LEN (sizeof("monospace://") - 1)  // Should be 12
 	// We expect the URI to be for the form (note: three slashes)
-	//    rocks:///path/to/file
+	//    monospace:///path/to/file
 	std::string file(uri + URIX_LEN);
 
 	rocksdb::Options options;
@@ -145,7 +145,7 @@ MonoStorage::MonoStorage(std::string uri) :
 	_next_aid(0)
 {
 	const char *yuri = _name.c_str();
-	if (strncmp(yuri, "rocks://", URIX_LEN))
+	if (strncmp(yuri, "monospace://", URIX_LEN))
 		throw IOException(TRACE_INFO, "Unknown URI '%s'\n", yuri);
 }
 
