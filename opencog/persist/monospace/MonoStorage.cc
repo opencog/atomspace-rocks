@@ -1,9 +1,9 @@
 /*
  * FILE:
- * opencog/persist/rocks/RocksStorage.cc
+ * opencog/persist/mono/MonoStorage.cc
  *
  * FUNCTION:
- * Simple CogServer-backed persistent storage.
+ * Simple RocksDB-backed persistent storage.
  *
  * HISTORY:
  * Copyright (c) 2020 Linas Vepstas <linasvepstas@gmail.com>
@@ -38,7 +38,7 @@
 #include <opencog/util/Logger.h>
 #include <opencog/atoms/base/Node.h>
 
-#include "RocksStorage.h"
+#include "MonoStorage.h"
 
 using namespace opencog;
 
@@ -47,7 +47,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 /* ================================================================ */
 // Constructors
 
-void RocksStorage::init(const char * uri)
+void MonoStorage::init(const char * uri)
 {
 	_uri = uri;
 
@@ -66,11 +66,11 @@ void RocksStorage::init(const char * uri)
 	// Create the file if it doesn't exist yet.
 	options.create_if_missing = true;
 
-	// The primary consumer of disk and RAM in RocksDB are the `*.sst`
-	// files: each one is opened and memory-mapped. RocksDB does NOT
+	// The primary consumer of disk and RAM in MonoDB are the `*.sst`
+	// files: each one is opened and memory-mapped. MonoDB does NOT
 	// check the `ulimit -n` setting, and can overflow it, resulting
 	// in failed reads and dropped writes. We MUST set `max_open_files`
-	// to an acceptable value. Rocks will run, just more slowly, when
+	// to an acceptable value. Mono will run, just more slowly, when
 	// it hits this limit.
 	//
 	// For me, each sst file averages about 40MBytes, with a roughly
@@ -92,7 +92,7 @@ void RocksStorage::init(const char * uri)
 	options.max_open_files = max_of;
 
 #if 0
-	// According to the RocksDB wiki, Bloom filters should make
+	// According to the MonoDB wiki, Bloom filters should make
 	// everything go faster for us, since we use lots of Get()'s.
 	// But the unit tests are completely unaffected by this.
 	// So don't enable.
@@ -122,8 +122,8 @@ void RocksStorage::init(const char * uri)
 	else
 		_next_aid = strtoaid(sid) + 1; // next unused...
 
-printf("Rocks: opened=%s\n", file.c_str());
-printf("Rocks: initial aid=%lu\n", _next_aid.load());
+printf("Mono: opened=%s\n", file.c_str());
+printf("Mono: initial aid=%lu\n", _next_aid.load());
 
 	// Set up a SID for the TV predicate key.
 	// This must match what the AtomSpace is using.
@@ -132,14 +132,14 @@ printf("Rocks: initial aid=%lu\n", _next_aid.load());
 	tv_pred_sid = writeAtom(h);
 }
 
-void RocksStorage::open()
+void MonoStorage::open()
 {
 	// User might call us twice. If so, ignore the second call.
 	if (_rfile) return;
 	init(_name.c_str());
 }
 
-RocksStorage::RocksStorage(std::string uri) :
+MonoStorage::MonoStorage(std::string uri) :
 	StorageNode(ROCKS_STORAGE_NODE, std::move(uri)),
 	_rfile(nullptr),
 	_next_aid(0)
@@ -149,23 +149,23 @@ RocksStorage::RocksStorage(std::string uri) :
 		throw IOException(TRACE_INFO, "Unknown URI '%s'\n", yuri);
 }
 
-RocksStorage::~RocksStorage()
+MonoStorage::~MonoStorage()
 {
 	close();
 }
 
-void RocksStorage::close()
+void MonoStorage::close()
 {
 	if (nullptr == _rfile) return;
 
-	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
+	logger().debug("Mono: storing final aid=%lu\n", _next_aid.load());
 	write_aid();
 	delete _rfile;
 	_rfile = nullptr;
 	_next_aid = 0;
 }
 
-void RocksStorage::write_aid(void)
+void MonoStorage::write_aid(void)
 {
 	// We write the highest issued atom-id. This is the behavior that
 	// is compatible with writeAtom(), which also write the atom-id.
@@ -175,7 +175,7 @@ void RocksStorage::write_aid(void)
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 }
 
-bool RocksStorage::connected(void)
+bool MonoStorage::connected(void)
 {
 	return nullptr != _rfile;
 }
@@ -186,7 +186,7 @@ bool RocksStorage::connected(void)
 /// barrier really are performed before before all the writes after
 /// the barrier.
 ///
-void RocksStorage::barrier()
+void MonoStorage::barrier()
 {
 	// belt and suspenders.
 	write_aid();
@@ -194,11 +194,11 @@ void RocksStorage::barrier()
 
 /* ================================================================ */
 
-void RocksStorage::clear_stats(void)
+void MonoStorage::clear_stats(void)
 {
 }
 
-std::string RocksStorage::monitor(void)
+std::string MonoStorage::monitor(void)
 {
 	std::string rs;
 	rs += "Connected to `" + _uri + "`\n";
@@ -222,11 +222,11 @@ std::string RocksStorage::monitor(void)
 	return rs;
 }
 
-void RocksStorage::print_stats(void)
+void MonoStorage::print_stats(void)
 {
 	printf("%s\n", monitor().c_str());
 }
 
-DEFINE_NODE_FACTORY(RocksStorageNode, ROCKS_STORAGE_NODE)
+DEFINE_NODE_FACTORY(MonoStorageNode, MONO_STORAGE_NODE)
 
 /* ============================= END OF FILE ================= */

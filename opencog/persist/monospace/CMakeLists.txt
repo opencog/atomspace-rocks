@@ -1,24 +1,24 @@
 #
-# Build the RocksDB driver for the AtomSpace
+# Build the RocksDB driver for a single AtomSpace
 #
 
-ADD_LIBRARY (persist-rocks SHARED
-	RocksIO
-	RocksStorage
-	RocksPersistSCM
+ADD_LIBRARY (persist-monospace SHARED
+	MonoIO
+	MonoStorage
+	MonoPersistSCM
 )
 
-TARGET_LINK_LIBRARIES(persist-rocks
+TARGET_LINK_LIBRARIES(persist-monospace
 	${ATOMSPACE_LIBRARIES}
 	rocksdb
 )
 
-ADD_GUILE_EXTENSION(SCM_CONFIG persist-rocks
-	"opencog-ext-path-persist-rocks")
+ADD_GUILE_EXTENSION(SCM_CONFIG persist-mono
+	"opencog-ext-path-persist-mono")
 
 # The EXPORT is neeed to autogenerate CMake boilerplate in the lib
-# directory that lets other packages FIND_PACKAGE(AtomSpaceRocks)
-INSTALL (TARGETS persist-rocks
-	EXPORT AtomSpaceRocksTargets
+# directory that lets other packages FIND_PACKAGE(AtomSpaceMonoSpace)
+INSTALL (TARGETS persist-monospace
+	EXPORT AtomSpaceMonoSpaceTargets
 	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
 )

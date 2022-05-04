@@ -1,9 +1,9 @@
 /*
  * FILE:
- * opencog/persist/rocks/RocksStorage.h
+ * opencog/persist/rocks/MonoStorage.h
  *
  * FUNCTION:
- * Simple RocksDB-backed persistent storage.
+ * Simple MonoDB-backed persistent storage.
  *
  * HISTORY:
  * Copyright (c) 2020 Linas Vepstas <linasvepstas@gmail.com>
@@ -27,8 +27,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ATOMSPACE_ROCKS_STORAGE_H
-#define _ATOMSPACE_ROCKS_STORAGE_H
+#ifndef _ATOMSPACE_MONO_STORAGE_H
+#define _ATOMSPACE_MONO_STORAGE_H
 
 #include <atomic>
 #include <mutex>
@@ -42,13 +42,13 @@ namespace opencog
  *  @{
  */
 
-class RocksSatisfyingSet;
+class MonoSatisfyingSet;
 
-class RocksStorage : public StorageNode
+class MonoStorage : public StorageNode
 {
-	friend class RocksImplicator;
-	friend class RocksSatisfyingSet;
-	friend class RocksJoinCallback;
+	friend class MonoImplicator;
+	friend class MonoSatisfyingSet;
+	friend class MonoJoinCallback;
 	private:
 		void init(const char *);
 		std::string _uri;
@@ -95,10 +95,10 @@ class RocksStorage : public StorageNode
 		size_t count_records(const std::string&);
 
 	public:
-		RocksStorage(std::string uri);
-		RocksStorage(const RocksStorage&) = delete; // disable copying
-		RocksStorage& operator=(const RocksStorage&) = delete; // disable assignment
-		virtual ~RocksStorage();
+		MonoStorage(std::string uri);
+		MonoStorage(const MonoStorage&) = delete; // disable copying
+		MonoStorage& operator=(const MonoStorage&) = delete; // disable assignment
+		virtual ~MonoStorage();
 
 		void open(void);
 		void close(void);
@@ -132,14 +132,14 @@ class RocksStorage : public StorageNode
 		void checkdb(void);
 };
 
-class RocksStorageNode : public RocksStorage
+class MonoStorageNode : public MonoStorage
 {
 	public:
-		RocksStorageNode(Type t, const std::string&& uri) :
-			RocksStorage(std::move(uri))
+		MonoStorageNode(Type t, const std::string&& uri) :
+			MonoStorage(std::move(uri))
 		{}
-		RocksStorageNode(const std::string&& uri) :
-			RocksStorage(std::move(uri))
+		MonoStorageNode(const std::string&& uri) :
+			MonoStorage(std::move(uri))
 		{}
 
 		void setAtomSpace(AtomSpace* as)
@@ -152,13 +152,13 @@ class RocksStorageNode : public RocksStorage
 		static Handle factory(const Handle&);
 };
 
-typedef std::shared_ptr<RocksStorageNode> RocksStorageNodePtr;
-static inline RocksStorageNodePtr RocksStorageNodeCast(const Handle& h)
-	{ return std::dynamic_pointer_cast<RocksStorageNode>(h); }
+typedef std::shared_ptr<MonoStorageNode> MonoStorageNodePtr;
+static inline MonoStorageNodePtr MonoStorageNodeCast(const Handle& h)
+	{ return std::dynamic_pointer_cast<MonoStorageNode>(h); }
 
-#define createRocksStorageNode std::make_shared<RocksStorageNode>
+#define createMonoStorageNode std::make_shared<MonoStorageNode>
 
 /** @}*/
 } // namespace opencog
 
-#endif // _ATOMSPACE_ROCKS_STORAGE_H
+#endif // _ATOMSPACE_MONO_STORAGE_H
