@@ -1,0 +1,270 @@
+/*
+ * tests/persist/rocks/QueryPersistUTest.cxxtest
+ *
+ * Test persistance queries.  Assumes PerisistUTest and ValueSaveUTest
+ * are passing.
+ *
+ * Copyright (C) 2008, 2009, 2013, 2020 Linas Vepstas <linasvepstas@gmail.com>
+ * All Rights Reserved
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <cstdio>
+
+#include <opencog/atoms/atom_types/atom_types.h>
+#include <opencog/atoms/base/Atom.h>
+#include <opencog/atoms/base/Link.h>
+#include <opencog/atoms/base/Node.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/LinkValue.h>
+#include <opencog/persist/rocks/RocksStorage.h>
+
+#include <opencog/util/Logger.h>
+#include <opencog/util/Config.h>
+
+using namespace opencog;
+
+class QueryPersistUTest :  public CxxTest::TestSuite
+{
+	private:
+		AtomSpacePtr _as;
+		std::string uri;
+
+	public:
+
+		QueryPersistUTest(void);
+		~QueryPersistUTest()
+		{
+			// erase the log file if no assertions failed
+			if (!CxxTest::TestTracker::tracker().suiteFailed())
+				std::remove(logger().get_filename().c_str());
+		}
+
+		void setUp(void);
+		void tearDown(void);
+		void kill_data(void);
+
+		void setup_data(void);
+		void test_meet(void);
+		void test_join(void);
+};
+
+QueryPersistUTest:: QueryPersistUTest(void)
+{
+	logger().set_level(Logger::DEBUG);
+	logger().set_print_to_stdout_flag(true);
+
+	uri = "rocks:///tmp/cog-rocks-unit-test";
+}
+
+/*
+ * This is called once before each test, for each test (!!)
+ */
+void QueryPersistUTest::setUp(void)
+{
+	_as = nullptr;
+}
+
+void QueryPersistUTest::tearDown(void)
+{
+	_as = nullptr;
+	kill_data();
+}
+
+// ============================================================
+
+void QueryPersistUTest::kill_data(void)
+{
+	RocksStorage *astore = new RocksStorage(uri);
+	astore->open();
+	if (!astore->connected())
+	{
+		logger().info("setUp: RocksStorage cannot connect to database");
+		exit(1);
+	}
+
+	// Trash the contents of the database.
+	astore->kill_data();
+
+	// Destructor also logs out of database
+	delete astore;
+}
+
+// ============================================================
+#define an _as->add_node
+#define al _as->add_link
+#define CONCEPT CONCEPT_NODE
+#define VARIABLE VARIABLE_NODE
+
+void QueryPersistUTest::setup_data(void)
+{
+	kill_data();
+
+	_as = createAtomSpace();
+
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
+	TS_ASSERT(store->connected())
+
+	/* Populate the Storage with stuff that we will later query. */
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "is-a"),
+		al(LIST_LINK, an(CONCEPT, "car"), an(CONCEPT, "vehicle")));
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "has-a"),
+		al(LIST_LINK, an(CONCEPT, "car"), an(CONCEPT, "wheel")));
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "has-a"),
+		al(LIST_LINK, an(CONCEPT, "car"), an(CONCEPT, "battery")));
+
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "is-a"),
+		al(LIST_LINK, an(CONCEPT, "bicycle"), an(CONCEPT, "vehicle")));
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "has-a"),
+		al(LIST_LINK, an(CONCEPT, "bicycle"), an(CONCEPT, "wheel")));
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "has-a"),
+		al(LIST_LINK, an(CONCEPT, "bicycle"), an(CONCEPT, "derailleur")));
+
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "is-a"),
+		al(LIST_LINK, an(CONCEPT, "airplane"), an(CONCEPT, "vehicle")));
+	al(EVALUATION_LINK, an(PREDICATE_NODE, "has-a"),
+		al(LIST_LINK, an(CONCEPT, "airplane"), an(CONCEPT, "wings")));
+
+	// Sprinkle in some TruthValues
+	an(CONCEPT, "airplane") ->
+		setTruthValue(SimpleTruthValue::createTV(0.11, 100));
+
+	an(CONCEPT, "bicycle") ->
+		setTruthValue(SimpleTruthValue::createTV(0.22, 100));
+
+	an(CONCEPT, "car") ->
+		setTruthValue(SimpleTruthValue::createTV(0.33, 300));
+
+	/* Push all atoms out to the database */
+	store->store_atomspace();
+	store->barrier();
+}
+
+void QueryPersistUTest::test_meet(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	setup_data();
+
+	_as = createAtomSpace();
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// Create a query to find all things that have wheels.
+	// We expect cars and bicycles, only.
+	Handle qry =
+	al(MEET_LINK,
+		al(TYPED_VARIABLE_LINK,
+			an(VARIABLE, "$transport"), an(TYPE_NODE, "Concept")),
+		al(EVALUATION_LINK, an(PREDICATE_NODE, "has-a"),
+			al(LIST_LINK, an(VARIABLE, "$transport"), an(CONCEPT, "wheel"))));
+
+	// Create a key where the query results will arrive...
+	Handle key = an(PREDICATE_NODE, "qkey");
+
+	// Run the query
+	store->fetch_query(qry, key);
+
+	// Verify that only bicycles and cars were fetched
+	ValuePtr results = qry->getValue(key);
+	printf("Got: %s\n", results->to_string().c_str());
+
+	TSM_ASSERT("Expecting a LinkValue",
+		nameserver().isA(results->get_type(), LINK_VALUE));
+
+	LinkValuePtr lvp = LinkValueCast(results);
+	TSM_ASSERT_EQUALS("Expecting two results", lvp->size(), 2);
+
+	HandleSet hset = lvp->to_handle_set();
+	HandleSet expect;
+	expect.insert(an(CONCEPT, "bicycle"));
+	expect.insert(an(CONCEPT, "car"));
+	TSM_ASSERT_EQUALS("Expecting bicycle and car", hset, expect);
+
+	// Test key deletion.  Lack of a crash is a good thing.
+	qry->setValue(key, nullptr);
+	store->store_value(qry, key);
+	ValuePtr nada = qry->getValue(key);
+	TS_ASSERT(nullptr == nada);
+
+	// Should get back the same results.
+	store->fetch_query(qry, key);
+	ValuePtr rtoo = qry->getValue(key);
+	printf("Re-got: %s\n", rtoo->to_string().c_str());
+
+	lvp = LinkValueCast(rtoo);
+	HandleSet htoo = lvp->to_handle_set();
+	TSM_ASSERT("Expect same results as before", hset == htoo);
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+void QueryPersistUTest::test_join(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	setup_data();
+
+	_as = createAtomSpace();
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// Create a join to find all vehicles.
+	Handle join =
+	al(MAXIMAL_JOIN_LINK, al(PRESENT_LINK, an(CONCEPT, "vehicle")));
+
+	// Create a key where the query results will arrive...
+	Handle key = an(PREDICATE_NODE, "qkey");
+
+	// Run the join
+	store->fetch_query(join, key);
+
+	// Verify that vehicles were fetched
+	ValuePtr results = join->getValue(key);
+	printf("Got: %s\n", results->to_string().c_str());
+
+	TSM_ASSERT("Expecting a LinkValue",
+		nameserver().isA(results->get_type(), LINK_VALUE));
+
+	LinkValuePtr lvp = LinkValueCast(results);
+	TSM_ASSERT_EQUALS("Expecting three results", lvp->size(), 3);
+
+	HandleSet hset = lvp->to_handle_set();
+	HandleSet expect;
+	expect.insert(
+		al(EVALUATION_LINK, an(PREDICATE_NODE, "is-a"),
+			al(LIST_LINK, an(CONCEPT, "airplane"), an(CONCEPT, "vehicle"))));
+	expect.insert(
+		al(EVALUATION_LINK, an(PREDICATE_NODE, "is-a"),
+			al(LIST_LINK, an(CONCEPT, "bicycle"), an(CONCEPT, "vehicle"))));
+	expect.insert(
+		al(EVALUATION_LINK, an(PREDICATE_NODE, "is-a"),
+			al(LIST_LINK, an(CONCEPT, "car"), an(CONCEPT, "vehicle"))));
+
+	TSM_ASSERT_EQUALS("Expecting airplane, bicycle and car", hset, expect);
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+/* ============================= END OF FILE ================= */
