@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/BasicDeleteUTest.cxxtest
+ * tests/persist/mono/BasicDeleteUTest.cxxtest
  *
  * Verify that deletion of keys works, even if some Atoms are still
  * using those keys.
@@ -53,7 +53,7 @@ class BasicDeleteUTest :  public CxxTest::TestSuite
 			// logger().set_level(Logger::DEBUG);
 			logger().set_print_to_stdout_flag(true);
 
-			uri = "rocks:///tmp/cog-rocks-unit-test";
+			uri = "monospace:///tmp/cog-mono-unit-test";
 		}
 
 		~BasicDeleteUTest()
@@ -91,7 +91,7 @@ void BasicDeleteUTest::test_duplicates(void)
 
 	AtomSpace* as = new AtomSpace();
 
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
 	store->open();
@@ -133,7 +133,7 @@ void BasicDeleteUTest::test_recursive(void)
 
 	AtomSpace* as = new AtomSpace();
 
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
 	store->open();
@@ -233,7 +233,7 @@ void BasicDeleteUTest::test_key_deletion(void)
 	// Create an Atom with some keys on it.
 	AtomSpace* as = new AtomSpace();
 
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
 	store->open();
@@ -283,7 +283,7 @@ void BasicDeleteUTest::test_key_deletion(void)
 
 	as = new AtomSpace();
 
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
 	store->open();
@@ -324,7 +324,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 	// Create an Atom with some keys on it.
 	AtomSpace* as = new AtomSpace();
 
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
 	store->open();
@@ -365,7 +365,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 
 	as = new AtomSpace();
 
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
 	store->open();
@@ -411,7 +411,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 
 	as = new AtomSpace();
 
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
 	store->open();

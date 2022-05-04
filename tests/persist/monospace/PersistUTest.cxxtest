@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/PersistUTest.cxxtest
+ * tests/persist/mono/PersistUTest.cxxtest
  *
  * Test AtomSpace persistence.  Assumes BasicSaveUTest is passing.
  * Ported from tests/persist/sql/multi-driver/PersistUTest.cxxtest
@@ -34,7 +34,7 @@
 
 #include <opencog/atomspace/AtomSpace.h>
 
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -299,7 +299,7 @@ void PersistUTest::test_atomspace(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+    Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
     StorageNodePtr store = StorageNodeCast(hsn);
     store->open();
     TS_ASSERT(store->connected())
@@ -333,7 +333,7 @@ void PersistUTest::test_atomspace(void)
     TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
     /* The above clear wiped out the storage node; recreate it. */
-    hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
     store = StorageNodeCast(hsn);
     store->open();
 
@@ -348,7 +348,7 @@ void PersistUTest::test_atomspace(void)
     TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
     /* The above clear wiped out the storage node; recreate it. */
-    hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
     store = StorageNodeCast(hsn);
     store->open();
 

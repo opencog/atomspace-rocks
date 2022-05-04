@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/DeleteUTest.cxxtest
+ * tests/persist/mono/DeleteUTest.cxxtest
  *
  * Test deletion from backing store.  Assumes PersistUTest is passing.
  * Ported from tests/persist/sql/multi-driver/DeleteUTest.cxxtest
@@ -33,7 +33,7 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -97,7 +97,7 @@ DeleteUTest:: DeleteUTest(void)
     logger().set_print_to_stdout_flag(true);
     // logger().set_sync_flag(true);
 
-    uri = "rocks:///tmp/cog-rocks-unit-test";
+    uri = "monospace:///tmp/cog-mono-unit-test";
 }
 
 /*
@@ -396,7 +396,7 @@ void DeleteUTest::test_remove(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+    Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
     StorageNodePtr store = StorageNodeCast(hsn);
     store->open();
     TS_ASSERT(store->connected())
@@ -477,7 +477,7 @@ void DeleteUTest::test_recurse(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+    Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
     StorageNodePtr store = StorageNodeCast(hsn);
     store->open();
 

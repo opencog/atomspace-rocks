@@ -2,7 +2,7 @@
 # Unit tests
 
 LINK_LIBRARIES(
-	persist-rocks
+	persist-monospace
    persist
    atomspace
 )

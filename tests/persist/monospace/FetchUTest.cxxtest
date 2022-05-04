@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/FetchUTest.cxxtest
+ * tests/persist/mono/FetchUTest.cxxtest
  *
  * Test atom fetch semantics.  Assumes PersistUTest is passing.
  * Ported over from original unit test at
@@ -33,7 +33,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/guile/SchemeEval.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -72,11 +72,11 @@ FetchUTest::FetchUTest(void)
 	// logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
 
-	uri = "rocks:///tmp/cog-rocks-unit-test";
-	srv_open = "(cog-rocks-open \"" + uri + "\")\n";
+	uri = "monospace:///tmp/cog-mono-unit-test";
+	srv_open = "(cog-mono-open \"" + uri + "\")\n";
 
 	// Other unit tests leave junk laying around...
-	RocksStorage *store = new RocksStorage(uri);
+	MonoStorage *store = new MonoStorage(uri);
 	store->open();
 	store->kill_data();
 	delete store;
@@ -153,12 +153,12 @@ void FetchUTest::test_stuff(void)
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
 	// First, initialize the database
-	eval->eval("(use-modules (opencog persist) (opencog persist-rocks))");
+	eval->eval("(use-modules (opencog persist) (opencog persist-mono))");
 	eval->eval(srv_open);
 	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.1 0.11)))");
 	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
 	eval->eval("(store-atomspace)");
-	eval->eval("(cog-rocks-close)");
+	eval->eval("(cog-mono-close)");
 
 	_as = createAtomSpace();
 	eval = SchemeEval::get_evaluator(_as);
@@ -188,7 +188,7 @@ void FetchUTest::test_stuff(void)
 	// Saving everything should not crash.  It should, however,
 	// change the TV on (Concept "BBB") back to DEFAULT_TV.
 	eval->eval("(store-atomspace)");
-	eval->eval("(cog-rocks-close)");
+	eval->eval("(cog-mono-close)");
 
 	_as = createAtomSpace();
 	eval = SchemeEval::get_evaluator(_as);
@@ -211,7 +211,7 @@ void FetchUTest::test_stuff(void)
 	printf("Expecting %s\n", dtv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
 
-	eval->eval("(cog-rocks-close)");
+	eval->eval("(cog-mono-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
@@ -222,13 +222,13 @@ void FetchUTest::test_readonly(void)
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
 	// First, initialize the database
-	eval->eval("(use-modules (opencog persist) (opencog persist-rocks))");
+	eval->eval("(use-modules (opencog persist) (opencog persist-mono))");
 	eval->eval(srv_open);
 	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.1 0.11)))");
 	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
 	eval->eval(R"((List (Concept "AAA") (Concept "BBB")))");
 	eval->eval("(store-atomspace)");
-	eval->eval("(cog-rocks-close)");
+	eval->eval("(cog-mono-close)");
 
 	_as = createAtomSpace();
 	eval = SchemeEval::get_evaluator(_as);
@@ -282,7 +282,7 @@ void FetchUTest::test_readonly(void)
 	TS_ASSERT(d == nullptr);
 	TS_ASSERT_EQUALS(3, _as->get_size());
 
-	eval->eval("(cog-rocks-close)");
+	eval->eval("(cog-mono-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 

@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/ValueSaveUTest.cxxtest
+ * tests/persist/mono/ValueSaveUTest.cxxtest
  *
  * Test of save and restore of generic values.
  * Ported from tests/persist/sql/multi-driver/ValueSaveUTest.cxxtest
@@ -38,7 +38,7 @@
 #include <opencog/atoms/base/Valuation.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -58,7 +58,7 @@ class ValueSaveUTest :  public CxxTest::TestSuite
 			// logger().set_level(Logger::DEBUG);
 			logger().set_print_to_stdout_flag(true);
 
-			uri = "rocks:///tmp/cog-rocks-unit-test";
+			uri = "monospace:///tmp/cog-mono-unit-test";
 		}
 
 		~ValueSaveUTest()
@@ -99,7 +99,7 @@ void ValueSaveUTest::test_single_atom_save()
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	AtomSpace* as = new AtomSpace();
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -166,7 +166,7 @@ void ValueSaveUTest::check_one(ValuePtr pap, bool fetchkey)
 	// First, save the value
 
 	AtomSpace* as = new AtomSpace();
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -189,7 +189,7 @@ void ValueSaveUTest::check_one(ValuePtr pap, bool fetchkey)
 	// Now, fetch the value and compare.
 
 	as = new AtomSpace();
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -214,7 +214,7 @@ void ValueSaveUTest::test_save_restore(bool fkey)
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	AtomSpace* as = new AtomSpace();
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -270,7 +270,7 @@ void ValueSaveUTest::test_load_by_type()
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	AtomSpace* as = new AtomSpace();
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -331,7 +331,7 @@ void ValueSaveUTest::test_load_by_type()
 	// Start it up again.
 
 	as = new AtomSpace();
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -398,7 +398,7 @@ void ValueSaveUTest::test_link_by_type()
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	AtomSpace* as = new AtomSpace();
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -485,7 +485,7 @@ void ValueSaveUTest::test_link_by_type()
 	// Start it up again.
 
 	as = new AtomSpace();
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -607,7 +607,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	AtomSpace* as = new AtomSpace();
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -694,7 +694,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	// Start it up again.
 
 	as = new AtomSpace();
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -819,7 +819,7 @@ void ValueSaveUTest::test_incoming()
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	AtomSpace* as = new AtomSpace();
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -906,7 +906,7 @@ void ValueSaveUTest::test_incoming()
 	// Start it up again.
 
 	as = new AtomSpace();
-	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())

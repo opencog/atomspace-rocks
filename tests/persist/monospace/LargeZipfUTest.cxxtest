@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/LargeZipfTest.cxxtest
+ * tests/persist/mono/LargeZipfTest.cxxtest
  *
  * Emulate word-pair dataset with Zipfian incoming sets.
  * This creates nodes with large incoming sets; database should
@@ -32,7 +32,7 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/truthvalue/CountTruthValue.h>
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -99,11 +99,11 @@ void LargeZipfUTest::tearDown(void)
 
 void LargeZipfUTest::kill_data(void)
 {
-	RocksStorage *astore = new RocksStorage("rocks:///tmp/cog-rocks-unit-test");
+	MonoStorage *astore = new MonoStorage("monospace:///tmp/cog-mono-unit-test");
 	astore->open();
 	if (!astore->connected())
 	{
-		logger().info("setUp: RocksStorage cannot connect to database");
+		logger().info("setUp: MonoStorage cannot connect to database");
 		exit(1);
 	}
 
@@ -277,7 +277,7 @@ void LargeZipfUTest::test_atomspace(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+	Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -300,7 +300,7 @@ void LargeZipfUTest::test_atomspace(void)
 	TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
 	/* The clear above nuked the storage, so restart */
-	hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace///tmp/cog-mono-unit-test");
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -315,7 +315,7 @@ void LargeZipfUTest::test_atomspace(void)
 	TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
 	/* The clear above nuked the storage, so restart */
-	hsn = _as->add_node(ROCKS_STORAGE_NODE, "rocks:///tmp/cog-rocks-unit-test");
+	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())

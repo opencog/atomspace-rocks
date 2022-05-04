@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/BasicSaveUTest.cxxtest
+ * tests/persist/mono/BasicSaveUTest.cxxtest
  *
  * Most basic, simplest sniff test, saves and restores a few atoms.
  * Copied from tests/persist/sql/BasicSaveUTest.cxxtest and
@@ -33,7 +33,7 @@
 #include <opencog/atoms/atom_types/atom_types.h>
 #include <opencog/atoms/truthvalue/SimpleTruthValue.h>
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
 
@@ -63,7 +63,7 @@ class BasicSaveUTest :  public CxxTest::TestSuite
             // logger().set_level(Logger::DEBUG);
             logger().set_print_to_stdout_flag(true);
 
-            uri = "rocks:///tmp/cog-rocks-unit-test";
+            uri = "monospace:///tmp/cog-mono-unit-test";
         }
 
         ~BasicSaveUTest()
@@ -158,7 +158,7 @@ static void atomCompare(AtomPtr a, AtomPtr b, const char* where)
  */
 void BasicSaveUTest::single_atom_save_restore(std::string id)
 {
-    RocksStorage *store = new RocksStorage(uri);
+    MonoStorage *store = new MonoStorage(uri);
     store->open();
     if (!store->connected())
     {
@@ -309,7 +309,7 @@ void BasicSaveUTest::test_fresh_atom(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    RocksStorage *store = new RocksStorage(uri);
+    MonoStorage *store = new MonoStorage(uri);
     store->open();
     if (!store->connected())
     {
@@ -354,7 +354,7 @@ void BasicSaveUTest::test_table()
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    RocksStorage *store = new RocksStorage(uri);
+    MonoStorage *store = new MonoStorage(uri);
     store->open();
     if (!store->connected())
     {
@@ -387,7 +387,7 @@ void BasicSaveUTest::test_table()
     printf("Done storing table; size=%lu\n", num_stored);
 
     // Reopen connection, and load the atom table.
-    store = new RocksStorage(uri);
+    store = new MonoStorage(uri);
     store->open();
     TSM_ASSERT("Not connected to database", store->connected());
 
