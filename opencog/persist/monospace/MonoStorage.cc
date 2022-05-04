@@ -140,7 +140,7 @@ void MonoStorage::open()
 }
 
 MonoStorage::MonoStorage(std::string uri) :
-	StorageNode(ROCKS_STORAGE_NODE, std::move(uri)),
+	StorageNode(MONO_STORAGE_NODE, std::move(uri)),
 	_rfile(nullptr),
 	_next_aid(0)
 {
