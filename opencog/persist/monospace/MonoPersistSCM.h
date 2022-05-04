@@ -66,7 +66,7 @@ public:
 }  // namespace
 
 extern "C" {
-void opencog_persist_rocks_init(void);
+void opencog_persist_mono_init(void);
 };
 
 #endif // _OPENCOG_MONO_PERSIST_SCM_H
