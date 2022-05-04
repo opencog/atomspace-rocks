@@ -3,7 +3,9 @@ DECLARE_GUILE_CONFIG_TARGET(SCM_CONFIG "opencog rocks-config" "OPENCOG_TEST")
 
 ADD_SUBDIRECTORY (persist)
 
+# ------------------------------------------------------------------
 ADD_GUILE_MODULE (FILES
+   scm/persist-mono.scm
    scm/persist-rocks.scm
    MODULE_DESTINATION "${GUILE_SITE_DIR}/opencog"
 )
