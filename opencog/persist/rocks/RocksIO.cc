@@ -35,11 +35,6 @@
 
 using namespace opencog;
 
-// The old incoming-list needs locks; the new one does not.
-#if USE_INLIST_STRING
-	#define NEED_LIST_LOCK 1
-#endif // USE_INLIST_STRING
-
 /// int to base-62 We use base62 not base64 because we
 /// want to reserve punctuation "just in case" as special chars.
 std::string RocksStorage::aidtostr(uint64_t aid) const
@@ -143,7 +138,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //
 // The current code will use the space-separated list when
 // #define USE_INLIST_STRING 1 is set, otherwise it uses one key
-// per incoming.
+// per incoming. (This code is in MonoStorageNode only).
 //
 // Multiple AtomSpaces
 // -------------------
@@ -296,14 +291,6 @@ std::string RocksStorage::writeAtom(const Handle& h)
 
 	// The rest is safe to do in parallel.
 	lck.unlock();
-
-#ifdef NEED_LIST_LOCK
-	// The-read-modify-write of the incoming-set list has to be
-	// protected from other callers, as well as from the atom
-	// deletion code. Delete races are checked with a@ and so the
-	// update of a@ and i@ must be atomic.
-	std::lock_guard<std::recursive_mutex> lilck(_mtx_list);
-#endif
 
 	// logger().debug("Store sid=>>%s<< for >>%s<<", sid.c_str(), satom.c_str());
 	_rfile->Put(rocksdb::WriteOptions(), pfx + satom, sid);
@@ -643,9 +630,6 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// because doing it any other way would require
 			// tracking keys. Which is hard; the atomspace was
 			// designed to NOT track keys on purpose, for efficiency.)
-#ifdef NEED_LIST_LOCK
-			std::lock_guard<std::recursive_mutex> lck(_mtx_list);
-#endif
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
@@ -828,12 +812,6 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 		if (0 == sid.size()) return;
 	}
 
-#ifdef NEED_LIST_LOCK
-	// Removal needs to be atomic, and not race with other
-	// removals, nor with other manipulations of the incoming
-	// set. A plain-old lock is the easiest way to get this.
-	std::lock_guard<std::recursive_mutex> lck(_mtx_list);
-#endif
 	removeSatom(satom, sid, h->is_node(), recursive);
 }
 
@@ -914,46 +892,6 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// So first, iterate up to the top, chopping away the incoming set.
 	// It's stored with prefixes according to type, so this is a loop...
 	std::string ist = "i@" + sid + ":";
-#if USE_INLIST_STRING
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
-	{
-		// If there is an incoming set, but were are not recursive,
-		// then refuse to do anything more.
-		if (not recursive)
-		{
-			delete it;
-			return;
-		}
-
-		// The list of sids of incoming Atoms.
-		std::string inset = it->value().ToString();
-
-		// Loop over the incoming set.
-		size_t nsk = 0;
-		size_t last = inset.find(' ');
-		while (std::string::npos != last)
-		{
-			// isid is the sid of an atom in the incoming set.
-			// Get the matching atom.
-			const std::string& isid = inset.substr(nsk, last-nsk);
-			std::string isatom;
-			_rfile->Get(rocksdb::ReadOptions(), "a@" + isid, &isatom);
-
-			// Its possible its been already removed. For example,
-			// delete a in (Link (Link a b) a)
-			if (0 < isatom.size())
-				removeSatom(isatom, isid, false, recursive);
-
-			nsk = last + 1;
-			last = inset.find(' ', nsk);
-		}
-
-		// Finally, delete the inset itself.
-		_rfile->Delete(rocksdb::WriteOptions(), it->key());
-	}
-	delete it;
-#else
 	size_t istlen = ist.size();
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
@@ -980,7 +918,6 @@ void RocksStorage::removeSatom(const std::string& satom,
 			removeSatom(isatom, isid, false, recursive);
 	}
 	delete it;
-#endif
 
 	// If the atom to be deleted has a hash, we need to remove it
 	// (the atom) from the list of other atoms having the same hash.
@@ -1062,55 +999,24 @@ void RocksStorage::removeSatom(const std::string& satom,
 void RocksStorage::appendToInset(const std::string& klist,
                                  const std::string& sid)
 {
-#if USE_INLIST_STRING
-	appendToSidList(klist, sid);
-#else
 	std::string key = klist + "-" + sid;
 	rocksdb::Status s = _rfile->Put(rocksdb::WriteOptions(), key, "");
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Internal Error!");
-#endif
 }
 
 void RocksStorage::remFromInset(const std::string& klist,
                                 const std::string& sid)
 {
-#if USE_INLIST_STRING
-	remFromSidList(klist, sid);
-#else
 	std::string key = klist + "-" + sid;
 	rocksdb::Status s = _rfile->Delete(rocksdb::WriteOptions(), key);
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Internal Error!");
-#endif
 }
 
 /// Load the incoming set based on the key prefix `ist`.
 void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 {
-#if USE_INLIST_STRING
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
-	{
-		// The list of sids of incoming Atoms.
-		std::string inlist = it->value().ToString();
-
-		size_t nsk = 0;
-		size_t last = inlist.find(' ');
-		while (std::string::npos != last)
-		{
-			const std::string& sid = inlist.substr(nsk, last-nsk);
-
-			Handle hi = getAtom(sid);
-			getKeys(as, sid, hi);
-			as->add_atom(hi);
-			nsk = last + 1;
-			last = inlist.find(' ', nsk);
-		}
-	}
-	delete it;
-#else
-
 	// `ist` is either `i@ABC:ConceptNode-` or else it is
 	// just `i@ABC:` and we have to search for the dash.
 	size_t istlen = ist.size();
@@ -1131,7 +1037,6 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		getKeys(as, sid, hi);
 	}
 	delete it;
-#endif
 }
 
 /// Backing API - get the incoming set.
