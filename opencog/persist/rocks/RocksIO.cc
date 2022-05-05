@@ -688,7 +688,9 @@ void RocksStorage::getAtom(const Handle& h)
 	}
 }
 
-/// Backend callback - find the Link
+/// Backend callback - find the Link. This is used ONLY to implement
+/// the backend Query call, and is not otherwised used.
+/// Note: currently broken for multi-space usage, XXX FIXME.
 Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 {
 	CHECK_OPEN;
@@ -1038,6 +1040,10 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 	size_t offset = -1;
 	if ('-' == ist[istlen - 1]) offset = 0;
 
+	std::map<uint64_t, Handle> frame_order;
+	if (_multi_space)
+		makeOrder(HandleCast(as), frame_order);
+
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
@@ -1048,8 +1054,19 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		const std::string& sid = frag.substr(offset);
 
 		Handle hi = getAtom(sid);
-		hi = as->add_atom(hi);
-		getKeys(as, sid, hi);
+		if (not _multi_space)
+		{
+			hi = as->add_atom(hi);
+			getKeys(as, sid, hi);
+			continue;
+		}
+
+		// If we are here, its a multi-space fetch.
+		for (const auto& frit: frame_order)
+		{
+			AtomSpace* fas = (AtomSpace*) frit.second.get();
+			getKeys(fas, sid, hi);
+		}
 	}
 	delete it;
 }
