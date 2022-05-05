@@ -628,7 +628,10 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// because doing it any other way would require
 			// tracking keys. Which is hard; the atomspace was
 			// designed to NOT track keys on purpose, for efficiency.)
-			_rfile->Delete(rocksdb::WriteOptions(), it->key());
+			if (not _multi_space)
+				_rfile->Delete(rocksdb::WriteOptions(), it->key());
+			else
+				throw IOException(TRACE_INFO, "Internal Error!");
 			continue;
 		}
 // XXX this is adding to wrong atomspace!?
@@ -668,7 +671,22 @@ void RocksStorage::getAtom(const Handle& h)
 	CHECK_OPEN;
 	std::string sid = findAtom(h);
 	if (0 == sid.size()) return;
-	getKeys(h->getAtomSpace(), sid, h);
+
+	if (not _multi_space)
+	{
+		getKeys(h->getAtomSpace(), sid, h);
+		return;
+	}
+
+	// For multi-spaces, determine the path-DAG from the top space
+	// to the bottom, and load from the bottom-up.
+	std::map<uint64_t, Handle> frame_order;
+	makeOrder(HandleCast(h->getAtomSpace()), frame_order);
+	for (const auto& frit: frame_order)
+	{
+		AtomSpace* as = (AtomSpace*) frit.second.get();
+		getKeys(as, sid, h);
+	}
 }
 
 /// Backend callback - find the Link
