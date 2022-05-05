@@ -227,6 +227,7 @@
 	; Test deleted atom fetch
 	(define sage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
 	(cog-open sage)
+	(load-frames)
 	(fetch-atom (Concept "foo"))
 	(cog-close sage)
 	(test-assert "mid1-fetch" (nil? (cog-node 'Concept "foo")))

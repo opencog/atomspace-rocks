@@ -677,6 +677,11 @@ void RocksStorage::getAtom(const Handle& h)
 		return;
 	}
 
+	if (0 == _frame_map.size())
+		throw IOException(TRACE_INFO,
+			"Attempting a multi-space fetch without known DAG. "
+			"Did you forget to say `load-frames` first?");
+
 	// For multi-spaces, determine the path-DAG from the top space
 	// to the bottom, and load from the bottom-up.
 	std::map<uint64_t, Handle> frame_order;
