@@ -1,9 +1,9 @@
 /*
  * FILE:
- * opencog/persist/rocks/RocksStorage.h
+ * opencog/persist/rocks/MonoStorage.h
  *
  * FUNCTION:
- * Simple RocksDB-backed persistent storage.
+ * Simple MonoDB-backed persistent storage.
  *
  * HISTORY:
  * Copyright (c) 2020 Linas Vepstas <linasvepstas@gmail.com>
@@ -27,15 +27,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _ATOMSPACE_ROCKS_STORAGE_H
-#define _ATOMSPACE_ROCKS_STORAGE_H
+#ifndef _ATOMSPACE_MONO_STORAGE_H
+#define _ATOMSPACE_MONO_STORAGE_H
 
 #include <atomic>
-#include <map>
 #include <mutex>
 #include "rocksdb/db.h"
 
-#include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/api/StorageNode.h>
 
 namespace opencog
@@ -44,28 +42,17 @@ namespace opencog
  *  @{
  */
 
-class RocksStorage : public StorageNode
+class MonoSatisfyingSet;
+
+class MonoStorage : public StorageNode
 {
+	friend class MonoImplicator;
+	friend class MonoSatisfyingSet;
+	friend class MonoJoinCallback;
 	private:
 		void init(const char *);
 		std::string _uri;
 		rocksdb::DB* _rfile;
-
-		// True if file contains more than one atomspace.
-		bool _multi_space;
-		// The Handles are *always* AtomSpacePtr's
-		std::unordered_map<Handle, const std::string> _frame_map;
-		std::unordered_map<std::string, Handle> _fid_map;
-		void makeOrder(Handle, std::map<uint64_t, Handle>&);
-
-		std::mutex _mtx_frame;
-		std::string encodeFrame(const Handle&);
-		std::string writeFrame(const Handle&);
-		std::string writeFrame(AtomSpace* as) {
-			return writeFrame(HandleCast(as));
-		}
-		Handle decodeFrame(const std::string&);
-		Handle getFrame(const std::string&);
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
@@ -79,6 +66,11 @@ class RocksStorage : public StorageNode
 		// Issue of sid needs to be atomic.
 		std::mutex _mtx_sid;
 
+#ifdef NEED_LIST_LOCK
+		// Gaurantee atomic update of atom plus it's incoming set.
+		std::recursive_mutex _mtx_list;
+#endif
+
 		// Assorted helper functions
 		std::string findAtom(const Handle&);
 		std::string writeAtom(const Handle&);
@@ -86,16 +78,12 @@ class RocksStorage : public StorageNode
 		void remFromSidList(const std::string&, const std::string&);
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
-		void storeMissingAtom(AtomSpace*, const Handle&);
 
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
 		Handle findAlpha(const Handle&, const std::string&, std::string&);
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
-		void loadAtoms(AtomSpace*);
-		void loadAtomsAllFrames(AtomSpace*);
-		void loadTypeMonospace(AtomSpace*, Type);
-		void loadTypeAllFrames(AtomSpace*, Type);
+		void loadAtoms(AtomSpace*, const std::string& pfx);
 		void loadInset(AtomSpace*, const std::string& ist);
 		void appendToInset(const std::string&, const std::string&);
 		void remFromInset(const std::string&, const std::string&);
@@ -107,10 +95,10 @@ class RocksStorage : public StorageNode
 		size_t count_records(const std::string&);
 
 	public:
-		RocksStorage(std::string uri);
-		RocksStorage(const RocksStorage&) = delete; // disable copying
-		RocksStorage& operator=(const RocksStorage&) = delete; // disable assignment
-		virtual ~RocksStorage();
+		MonoStorage(std::string uri);
+		MonoStorage(const MonoStorage&) = delete; // disable copying
+		MonoStorage& operator=(const MonoStorage&) = delete; // disable assignment
+		virtual ~MonoStorage();
 
 		void open(void);
 		void close(void);
@@ -135,9 +123,7 @@ class RocksStorage : public StorageNode
 		void loadType(AtomSpace*, Type);
 		void loadAtomSpace(AtomSpace*); // Load entire contents
 		void storeAtomSpace(const AtomSpace*); // Store entire contents
-		HandleSeq loadFrameDAG(void); // Load AtomSpace DAG
-		void storeFrameDAG(AtomSpace*); // Store AtomSpace DAG
-		void barrier(AtomSpace* = nullptr);
+		void barrier();
 		std::string monitor();
 
 		// Debugging and performance monitoring
@@ -146,14 +132,14 @@ class RocksStorage : public StorageNode
 		void checkdb(void);
 };
 
-class RocksStorageNode : public RocksStorage
+class MonoStorageNode : public MonoStorage
 {
 	public:
-		RocksStorageNode(Type t, const std::string&& uri) :
-			RocksStorage(std::move(uri))
+		MonoStorageNode(Type t, const std::string&& uri) :
+			MonoStorage(std::move(uri))
 		{}
-		RocksStorageNode(const std::string&& uri) :
-			RocksStorage(std::move(uri))
+		MonoStorageNode(const std::string&& uri) :
+			MonoStorage(std::move(uri))
 		{}
 
 		void setAtomSpace(AtomSpace* as)
@@ -166,13 +152,13 @@ class RocksStorageNode : public RocksStorage
 		static Handle factory(const Handle&);
 };
 
-typedef std::shared_ptr<RocksStorageNode> RocksStorageNodePtr;
-static inline RocksStorageNodePtr RocksStorageNodeCast(const Handle& h)
-	{ return std::dynamic_pointer_cast<RocksStorageNode>(h); }
+typedef std::shared_ptr<MonoStorageNode> MonoStorageNodePtr;
+static inline MonoStorageNodePtr MonoStorageNodeCast(const Handle& h)
+	{ return std::dynamic_pointer_cast<MonoStorageNode>(h); }
 
-#define createRocksStorageNode std::make_shared<RocksStorageNode>
+#define createMonoStorageNode std::make_shared<MonoStorageNode>
 
 /** @}*/
 } // namespace opencog
 
-#endif // _ATOMSPACE_ROCKS_STORAGE_H
+#endif // _ATOMSPACE_MONO_STORAGE_H

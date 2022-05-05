@@ -7,6 +7,7 @@ link_directories(
 )
 set(ATOMSPACE_ROCKS_LIBRARIES
 	persist-rocks
+	persist-monospace
 )
 
 set(ATOMSPACE_ROCKS_DATA_DIR "@CMAKE_INSTALL_PREFIX@/share/opencog")
