@@ -88,19 +88,18 @@
 
 	; Verify appropriate atomspace membership
 	; It's in top-space, not mid2-space, because
-	; the fetch, above, put it in the top space.
+	; just prior to the fetch, above, we put it in the top space.
 	(test-equal "foo-space" top-space (cog-atomspace (Concept "foo")))
 
 	; The shadowed value should be the top-most value.
+	(cog-set-atomspace! mid2-space)
 	(test-equal "foo-mid2-tv" 333 (get-cnt (cog-node 'Concept "foo")))
 
-#! ===
 	(cog-set-atomspace! mid1-space)
 	(test-equal "foo-mid1-tv" 33 (get-cnt (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! base-space)
 	(test-equal "foo-base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
-=== !#
 )
 
 (define load-single "test load-single")
@@ -171,10 +170,10 @@
 (define (test-load-incoming)
 	(setup-and-store)
 
-	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	(cog-rocks-stats)
-	(cog-rocks-get "")
-	(cog-rocks-close)
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
 
 	; Start with a blank slate.
 	(cog-set-atomspace! (cog-new-atomspace))
@@ -194,11 +193,15 @@
 	(define mid1-space (cog-outgoing-atom mid2-space 0))
 	(define base-space (cog-outgoing-atom mid1-space 0))
 
-(format #t "duuude space=~A\n" (cog-get-all-roots))
-
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))
-(format #t "duuude lully=~A\n" lilly)
 	(test-equal "lilly-tv" 5 (get-cnt lilly))
+
+	; lilly is in the top space, because we created it there.
+	; (test-equal "lilly-space" mid2-space (cog-atomspace lilly))
+
+	(cog-set-atomspace! mid2-space)
+	(define lulu (cog-link 'ListLink (Concept "foo") (Concept "bar")))
+	(test-equal "lulu-space" mid2-space (cog-atomspace lulu))
 )
 
 (define load-incoming "test load-incoming")
