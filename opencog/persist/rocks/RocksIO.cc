@@ -586,13 +586,11 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 }
 
 /// Get all of the keys for the Atom at `sid`, and attach them to `h`.
-/// Place the keys into the AtomSpace.
-void RocksStorage::getKeys(AtomSpace* as,
-                           const std::string& sid, const Handle& h)
+/// Place the keys into the AtomSpace. Single-AtomSpace version.
+void RocksStorage::getKeysMono(AtomSpace* as,
+                               const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-	if (as and _multi_space)
-		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
 	size_t kidoff = cid.size();
@@ -600,17 +598,81 @@ void RocksStorage::getKeys(AtomSpace* as,
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 		const std::string& rks = it->key().ToString();
-		if (_multi_space)
+
+		Handle key;
+		try
 		{
-			// Check for Atoms marked as deleted. Mark them up
-			// in the corresponding AtomSpace as well.
-			if ('-' == rks[kidoff])
+			key = getAtom(rks.substr(kidoff));
+		}
+		catch (const IOException& ex)
+		{
+			// If the user deleted the key-Atom from storage, then
+			// the above getAtom() will fail. Ignore the failure,
+			// and instead just cleanup the key storage.
+			//
+			// (Design comments: its easiest to do it like this,
+			// because doing it any other way would require
+			// tracking keys. Which is hard; the atomspace was
+			// designed to NOT track keys on purpose, for efficiency.)
+			_rfile->Delete(rocksdb::WriteOptions(), it->key());
+			continue;
+		}
+		if (as) key = as->add_atom(key);
+
+		// read-only Atomspaces will refuse insertion of keys.
+		// However, we have to special-case the truth values.
+		// Mostly because (PredicateNode "*-TruthValueKey-*")
+		// is not in the AtomSpace. Argh! That's an old design flaw.
+		// XXX Hang on, don't we want to always restore Values,
+		// for read-only spaces!? Fix this ...
+		if (nullptr == key)
+		{
+			if (0 == tv_pred_sid.compare(rks.substr(kidoff)))
 			{
-				bool extracted = as->extract_atom(h, true);
-				if (not extracted)
-					throw IOException(TRACE_INFO, "Internal Error!");
-				return;
+				size_t junk = 0;
+				ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
+				h->setTruthValue(TruthValueCast(vp));
 			}
+			continue;
+		}
+
+		size_t junk = 0;
+		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
+		if (vp) vp = as->add_atoms(vp);
+
+		if (as)
+			as->set_value(h, key, vp);
+		else
+			h->setValue(key, vp);
+	}
+	delete it;
+}
+
+/// Get all of the keys for the Atom at `sid`, and attach them to `h`.
+/// Place the keys into the matching frame AtomSpace.
+// FIXME: This should accept an AtomSpace argument, indicating the
+// top-most frame to work with, and only fetch those atoms up to that
+// frame... and only in that stack .... ugh...
+void RocksStorage::getKeysMulti(const std::string& sid, const Handle& h)
+{
+	std::string cid = "k@" + sid + ":";
+
+	// Iterate over all the keys on the Atom.
+	size_t fidoff = cid.size();
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
+	{
+		const std::string& rks = it->key().ToString();
+		size_t kidoff = rks.find(':', fidoff) + 1;
+
+		// Check for Atoms marked as deleted. Mark them up
+		// in the corresponding AtomSpace as well.
+		if ('-' == rks[kidoff])
+		{
+			bool extracted = as->extract_atom(h, true);
+			if (not extracted)
+				throw IOException(TRACE_INFO, "Internal Error!");
+			continue;
 		}
 
 		Handle key;
@@ -631,35 +693,37 @@ void RocksStorage::getKeys(AtomSpace* as,
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
-// XXX this is adding to wrong atomspace!?
-		if (as) key = as->add_atom(key);
 
-		// read-only Atomspaces will refuse insertion of keys.
-		// However, we have to special-case the truth values.
-		// Mostly because (PredicateNode "*-TruthValueKey-*")
-		// is not in the AtomSpace. Argh! That's an old design flaw.
-		if (nullptr == key)
-		{
-			if (0 == tv_pred_sid.compare(rks.substr(kidoff)))
-			{
-				size_t junk = 0;
-				ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-				h->setTruthValue(TruthValueCast(vp));
-			}
-			continue;
-		}
+		const std::string& fid = rks.substr(fidoff, kidoff-fidoff-1);
+
+		const auto& pr = _fid_map.find(fid);
+		if (_fid_map.end() == pr) continue;
+
+		AtomSpace* as = (AtomSpace*) pr->second.get();
+		key = as->add_atom(key);
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-// XXX this is adding to wrong atomspace!?
 		if (vp) vp = as->add_atoms(vp);
 
-		if (as)
-			as->set_value(h, key, vp);
-		else
-			h->setValue(key, vp);
+		as->set_value(h, key, vp);
 	}
 	delete it;
+}
+
+/// Get all of the keys for the Atom at `sid`, and attach them to `h`.
+/// Place the keys into the AtomSpace.
+void RocksStorage::getKeys(AtomSpace* as,
+                           const std::string& sid, const Handle& h)
+{
+	if (not _multi_space)
+	{
+		getKeysMono(as, sid, h);
+		return;
+	}
+
+	// XXX FIXME this should fetch only up to as, and not go any higher.
+	getKeysMulti(sid, h);
 }
 
 /// Backend callback - get the Atom
