@@ -93,6 +93,8 @@ class RocksStorage : public StorageNode
 		Handle findAlpha(const Handle&, const std::string&, std::string&);
 		void getKeys(AtomSpace*, const std::string&, const Handle&);
 		void loadAtoms(AtomSpace*);
+		size_t loadAtomsPfx(const std::map<uint64_t, Handle>&,
+		                    const std::string&);
 		void loadAtomsAllFrames(AtomSpace*);
 		void loadTypeMonospace(AtomSpace*, Type);
 		void loadTypeAllFrames(AtomSpace*, Type);
