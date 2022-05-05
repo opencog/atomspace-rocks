@@ -665,6 +665,13 @@ void RocksStorage::getKeysMulti(const std::string& sid, const Handle& h)
 		const std::string& rks = it->key().ToString();
 		size_t kidoff = rks.find(':', fidoff) + 1;
 
+		const std::string& fid = rks.substr(fidoff, kidoff-fidoff-1);
+
+		const auto& pr = _fid_map.find(fid);
+		if (_fid_map.end() == pr) continue;
+
+		AtomSpace* as = (AtomSpace*) pr->second.get();
+
 		// Check for Atoms marked as deleted. Mark them up
 		// in the corresponding AtomSpace as well.
 		if ('-' == rks[kidoff])
@@ -682,24 +689,10 @@ void RocksStorage::getKeysMulti(const std::string& sid, const Handle& h)
 		}
 		catch (const IOException& ex)
 		{
-			// If the user deleted the key-Atom from storage, then
-			// the above getAtom() will fail. Ignore the failure,
-			// and instead just cleanup the key storage.
-			//
-			// (Design comments: its easiest to do it like this,
-			// because doing it any other way would require
-			// tracking keys. Which is hard; the atomspace was
-			// designed to NOT track keys on purpose, for efficiency.)
-			_rfile->Delete(rocksdb::WriteOptions(), it->key());
-			continue;
+			// Do not know what to do, if this fails.
+			throw IOException(TRACE_INFO, "Internal Error!");
 		}
 
-		const std::string& fid = rks.substr(fidoff, kidoff-fidoff-1);
-
-		const auto& pr = _fid_map.find(fid);
-		if (_fid_map.end() == pr) continue;
-
-		AtomSpace* as = (AtomSpace*) pr->second.get();
 		key = as->add_atom(key);
 
 		size_t junk = 0;
