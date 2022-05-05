@@ -509,6 +509,7 @@ Handle RocksStorage::decodeFrame(const std::string& senc)
 	}
 	AtomSpacePtr asp = createAtomSpace(oset);
 	asp->set_name(name);
+	asp->set_copy_on_write();
 	return HandleCast(asp);
 }
 
@@ -634,7 +635,6 @@ void RocksStorage::getKeys(AtomSpace* as,
 				throw IOException(TRACE_INFO, "Internal Error!");
 			continue;
 		}
-// XXX this is adding to wrong atomspace!?
 		if (as) key = as->add_atom(key);
 
 		// read-only Atomspaces will refuse insertion of keys.
@@ -654,7 +654,6 @@ void RocksStorage::getKeys(AtomSpace* as,
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-// XXX this is adding to wrong atomspace!?
 		if (vp) vp = as->add_atoms(vp);
 
 		if (as)
