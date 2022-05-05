@@ -1123,14 +1123,14 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 
 size_t RocksStorage::loadAtomsPfx(
                         const std::map<uint64_t, Handle>& frame_order,
-                        const std::string&a pfx);
+                        const std::string& pfx)
 {
 	size_t cnt = 0;
 	// Outer loop: loop over all atoms of the given prefix.
 	// Inner loop: loop over all atomspaces that atom might
 	// belong to.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		cnt ++;
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
