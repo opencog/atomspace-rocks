@@ -1,5 +1,5 @@
 /*
- * tests/persist/rocks/MultiDeleteUTest.cxxtest
+ * tests/persist/mono/MultiDeleteUTest.cxxtest
  *
  * Verify that racing atom insertion and deletion does not trigger
  * internal errors.
@@ -56,7 +56,7 @@ class MultiDeleteUTest :  public CxxTest::TestSuite
 			// logger().set_level(Logger::DEBUG);
 			logger().set_print_to_stdout_flag(true);
 
-			uri = "rocks:///tmp/cog-rocks-unit-test";
+			uri = "monospace:///tmp/cog-mono-unit-test";
 		}
 
 		~MultiDeleteUTest()
@@ -140,7 +140,7 @@ void MultiDeleteUTest::test_add_delete(void)
 
 	as = createAtomSpace();
 
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
 	store->open();

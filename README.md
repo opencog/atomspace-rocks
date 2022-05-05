@@ -48,7 +48,7 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is **Version 1.1.2**.  All unit tests pass.  It has been used in
+This is **Version 1.2.0**.  All unit tests pass.  It has been used in
 at least one major project, to process tens of millions of Atoms.
 
 This code is 2x or 3x faster than Postgres on synthetic benchmarks,
@@ -75,6 +75,18 @@ AtomSpace!  Of course, loading everything is not generally desirable,
 especially when the file is huge and RAM space is tight.  More granular
 load and store is possible; see the [examples directory](examples) for
 details.
+
+Contents
+--------
+There are two implementations in this repo: a simple one, suitable for
+users who use only a single AtomSpace, and a sophisticated one, intended
+for sophisticated users who need to work with complex DAG's of
+AtomSpaces. These two are accessed by using either `MonoStorageNode`
+or by using `RocksStorageNode`. Both use the standard
+[`StorageNode`](https://wiki.opencog.org/w/StorageNode) API.
+
+The implementation of `MonoStorageNode` is smaller and simpler, and is
+the easier of the two to understand.
 
 Design
 ------
