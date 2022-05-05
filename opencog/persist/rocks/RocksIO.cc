@@ -1176,6 +1176,7 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 	delete it;
 }
 
+// frame_order is a specific path DAG through the atomspaces.
 size_t RocksStorage::loadAtomsPfx(
                         const std::map<uint64_t, Handle>& frame_order,
                         const std::string& pfx)
@@ -1190,11 +1191,8 @@ size_t RocksStorage::loadAtomsPfx(
 		cnt ++;
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		const std::string& sid = it->value().ToString();
-		for (const auto& frit: frame_order)
-		{
-			AtomSpace* as = (AtomSpace*) frit.second.get();
-			getKeys(as, sid, h);
-		}
+// XXX pass in frames order.
+		getKeysMulti(sid, h);
 	}
 	delete it;
 
