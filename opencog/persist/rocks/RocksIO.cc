@@ -1155,6 +1155,8 @@ void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 	std::map<uint64_t, Handle> frame_order;
 	makeOrder(HandleCast(as), frame_order);
 
+	// XXX TODO: links must be loaded in order of increasing height.
+	// This is so that taller links don't hide values on lower atoms.
 	loadAtomsPfx(frame_order, "n@");
 	loadAtomsPfx(frame_order, "l@");
 }
