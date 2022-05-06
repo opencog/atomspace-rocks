@@ -224,15 +224,7 @@
 	(cog-set-atomspace! mid1-space)
 	(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
 
-	; Test deleted atom fetch
-	(define sage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
-	(cog-open sage)
-	(load-frames)
-	(fetch-atom (Concept "foo"))
-	(cog-close sage)
-	(test-assert "mid1-fetch" (nil? (cog-node 'Concept "foo")))
-
-	; Resume testing other frames.
+	; Test remaining levels.
 	(cog-set-atomspace! mid2-space)
 	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
 	(test-equal "mid2-tv" 4 (get-cnt (cog-node 'Concept "foo")))
