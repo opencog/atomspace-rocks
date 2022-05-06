@@ -123,7 +123,7 @@ void RocksStorage::init(const char * uri)
 	{
 		if (0 != version.compare("1"))
 			throw IOException(TRACE_INFO,
-				"Unsupported DB version '%s'\n", vrsiobn.c_str());
+				"Unsupported DB version '%s'\n", version.c_str());
 	}
 
 	// If the file was created just now, then set the UUID to 1.
