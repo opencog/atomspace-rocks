@@ -3,6 +3,7 @@
 #
 
 ADD_LIBRARY (persist-rocks SHARED
+	RocksDAG
 	RocksIO
 	RocksStorage
 	RocksPersistSCM
