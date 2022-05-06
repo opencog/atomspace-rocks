@@ -245,6 +245,19 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 			_name.c_str());
 
 // ======================================================================
+
+size_t RocksStorage::getHeight(const Handle& h)
+{
+	if (h->is_node()) return 0;
+	size_t hmax = 0;
+	for (const Handle& ho : h->getOutgoingSet())
+	{
+		size_t hei = getHeight(ho);
+		if (hmax < hei) hmax = hei;
+	}
+	return hmax +1;
+}
+
 /// Place Atom into storage.
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h)
@@ -307,6 +320,14 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	{
 		std::string ist = "i@" + writeAtom(ho) + stype;
 		appendToInset(ist, sid);
+	}
+
+	// Record the height of the link. Needed for ordered restore.
+	if (_multi_space)
+	{
+		size_t height = getHeight(h);
+		_rfile->Put(rocksdb::WriteOptions(),
+			"z" + aidtostr(height) + "@" + sid, "");
 	}
 
 	return sid;

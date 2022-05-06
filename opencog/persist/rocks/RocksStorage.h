@@ -81,6 +81,7 @@ class RocksStorage : public StorageNode
 		std::mutex _mtx_sid;
 
 		// Assorted helper functions
+		size_t getHeight(const Handle&);
 		std::string findAtom(const Handle&);
 		std::string writeAtom(const Handle&);
 		void appendToSidList(const std::string&, const std::string&);
