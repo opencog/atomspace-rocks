@@ -92,12 +92,15 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // "a@" sid . [shash]satom -- finds the satom associated with sid
 // "l@" satom . sid -- finds the sid associated with the Link
 // "n@" satom . sid -- finds the sid associated with the Node
-// "d@" fid . senc -- finds the AtomSpace frame (delta) for fid
-// "f@" senc . fid -- finds the fid associated with the AtomSpace
 // "k@" sid:kid . sval -- find the Atomese Value for the Atom,Key
-// "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
 // "i@" sid:stype-sid . (null) -- finds IncomingSet of sid
 // "h@" shash . sid-list -- finds all sids having a given hash
+//
+// Multi-AtomSpaces also use the following keys:
+// "d@" fid . senc -- finds the AtomSpace frame (delta) for fid
+// "f@" senc . fid -- finds the fid associated with the AtomSpace
+// "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
+// "z" N@sid . (null) -- record height N of Link at sid
 //
 // General design:
 // ---------------
@@ -143,13 +146,16 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // different Values in different Spaces, or simply being absent in some
 // but not others.
 //
-// In this case, the representation is slightly more complex, for the
-// expected reasons:
-//  * Atoms must be tagged with the AtomSpace that they are in.
+// In this case, the representation is more complex, for several
+// reasons:
+//  * Atoms must be tagged with the AtomSpace frame that they are in.
 //  * Values (identified by atom-key pairs) can be different in
-//    different AtomSpaces.
+//    different AtomSpace frames.
 //  * Atoms lower down in a stack can be hidden, when they are deleted
 //    higher up in a stack.
+//  * Links must be loaded in order of increasing Link-height, else
+//    taller Links will inadvertently hide Atoms lower in the frame
+//    stack.
 //
 // S-expression Encodings
 // ----------------------
