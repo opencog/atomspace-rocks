@@ -43,6 +43,7 @@
 using namespace opencog;
 
 static const char* aid_key = "*-NextUnusedAID-*";
+static const char* version_key = "*-Version-*";
 
 /* ================================================================ */
 // Constructors
@@ -66,8 +67,8 @@ void MonoStorage::init(const char * uri)
 	// Create the file if it doesn't exist yet.
 	options.create_if_missing = true;
 
-	// The primary consumer of disk and RAM in MonoDB are the `*.sst`
-	// files: each one is opened and memory-mapped. MonoDB does NOT
+	// The primary consumer of disk and RAM in RocksDB are the `*.sst`
+	// files: each one is opened and memory-mapped. RocksDB does NOT
 	// check the `ulimit -n` setting, and can overflow it, resulting
 	// in failed reads and dropped writes. We MUST set `max_open_files`
 	// to an acceptable value. Mono will run, just more slowly, when
@@ -92,7 +93,7 @@ void MonoStorage::init(const char * uri)
 	options.max_open_files = max_of;
 
 #if 0
-	// According to the MonoDB wiki, Bloom filters should make
+	// According to the RocksDB wiki, Bloom filters should make
 	// everything go faster for us, since we use lots of Get()'s.
 	// But the unit tests are completely unaffected by this.
 	// So don't enable.
@@ -110,6 +111,20 @@ void MonoStorage::init(const char * uri)
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
 
+	// Verify the version number. Version numbers are not currently used;
+	// this is for future-proofing future versions.
+	std::string version;
+	s = _rfile->Get(rocksdb::ReadOptions(), version_key, &version);
+	if (not s.ok())
+	{
+		s = _rfile->Put(rocksdb::WriteOptions(), version_key, "1");
+	}
+	else
+	{
+		if (0 != version.compare("1"))
+			throw IOException(TRACE_INFO,
+				"Unsupported DB version '%s'\n", vrsiobn.c_str());
+	}
 	// If the file was created just now, then set the UUID to 1.
 	std::string sid;
 	s = _rfile->Get(rocksdb::ReadOptions(), aid_key, &sid);
@@ -121,7 +136,6 @@ void MonoStorage::init(const char * uri)
 	}
 	else
 		_next_aid = strtoaid(sid) + 1; // next unused...
-
 
 	// Does the file contain multiple atomspaces?
 	bool multi_space = false;

@@ -43,6 +43,7 @@
 using namespace opencog;
 
 static const char* aid_key = "*-NextUnusedAID-*";
+static const char* version_key = "*-Version-*";
 
 /* ================================================================ */
 // Constructors
@@ -109,6 +110,21 @@ void RocksStorage::init(const char * uri)
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
+
+	// Verify the version number. Version numbers are not currently used;
+	// this is for future-proofing future versions.
+	std::string version;
+	s = _rfile->Get(rocksdb::ReadOptions(), version_key, &version);
+	if (not s.ok())
+	{
+		s = _rfile->Put(rocksdb::WriteOptions(), version_key, "1");
+	}
+	else
+	{
+		if (0 != version.compare("1"))
+			throw IOException(TRACE_INFO,
+				"Unsupported DB version '%s'\n", vrsiobn.c_str());
+	}
 
 	// If the file was created just now, then set the UUID to 1.
 	std::string sid;

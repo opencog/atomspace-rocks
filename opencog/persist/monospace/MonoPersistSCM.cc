@@ -96,7 +96,7 @@ void MonoPersistSCM::do_open(const std::string& uri)
         throw RuntimeException(TRACE_INFO,
              "cog-mono-open: Error: AtomSpace is read-only!");
 
-    // Use the MonoDB driver.
+    // Use the RocksDB driver.
     Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
     _storage = MonoStorageNodeCast(hsn);
     _storage->open();

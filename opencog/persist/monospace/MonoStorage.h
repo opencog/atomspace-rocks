@@ -3,7 +3,7 @@
  * opencog/persist/rocks/MonoStorage.h
  *
  * FUNCTION:
- * Simple MonoDB-backed persistent storage.
+ * Simple RocksDB-backed persistent storage.
  *
  * HISTORY:
  * Copyright (c) 2020 Linas Vepstas <linasvepstas@gmail.com>

@@ -112,11 +112,11 @@ static const char* aid_key = "*-NextUnusedAID-*";
 //
 // The main lookups involve converting s-expressions aka "satoms"
 // to sids, and back again. This is done with the `a@`, `n@` and `l@`
-// prefixes. These are "prefixes" because MonoDB stores keys in
+// prefixes. These are "prefixes" because RocksDB stores keys in
 // lexical order, so one can quickly find all keys starting with `n@`,
 // which is useful for rapid load of entire AtomSpaces. Similarly,
 // all ConceptNodes will have the prefix `n@(Concept` and likewise
-// can be rapidly traversed by MonoDB.
+// can be rapidly traversed by RocksDB.
 //
 // Value lookups (e.g. TruthValue) is also handled with this prefix
 // trick, so that, for example, all Values on a given Atom will be
@@ -131,7 +131,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 // long space-separated list of sids, or by encoding each sid into
 // it's own key. The former style seems to cause issues when the
 // incoming set is large: the update of the large string seems to
-// drive MonoDB just crazy, leading to RAM and disk-usage issues.
+// drive RocksDB just crazy, leading to RAM and disk-usage issues.
 // See https://github.com/facebook/rocksdb/issues/3216 for more.
 //
 // The current code will use the space-separated list when
@@ -191,7 +191,7 @@ static const char* aid_key = "*-NextUnusedAID-*";
 
 #define CHECK_OPEN \
 	if (nullptr == _rfile) \
-		throw IOException(TRACE_INFO, "MonoDB is not open! %s", \
+		throw IOException(TRACE_INFO, "RocksDB is not open! %s", \
 			_name.c_str());
 
 // ======================================================================
