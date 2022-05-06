@@ -935,52 +935,6 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 }
 
 // =========================================================
-// DAG API
-
-/// Load the entire collection of AtomSpace frames.
-HandleSeq RocksStorage::loadFrameDAG(void)
-{
-	CHECK_OPEN;
-
-	_multi_space = true;
-
-	// Load all frames.
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	for (it->Seek("d@"); it->Valid() and it->key().starts_with("d@"); it->Next())
-	{
-		const std::string& fid = it->key().ToString().substr(2);
-		getFrame(fid);
-	}
-	delete it;
-
-	// Get all spaces that are subspaces
-	HandleSet all;
-	HandleSet subs;
-	for (const auto& pr : _frame_map)
-	{
-		const Handle& hasp = pr.first;
-		all.insert(hasp);
-		for (const Handle& ho : hasp->getOutgoingSet())
-			subs.insert(ho);
-	}
-
-	// The tops of the DAG are all the spaces that are not subspaces.
-	HandleSeq tops;
-	std::set_difference(all.begin(), all.end(),
-	                    subs.begin(), subs.end(),
-	                    std::back_inserter(tops));
-	return tops;
-}
-
-/// Load the entire collection of AtomSpace frames.
-void RocksStorage::storeFrameDAG(AtomSpace* top)
-{
-	CHECK_OPEN;
-	_multi_space = true;
-	writeFrame(HandleCast(top));
-}
-
-// =========================================================
 // Load and store Atoms in bulk.
 
 /// Load all the Atoms in the AtomSpace. Simple version, for handling
