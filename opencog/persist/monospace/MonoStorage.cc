@@ -122,6 +122,18 @@ void MonoStorage::init(const char * uri)
 	else
 		_next_aid = strtoaid(sid) + 1; // next unused...
 
+
+	// Does the file contain multiple atomspaces?
+	bool multi_space = false;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it->Seek("f@");
+	if (it->Valid() and it->key().starts_with("f@"))
+		multi_space = true;
+	delete it;
+	if (multi_space)
+		throw IOException(TRACE_INFO,
+			"Cannot use MonoStorageNode to open multi-space storage '%s'\n", uri);
+
 printf("Mono: opened=%s\n", file.c_str());
 printf("Mono: initial aid=%lu\n", _next_aid.load());
 
