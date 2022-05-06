@@ -189,6 +189,22 @@ void RocksStorage::write_aid(void)
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 }
 
+std::string RocksStorage::get_new_aid(void)
+{
+	uint64_t aid = _next_aid.fetch_add(1);
+	std::string sid = aidtostr(aid);
+
+	// Update immediately, in case of a future crash or badness...
+	// This isn't "really" necessary, because our dtor ~RocksStorage()
+	// updates this value. But if someone crashes before our dtor runs,
+	// we want to make sure the new bumped value is written, before we
+	// start using it in other records.  We want to avoid issueing it
+	// twice.
+	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+
+	return sid;
+}
+
 bool RocksStorage::connected(void)
 {
 	return nullptr != _rfile;

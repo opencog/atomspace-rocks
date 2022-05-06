@@ -74,8 +74,6 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 	return aid;
 }
 
-static const char* aid_key = "*-NextUnusedAID-*";
-
 // ======================================================================
 // Common abbreviations:
 // ---------------------
@@ -276,16 +274,8 @@ std::string RocksStorage::writeAtom(const Handle& h)
 		if (0 < sid.size()) return sid;
 	}
 
-	uint64_t aid = _next_aid.fetch_add(1);
-	sid = aidtostr(aid);
-
-	// Update immediately, in case of a future crash or badness...
-	// This isn't "really" necessary, because our dtor ~RocksStorage()
-	// updates this value. But if someone crashes before our dtor runs,
-	// we want to make sure the new bumped value is written, before we
-	// start using it in other records.  We want to avoid issueing it
-	// twice.
-	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
+	// Issue a brand new sid for this atom.
+	sid = get_new_aid();
 
 	// The rest is safe to do in parallel.
 	lck.unlock();

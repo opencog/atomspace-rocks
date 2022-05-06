@@ -110,17 +110,8 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 			"Attempting to store Atoms from multiple AtomSpaces. "
 			"Did you forget to say `store-frames` first?");
 
-	uint64_t aid = _next_aid.fetch_add(1);
-	sid = aidtostr(aid);
-
-	// Update immediately, in case of a future crash or badness...
-	// This isn't "really" necessary, because our dtor ~RocksStorage()
-	// updates this value. But if someone crashes before our dtor runs,
-	// we want to make sure the new bumped value is written, before we
-	// start using it in other records.  We want to avoid issueing it
-	// twice.
-	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
-
+	// Issue a band-new aid for this frame.
+	sid = get_new_aid();
 	{
 		std::lock_guard<std::mutex> flck(_mtx_frame);
 		_frame_map.insert({hasp, sid});

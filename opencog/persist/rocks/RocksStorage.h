@@ -72,6 +72,7 @@ class RocksStorage : public StorageNode
 		uint64_t strtoaid(const std::string&) const;
 		std::string aidtostr(uint64_t) const;
 		void write_aid(void);
+		std::string get_new_aid(void);
 
 		// Special case (PredicateNode "*-TruthValueKey-*")
 		std::string tv_pred_sid;
