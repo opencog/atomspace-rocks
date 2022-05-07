@@ -452,6 +452,17 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	h->setValue(key, vp);
 }
 
+bool RocksStorage::haveKeys(const std::string& sid)
+{
+	std::string cid = "k@" + sid + ":";
+
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it->Seek(cid);
+	bool have_keys = it->Valid() and it->key().starts_with(cid);
+	delete it;
+	return have_keys;
+}
+
 /// Get all of the keys for the Atom at `sid`, and attach them to `h`.
 /// Place the keys into the AtomSpace.
 void RocksStorage::getKeys(AtomSpace* as,
@@ -542,6 +553,8 @@ void RocksStorage::getAtom(const Handle& h)
 		getKeys(h->getAtomSpace(), sid, h);
 		return;
 	}
+
+	if (not haveKeys(sid)) return;
 
 	if (0 == _frame_map.size())
 		throw IOException(TRACE_INFO,
@@ -932,6 +945,8 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 			continue;
 		}
 
+		if (not haveKeys(sid)) continue;
+
 		// If we are here, its a multi-space fetch.
 		for (const auto& frit: frame_order)
 		{
@@ -992,6 +1007,7 @@ size_t RocksStorage::loadAtomsPfx(
 		cnt ++;
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		const std::string& sid = it->value().ToString();
+		if (not haveKeys(sid)) continue;
 		for (const auto& frit: frame_order)
 		{
 			AtomSpace* as = (AtomSpace*) frit.second.get();
@@ -1018,6 +1034,7 @@ size_t RocksStorage::loadAtomsHeight(
 	{
 		cnt ++;
 		const std::string& sid = it->key().ToString().substr(zsid);
+		if (not haveKeys(sid)) continue;
 
 		// Get the matching satom string.
 		std::string satom;
