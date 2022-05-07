@@ -121,6 +121,11 @@
 	(define eval-5 (Evaluation (Predicate "zing") lill-5))
 	(test-equal "eval-mid5-tv" 14 (get-cnt eval-5))
 	(test-equal "evlil-mid5-tv" 15 (get-cnt (gdr eval-5)))
+	(test-equal "lil-evlil-5" lill-5 (gdr eval-5))
+	(define and-5 (And eval-5))
+	(test-equal "and-mid5-tv" 13 (get-cnt and-5))
+	(test-equal "andev-mid5-tv" 14 (get-cnt (gar and-5)))
+	(test-equal "eva-and-5" eval-5 (gar and-5))
 
 	(cog-set-atomspace! mid4-space)
 (format #t "duuude mid4 space=~A\n" (cog-get-all-roots))
@@ -134,6 +139,11 @@
 	(define eval-4 (Evaluation (Predicate "zing") lill-4))
 	(test-equal "eval-mid4-tv" 14 (get-cnt eval-4))
 	(test-equal "evlil-mid4-tv" 11 (get-cnt (gdr eval-4)))
+	(test-equal "lil-evlil-4" lill-4 (gdr eval-4))
+	(define and-4 (And eval-4))
+	(test-equal "and-mid4-tv" 13 (get-cnt and-4))
+	(test-equal "andev-mid4-tv" 14 (get-cnt (gar and-4)))
+	(test-equal "eva-and-4" eval-4 (gar and-4))
 
 	(cog-set-atomspace! mid3-space)
 (format #t "duuude mid3 space=~A\n" (cog-get-all-roots))
@@ -146,8 +156,11 @@
 	(define eval-3 (Evaluation (Predicate "zing") lill-3))
 	(test-equal "eval-mid3-tv" 12 (get-cnt eval-3))
 	(test-equal "evlil-mid3-tv" 11 (get-cnt (gdr eval-3)))
+	(test-equal "lil-evlil-3" lill-3 (gdr eval-3))
 	(define and-3 (And eval-3))
 	(test-equal "and-mid3-tv" 13 (get-cnt and-3))
+	(test-equal "andev-mid3-tv" 12 (get-cnt (gar and-3)))
+	(test-equal "eva-and-3" eval-3 (gar and-3))
 
 	(cog-set-atomspace! mid2-space)
 (format #t "duuude mid2 space=~A\n" (cog-get-all-roots))
@@ -160,6 +173,7 @@
 	(define eval-2 (Evaluation (Predicate "zing") lill-2))
 	(test-equal "eval-mid2-tv" 12 (get-cnt eval-2))
 	(test-equal "evlil-mid2-tv" 11 (get-cnt (gdr eval-2)))
+	(test-equal "lil-evlil-2" lill-2 (gdr eval-2))
 
 	(cog-set-atomspace! mid1-space)
 (format #t "duuude mid1 space=~A\n" (cog-get-all-roots))
