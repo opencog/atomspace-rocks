@@ -81,10 +81,10 @@
 (define (test-load-links)
 	(setup-and-store)
 
-	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	(cog-rocks-stats)
-	(cog-rocks-get "")
-	(cog-rocks-close)
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
 
 	; Start with a blank slate.
 	(cog-set-atomspace! (cog-new-atomspace))
@@ -111,7 +111,7 @@
 
 	; The shadowed value should be the top-most value.
 	(cog-set-atomspace! mid5-space)
-(format #t "duuude mid5 space=~A\n" (cog-get-all-roots))
+	; (format #t "mid5 space=~A\n" (cog-get-all-roots))
 	(test-equal "foo-mid5-tv" 555 (get-cnt (Concept "foo")))
 	(test-equal "bar-mid5-tv" 4 (get-cnt (Concept "bar")))
 	(define lill-5 (ListLink (Concept "foo") (Concept "bar")))
@@ -128,11 +128,10 @@
 	(test-equal "eva-and-5" eval-5 (gar and-5))
 
 	(cog-set-atomspace! mid4-space)
-(format #t "duuude mid4 space=~A\n" (cog-get-all-roots))
+	; (format #t "mid4 space=~A\n" (cog-get-all-roots))
 	(test-equal "foo-mid4-tv" 333 (get-cnt (Concept "foo")))
 	(test-equal "bar-mid4-tv" 4 (get-cnt (Concept "bar")))
 	(define lill-4 (ListLink (Concept "foo") (Concept "bar")))
-(format #t "duude lil4 its ~A space=~A\n" lill-4 (cog-atomspace lill-4))
 	(test-equal "lill-mid4-tv" 11 (get-cnt lill-4))
 	(test-equal "lilfoo-mid4-tv" 333 (get-cnt (gar lill-4)))
 	(test-equal "lilbar-mid4-tv" 4 (get-cnt (gdr lill-4)))
@@ -146,7 +145,7 @@
 	(test-equal "eva-and-4" eval-4 (gar and-4))
 
 	(cog-set-atomspace! mid3-space)
-(format #t "duuude mid3 space=~A\n" (cog-get-all-roots))
+	; (format #t "mid3 space=~A\n" (cog-get-all-roots))
 	(test-equal "foo-mid3-tv" 333 (get-cnt (Concept "foo")))
 	(test-equal "bar-mid3-tv" 4 (get-cnt (Concept "bar")))
 	(define lill-3 (ListLink (Concept "foo") (Concept "bar")))
@@ -163,7 +162,7 @@
 	(test-equal "eva-and-3" eval-3 (gar and-3))
 
 	(cog-set-atomspace! mid2-space)
-(format #t "duuude mid2 space=~A\n" (cog-get-all-roots))
+	; (format #t "mid2 space=~A\n" (cog-get-all-roots))
 	(test-equal "foo-mid2-tv" 333 (get-cnt (Concept "foo")))
 	(test-equal "bar-mid2-tv" 4 (get-cnt (Concept "bar")))
 	(define lill-2 (ListLink (Concept "foo") (Concept "bar")))
@@ -176,7 +175,7 @@
 	(test-equal "lil-evlil-2" lill-2 (gdr eval-2))
 
 	(cog-set-atomspace! mid1-space)
-(format #t "duuude mid1 space=~A\n" (cog-get-all-roots))
+	; (format #t "mid1 space=~A\n" (cog-get-all-roots))
 	(test-equal "foo-mid1-tv" 33 (get-cnt (Concept "foo")))
 	(test-equal "bar-mid1-tv" 4 (get-cnt (Concept "bar")))
 	(define lill-1 (ListLink (Concept "foo") (Concept "bar")))
