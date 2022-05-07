@@ -76,7 +76,7 @@
 (define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
-; Test that load of a single atom is done correctly.
+; Test that load of a series of nested links is done correctly.
 
 (define (test-load-links)
 	(setup-and-store)
