@@ -1003,6 +1003,39 @@ size_t RocksStorage::loadAtomsPfx(
 	return cnt;
 }
 
+size_t RocksStorage::loadAtomsHeight(
+                        const std::map<uint64_t, Handle>& frame_order,
+                        size_t height)
+{
+	size_t cnt = 0;
+	// Outer loop: loop over all atoms of the given prefix.
+	// Inner loop: loop over all atomspaces that atom might
+	// belong to.
+	std::string zfx = "z" + aidtostr(height) + "@";
+	size_t zsid = zfx.size();
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(zfx); it->Valid() and it->key().starts_with(zfx); it->Next())
+	{
+		cnt ++;
+		const std::string& sid = it->key().ToString().substr(zsid);
+
+		// Get the matching satom string.
+		std::string satom;
+		_rfile->Get(rocksdb::ReadOptions(), "a@" + sid, &satom);
+		Handle h = Sexpr::decode_atom(satom);
+
+		// Load the values, in frame-DAG order.
+		for (const auto& frit: frame_order)
+		{
+			AtomSpace* as = (AtomSpace*) frit.second.get();
+			getKeys(as, sid, h);
+		}
+	}
+	delete it;
+
+	return cnt;
+}
+
 /// Load all Atoms in a specific frame.
 void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 {
@@ -1012,10 +1045,15 @@ void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 	std::map<uint64_t, Handle> frame_order;
 	makeOrder(HandleCast(as), frame_order);
 
-	// XXX TODO: links must be loaded in order of increasing height.
-	// This is so that taller links don't hide values on lower atoms.
 	loadAtomsPfx(frame_order, "n@");
-	loadAtomsPfx(frame_order, "l@");
+
+	size_t height = 1;
+	while (true)
+	{
+		size_t found = loadAtomsHeight(frame_order, height);
+		if (0 == found) break;
+		height ++;
+	}
 }
 
 /// Create a total order out of a partial order, such that earlier

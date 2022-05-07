@@ -97,6 +97,8 @@ class RocksStorage : public StorageNode
 		void loadAtoms(AtomSpace*);
 		size_t loadAtomsPfx(const std::map<uint64_t, Handle>&,
 		                    const std::string&);
+		size_t loadAtomsHeight(const std::map<uint64_t, Handle>&,
+		                       size_t);
 		void loadAtomsAllFrames(AtomSpace*);
 		void loadTypeMonospace(AtomSpace*, Type);
 		void loadTypeAllFrames(AtomSpace*, Type);
