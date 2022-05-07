@@ -464,13 +464,11 @@ bool RocksStorage::haveKeys(const std::string& sid)
 }
 
 /// Get all of the keys for the Atom at `sid`, and attach them to `h`.
-/// Place the keys into the AtomSpace.
-void RocksStorage::getKeys(AtomSpace* as,
+/// Place the keys into the AtomSpace. Single AtomSpace version.
+void RocksStorage::getKeysMonospace(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
-	if (as and _multi_space)
-		cid += writeFrame(as) + ":";
 
 	// Iterate over all the keys on the Atom.
 	size_t kidoff = cid.size();
@@ -478,18 +476,6 @@ void RocksStorage::getKeys(AtomSpace* as,
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 		const std::string& rks = it->key().ToString();
-		if (_multi_space)
-		{
-			// Check for Atoms marked as deleted. Mark them up
-			// in the corresponding AtomSpace as well.
-			if ('-' == rks[kidoff])
-			{
-				bool extracted = as->extract_atom(h, true);
-				if (not extracted)
-					throw IOException(TRACE_INFO, "Internal Error!");
-				return;
-			}
-		}
 
 		Handle key;
 		try
@@ -506,10 +492,7 @@ void RocksStorage::getKeys(AtomSpace* as,
 			// because doing it any other way would require
 			// tracking keys. Which is hard; the atomspace was
 			// designed to NOT track keys on purpose, for efficiency.)
-			if (not _multi_space)
-				_rfile->Delete(rocksdb::WriteOptions(), it->key());
-			else
-				throw IOException(TRACE_INFO, "Internal Error!");
+			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			continue;
 		}
 		if (as) key = as->add_atom(key);
@@ -541,6 +524,41 @@ void RocksStorage::getKeys(AtomSpace* as,
 	delete it;
 }
 
+/// Same as above, but a multi-space version
+void RocksStorage::getKeysMulti(AtomSpace* as,
+                           const std::string& sid, const Handle& h)
+{
+	std::string cid = "k@" + sid + ":" + writeFrame(as) + ":";
+
+	// Iterate over all the keys on the Atom.
+	size_t kidoff = cid.size();
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
+	{
+		const std::string& rks = it->key().ToString();
+
+		// Check for Atoms marked as deleted. Mark them up
+		// in the corresponding AtomSpace as well.
+		if ('-' == rks[kidoff])
+		{
+			bool extracted = as->extract_atom(h, true);
+			if (not extracted)
+				throw IOException(TRACE_INFO, "Internal Error!");
+			return;
+		}
+
+		Handle key = getAtom(rks.substr(kidoff));
+		if (as) key = as->add_atom(key);
+
+		size_t junk = 0;
+		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
+		if (vp) vp = as->add_atoms(vp);
+
+		as->set_value(h, key, vp);
+	}
+	delete it;
+}
+
 /// Backend callback - get the Atom
 void RocksStorage::getAtom(const Handle& h)
 {
@@ -550,7 +568,7 @@ void RocksStorage::getAtom(const Handle& h)
 
 	if (not _multi_space)
 	{
-		getKeys(h->getAtomSpace(), sid, h);
+		getKeysMonospace(h->getAtomSpace(), sid, h);
 		return;
 	}
 
@@ -568,7 +586,7 @@ void RocksStorage::getAtom(const Handle& h)
 	for (const auto& frit: frame_order)
 	{
 		AtomSpace* as = (AtomSpace*) frit.second.get();
-		getKeys(as, sid, h);
+		getKeysMulti(as, sid, h);
 	}
 }
 
@@ -587,7 +605,7 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 		std::string sid;
 		h = findAlpha(h, shash, sid);
 		if (nullptr == h) return h;
-		getKeys(nullptr, sid, h);
+		getKeysMonospace(nullptr, sid, h);
 		return h;
 	}
 
@@ -601,7 +619,7 @@ Handle RocksStorage::getLink(Type t, const HandleSeq& hs)
 	if (0 == sid.size()) return Handle::UNDEFINED;
 
 	Handle h = createLink(hs, t);
-	getKeys(nullptr, sid, h);
+	getKeysMonospace(nullptr, sid, h);
 	return h;
 }
 
@@ -941,7 +959,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		if (not _multi_space)
 		{
 			hi = as->add_atom(hi);
-			getKeys(as, sid, hi);
+			getKeysMonospace(as, sid, hi);
 			continue;
 		}
 
@@ -951,7 +969,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		for (const auto& frit: frame_order)
 		{
 			AtomSpace* fas = (AtomSpace*) frit.second.get();
-			getKeys(fas, sid, hi);
+			getKeysMulti(fas, sid, hi);
 		}
 	}
 	delete it;
@@ -988,7 +1006,7 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 	{
 		Handle h = Sexpr::decode_atom(it->value().ToString());
 		h = add_nocheck(as, h);
-		getKeys(as, it->key().ToString().substr(2), h);
+		getKeysMonospace(as, it->key().ToString().substr(2), h);
 	}
 	delete it;
 }
@@ -1011,7 +1029,7 @@ size_t RocksStorage::loadAtomsPfx(
 		for (const auto& frit: frame_order)
 		{
 			AtomSpace* as = (AtomSpace*) frit.second.get();
-			getKeys(as, sid, h);
+			getKeysMulti(as, sid, h);
 		}
 	}
 	delete it;
@@ -1045,7 +1063,7 @@ size_t RocksStorage::loadAtomsHeight(
 		for (const auto& frit: frame_order)
 		{
 			AtomSpace* as = (AtomSpace*) frit.second.get();
-			getKeys(as, sid, h);
+			getKeysMulti(as, sid, h);
 		}
 	}
 	delete it;
@@ -1132,7 +1150,7 @@ void RocksStorage::loadTypeMonospace(AtomSpace* as, Type t)
 	{
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		h = add_nocheck(as, h);
-		getKeys(as, it->value().ToString(), h);
+		getKeysMonospace(as, it->value().ToString(), h);
 	}
 	delete it;
 }
