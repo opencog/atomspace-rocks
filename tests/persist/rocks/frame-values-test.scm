@@ -108,6 +108,7 @@
 
 	; Verify appropriate atomspace membership
 	(test-equal "top-space" top-space (cog-atomspace (Concept "foo")))
+	(test-equal "mid6-keylist" 1 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid6-key-0" #f (get-nov (Predicate "key-0")))
 	(test-equal "mid6-key-1" #f (get-nov (Predicate "key-1")))
 	(test-equal "mid6-key-2" #f (get-nov (Predicate "key-2")))
@@ -115,36 +116,46 @@
 
 	; The shadowed value should be the top-most value.
 	(cog-set-atomspace! mid5-space)
+(format #t "duuude mid5-keys=~A\n" (cog-keys (Concept "foo")))
+(format #t "duuude mid5-key0=~A\n" (cog-value (Concept "foo") (Predicate "key-0")))
+	(test-equal "mid5-keylist" 2 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid5-key-0" #f (get-nov (Predicate "key-0")))
 	(test-equal "mid5-key-1" #f (get-nov (Predicate "key-1")))
 	(test-equal "mid5-key-2" 2 (get-val (Predicate "key-2")))
 	(test-equal "mid5-key-3" 3 (get-val (Predicate "key-3")))
 
 	(cog-set-atomspace! mid4-space)
+(format #t "duuude mid4-keys=~A\n" (cog-keys (Concept "foo")))
+(format #t "duuude mid4-key0=~A\n" (cog-value (Concept "foo") (Predicate "key-0")))
+	(test-equal "mid4-keylist" 3 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid4-key-0" #f (get-nov (Predicate "key-0")))
 	(test-equal "mid4-key-1" 1 (get-val (Predicate "key-1")))
 	(test-equal "mid4-key-2" 2 (get-val (Predicate "key-2")))
 	(test-equal "mid4-key-3" 3 (get-val (Predicate "key-3")))
 
 	(cog-set-atomspace! mid3-space)
+	(test-equal "mid3-keylist" 4 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid3-key-0" 0 (get-val (Predicate "key-0")))
 	(test-equal "mid3-key-1" 1 (get-val (Predicate "key-1")))
 	(test-equal "mid3-key-2" 2 (get-val (Predicate "key-2")))
 	(test-equal "mid3-key-3" 3 (get-val (Predicate "key-3")))
 
 	(cog-set-atomspace! mid2-space)
+	(test-equal "mid2-keylist" 3 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid2-key-0" 0 (get-val (Predicate "key-0")))
 	(test-equal "mid2-key-1" 1 (get-val (Predicate "key-1")))
 	(test-equal "mid2-key-2" 2 (get-val (Predicate "key-2")))
 	(test-equal "mid2-key-3" #f (get-nov (Predicate "key-3")))
 
 	(cog-set-atomspace! mid1-space)
+	(test-equal "mid1-keylist" 2 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid1-key-0" 0 (get-val (Predicate "key-0")))
 	(test-equal "mid1-key-1" 1 (get-val (Predicate "key-1")))
 	(test-equal "mid1-key-2" #f (get-nov (Predicate "key-2")))
 	(test-equal "mid1-key-3" #f (get-nov (Predicate "key-3")))
 
 	(cog-set-atomspace! base-space)
+	(test-equal "mid0-keylist" 1 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid0-key-0" 0 (get-val (Predicate "key-0")))
 	(test-equal "mid0-key-1" #f (get-nov (Predicate "key-1")))
 	(test-equal "mid0-key-2" #f (get-nov (Predicate "key-2")))
