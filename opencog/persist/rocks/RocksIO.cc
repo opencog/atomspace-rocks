@@ -463,8 +463,13 @@ bool RocksStorage::haveKeys(const std::string& sid)
 	return have_keys;
 }
 
-/// Get all of the keys for the Atom at `sid`, and attach them to `h`.
-/// Place the keys into the AtomSpace. Single AtomSpace version.
+/// Get all of the key/value pairs for the Atom at `sid`, and attach
+/// them to `h`. Place the keys, and any Atoms in the Values, into
+/// the given AtomSpace.
+///
+/// This version is optimized for a single AtomSpace, that is, for
+/// the case where multi-atomspace frames are not being used.
+/// See getKeysMulti() for the multi-space version. It's different.
 void RocksStorage::getKeysMonospace(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
@@ -524,12 +529,25 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 	delete it;
 }
 
-/// Same as above, but a multi-space version
+/// Get all of the key-value pairs for the Atom at `sid`, and place
+/// them on `h`. If there are no pairs, `h` is untouched. If there
+/// are pairs, then *all* existing keys on `h` are deleted, first,
+/// and only then are keys from storage added.
+///
+/// The intent of this is to ease bulk loads from storage, where some
+/// upper frames may have Atoms with deleted keys. (An alternaitve
+/// design would be to explictly mark deleted keys in storage, but
+/// this seems unweildy.) At any rate, the current design risks some
+/// unexpected, subtle side-effects. It's not clear what the best
+/// answer is; this is the current pragmatic best solution.
+///
+/// Place the keys into the AtomSpace. Single AtomSpace version.
 void RocksStorage::getKeysMulti(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":" + writeFrame(as) + ":";
 
+	Handle hv;
 	// Iterate over all the keys on the Atom.
 	size_t kidoff = cid.size();
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -548,13 +566,21 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 		}
 
 		Handle key = getAtom(rks.substr(kidoff));
-		if (as) key = as->add_atom(key);
+		key = as->add_atom(key);
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
 		if (vp) vp = as->add_atoms(vp);
 
-		as->set_value(h, key, vp);
+		// hv is null first time through the loop.
+		// Nuke any inherited values.
+		if (nullptr == hv)
+		{
+			// Force a clone, first, and then clear!
+			hv = as->set_value(h, key, vp);
+			hv->clearValues();
+		}
+		as->set_value(hv, key, vp);
 	}
 	delete it;
 }
