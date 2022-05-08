@@ -203,6 +203,7 @@ ADD_CUSTOM_TARGET(cscope
 
 # ===================================================================
 # Packaging
+# XXX FIXME. Packging below is stale/wrong/broken.
 ## Architecture the package is for.
 ## TODO: Will give error on non debian distros, fix it.
 EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
@@ -216,27 +217,26 @@ STRING(TIMESTAMP UTC_DATE %Y%m%d UTC)
 FILE(WRITE "${PROJECT_BINARY_DIR}/install_manifest.txt")
 ## It doesn't have a header-file declaring the version similar to cogutil and
 ## atomspace.
-SET(SEMANTIC_VERSION 0.1.4)
+SET(SEMANTIC_VERSION 1.3.0)
 
 ## Cpack configuration
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_PACKAGE_CONTACT "opencog@googlegroups.com")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The AtomSpace Cogserver Client")
-SET(CPACK_PACKAGE_NAME "atomspace-cog-dev")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The AtomSpace RocksDB Storage Backend")
+SET(CPACK_PACKAGE_NAME "atomspace-rocks-dev")
 SET(CPACK_PACKAGE_VENDOR "opencog.org")
 SET(CPACK_PACKAGE_VERSION "${SEMANTIC_VERSION}-${UTC_DATE}")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 SET(CPACK_PACKAGE_FILE_NAME
 	"${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}_${PACKAGE_ARCHITECTURE}")
 SET(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
-SET(CPACK_PACKAGE_EXECUTABLES "cogserver" "The AtomSpace Cogserver Client")
 
 ## Debian specific configurations
 SET(DEPENDENCY_LIST
-	"guile-2.2-dev (>= 2.2.2)"
-	"libstdc++6 (>= 4.7)"
+	"guile-3.0-dev (>= 3.0.0)"
+	"libstdc++6 (>= 7.0)"
 	"libcogutil-dev (>= 2.0.2)"
 	"atomspace-dev (>= 5.0.3)"
 )
