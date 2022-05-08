@@ -88,6 +88,15 @@ or by using `RocksStorageNode`. Both use the standard
 The implementation of `MonoStorageNode` is smaller and simpler, and is
 the easier of the two to understand.
 
+The implementation of `RocksStorageNode` provides full support for deep
+stacks (DAG's) of AtomSpaces, layered one on top another (called
+"Frames", a name meant to suggest "Kripke Frames" and "stackframes").
+An individual "frame" can be thought of as a change-set, a collection of
+deltas to the next frame further down in the DAG. A frame inheriting
+from multiple AtomSpaces contains the set-union of Atoms in the
+contributing AtomSpaces. Atoms and Values can added, changed and removed
+in each changeset, without affecting Atoms and Values in deeper frames.
+
 Design
 ------
 This is a minimalistic implementation. There has been no performance
