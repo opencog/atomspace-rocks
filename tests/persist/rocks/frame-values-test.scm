@@ -81,10 +81,10 @@
 (define (test-load-values)
 	(setup-and-store)
 
-	(cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
-	(cog-rocks-stats)
-	(cog-rocks-get "")
-	(cog-rocks-close)
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-stats)
+	; (cog-rocks-get "")
+	; (cog-rocks-close)
 
 	; Start with a blank slate.
 	(cog-set-atomspace! (cog-new-atomspace))
@@ -116,8 +116,7 @@
 
 	; The shadowed value should be the top-most value.
 	(cog-set-atomspace! mid5-space)
-(format #t "duuude mid5-keys=~A\n" (cog-keys (Concept "foo")))
-(format #t "duuude mid5-key0=~A\n" (cog-value (Concept "foo") (Predicate "key-0")))
+	; (format #t "mid5-keysset=~A\n" (cog-keys (Concept "foo")))
 	(test-equal "mid5-keylist" 2 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid5-key-0" #f (get-nov (Predicate "key-0")))
 	(test-equal "mid5-key-1" #f (get-nov (Predicate "key-1")))
@@ -125,8 +124,7 @@
 	(test-equal "mid5-key-3" 3 (get-val (Predicate "key-3")))
 
 	(cog-set-atomspace! mid4-space)
-(format #t "duuude mid4-keys=~A\n" (cog-keys (Concept "foo")))
-(format #t "duuude mid4-key0=~A\n" (cog-value (Concept "foo") (Predicate "key-0")))
+	; (format #t "mid4-keyset=~A\n" (cog-keys (Concept "foo")))
 	(test-equal "mid4-keylist" 3 (length (cog-keys (Concept "foo"))))
 	(test-equal "mid4-key-0" #f (get-nov (Predicate "key-0")))
 	(test-equal "mid4-key-1" 1 (get-val (Predicate "key-1")))

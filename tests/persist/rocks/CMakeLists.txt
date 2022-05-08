@@ -30,6 +30,7 @@ ADD_GUILE_TEST(FetchFrame fetch-frame-test.scm)
 ADD_GUILE_TEST(FrameDelete frame-delete-test.scm)
 ADD_GUILE_TEST(FrameProgressive frame-progressive-test.scm)
 ADD_GUILE_TEST(FrameLinks frame-links-test.scm)
+ADD_GUILE_TEST(FrameValues frame-values-test.scm)
 #
 ADD_CXXTEST(LargeFlatUTest)
 ADD_CXXTEST(LargeZipfUTest)
