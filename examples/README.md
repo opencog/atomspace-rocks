@@ -41,3 +41,10 @@ thus be treated as ordinary Atoms. Among other things, this allows
 multiple databases to be simultaneously opened for reading and writing.
 
 * [multiple-databases.scm](multiple-databases.scm) -- Several at once.
+
+AtomSpaces can be stacked, one on top another. Each space in the stack
+is called a "frame", and it holds a change-set: all of the Atoms and
+Values that changed from the spaces further down in the stack. This
+stack (actually, a DAG) can be stored and fetched, just as above.
+
+* [space-frames.scm](space-frames.scm) -- A stack of AtomSpace Frames.

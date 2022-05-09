@@ -56,40 +56,33 @@
 	(define mid3-space (cog-new-atomspace mid2-space))
 	(define surface-space (cog-new-atomspace mid3-space))
 
+	; Save the entire stack of spaces. This only stores the spaces and
+	; their relationship to one-anothr; it does NOT store the contents,
+	(define storage (RocksStorageNode "rocks:///tmp/frame-demo"))
+	(cog-open storage)
+	(store-frames surface-space)
+
 	; Splatter some atoms into the various spaces. Place some values on
 	; each, so that later one, we can verify the the restored spaces.
 	; Recall that `ctv` is short for `CountTruthValue`: its just a list
    ; of three numbers.
 	(cog-set-atomspace! base-space)
 	(Concept "foo" (ctv 1 0 3))
+	(store-atom (Concept "foo"))
 
 	(cog-set-atomspace! mid1-space)
 	(Concept "bar" (ctv 1 0 4))
+	(store-atom (Concept "bar"))
 
 	(cog-set-atomspace! mid2-space)
-	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 5))
+	(store-atom (ListLink (Concept "foo") (Concept "bar") (ctv 1 0 5)))
 
 	; Change the ctv on `foo`. This will hade the earlier value.
 	(cog-set-atomspace! mid3-space)
 	(Concept "foo" (ctv 6 22 42))
-
-	(cog-set-atomspace! surface-space)
-
-	; Store the content. Store each atom individually, as otherwise,
-	; the Values on the Atoms aren't stored.
-	(define storage (RocksStorageNode "rocks:///tmp/frame-demo"))
-	(cog-open storage)
-
-	; Save the entire stack of spaces. This only stores the spaces and
-	; their relationship to one-anothr; it does NOT store the contents,
-	(store-frames surface-space)
-
-	; Store the individual atoms.
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 	(store-atom (Concept "foo"))
-	(store-atom (Concept "bar"))
 
-	; Close storeage
+	; Close storage
 	(cog-close storage)
 
 	; Clear out the spaces, start with a clean slate. This is NOT really
@@ -126,6 +119,12 @@
 (load-atomspace)
 (cog-close storage)
 
+; Print out the full top-most atomspace. This will print a long,
+; perhaps confusing string: it is a list of the AtomSpaces names,
+; followed by a list of the subspaces.
+(newline)
+(format #t "The top space is:\n~A\n\n" top-space)
+
 ; Starting from the top-most space, walk downwards, and create scheme
 ; references to each space. This is not strictly needed, but it will
 ; help us bounce between the spaces, below.
@@ -140,13 +139,15 @@
 (define lilly (ListLink (Concept "foo") (Concept "bar")))
 (format #t "The list link is: ~A\n" lilly)
 
-(define (check-equal MSG A B)
-	(format "For ~A, expecting: ~A got ~A\n" MSG A B))
+; Handy-dandy printer.
+(define (check-spaces MSG A B)
+	(format #t "For ~A, expecting: ~A -- Got: ~A\n\n"
+		MSG (cog-name A) (cog-name B)))
 
 ; Verify appropriate atomspace membership
-(check-equal "link-space" mid2-space (cog-atomspace lilly))
-(check-equal "foo-space" base-space (cog-atomspace (gar lilly)))
-(check-equal "bar-space" mid1-space (cog-atomspace (gdr lilly)))
+(check-spaces "link-space" mid2-space (cog-atomspace lilly))
+(check-spaces "foo-space" base-space (cog-atomspace (gar lilly)))
+(check-spaces "bar-space" mid1-space (cog-atomspace (gdr lilly)))
 
 ; The above ListLink was first created in the mid2-space, and it
 ; captured the truth values on `foo` and `bar` as they were, in this
@@ -154,12 +155,25 @@
 ; changed. Lets take a closer look at that.
 (cog-set-atomspace! surface-space)
 (define top-lilly (ListLink (Concept "foo") (Concept "bar")))
-(format #t "The top-most list link is: ~A\n" lilly)
+(format #t "The top-most list link is:\n~A\n" lilly)
 
-(check-equal "base-tv" (ctv 1 0 3) (cog-tv (Concept "foo")))
-(check-equal "mid1-tv" (ctv 1 0 4) (cog-tv (Concept "bar")))
-(check-equal "mid2-tv" (ctv 1 0 5) (cog-tv lilly))
-(check-equal "top-tv" (ctv 6 22 42) (cog-tv top-lilly))
+; Another handy printer.
+(define (check-equal MSG A B)
+	(format #t "For ~A, expecting: ~A-- Got: ~A\n" MSG A B))
 
+; Lets take a look at the TV on `foo` in the base space.
+(cog-set-atomspace! base-space)
+(check-equal "foo-tv in base" (ctv 1 0 3) (cog-tv (Concept "foo")))
+
+; How aout on top?
+(cog-set-atomspace! surface-space)
+(check-equal "foo-tv on top" (ctv 6 22 42) (cog-tv (Concept "foo")))
+
+; How about the others?
+(check-equal "bar-tv" (ctv 1 0 4) (cog-tv (Concept "bar")))
+(check-equal "lilly-tv" (ctv 1 0 5) (cog-tv lilly))
+(check-equal "top-tv" (ctv 1 0 5) (cog-tv top-lilly))
+
+(exit)
 ; The end!
 ; ===================================================================
