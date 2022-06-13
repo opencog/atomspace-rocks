@@ -444,7 +444,7 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 	std::string fid;
 	AtomSpace* as = h->getAtomSpace();
 	if (as and _multi_space)
-		fid = writeFrame(as) + ":";
+		fid = ":" + writeFrame(as);
 
 	ValuePtr vp = getValue("k@" + sid + fid + ":" + kid);
 // XXX this is adding to wrong atomspace!?
@@ -1032,7 +1032,10 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 	{
 		Handle h = Sexpr::decode_atom(it->value().ToString());
 		h = add_nocheck(as, h);
-		getKeysMonospace(as, it->key().ToString().substr(2), h);
+		// There's a trailing colo. drop it.
+		const std::string& sidcolon = it->key().ToString().substr(2);
+		size_t len = sidcolon.size();
+		getKeysMonospace(as, sidcolon.substr(0, len-1), h);
 	}
 	delete it;
 }
