@@ -10,13 +10,13 @@ install(EXPORT AtomSpaceRocksTargets
 	DESTINATION ${ConfigPackageLocation}
 )
 
+SET(SEMANTIC_VERSION 1.3.0)
+
 configure_package_config_file(AtomSpaceRocksConfig.cmake.in
 	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfig.cmake
 	INSTALL_DESTINATION ${ConfigPackageLocation}
 	PATH_VARS CMAKE_INSTALL_PREFIX
 )
-
-SET(SEMANTIC_VERSION 1.1.1)
 
 write_basic_package_version_file(
 	"${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfigVersion.cmake"
