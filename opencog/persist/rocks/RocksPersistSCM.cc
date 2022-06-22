@@ -40,7 +40,7 @@ using namespace opencog;
 
 RocksPersistSCM::RocksPersistSCM(AtomSpace *as)
 {
-    _as = as;
+    _as = AtomSpaceCast(as->shared_from_this());
 
     static bool is_init = false;
     if (is_init) return;
@@ -83,7 +83,7 @@ void RocksPersistSCM::do_open(const std::string& uri)
              "cog-rocks-open: Error: Already connected to a database!");
 
     // Unconditionally use the current atomspace, until the next close.
-    AtomSpace *as = SchemeSmob::ss_get_env_as("cog-rocks-open");
+    AtomSpacePtr as = SchemeSmob::ss_get_env_as("cog-rocks-open");
     if (nullptr != as) _as = as;
 
     if (nullptr == _as)

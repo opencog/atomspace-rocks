@@ -44,7 +44,7 @@ private:
 	void init(void);
 
 	RocksStorageNodePtr _storage;
-	AtomSpace *_as;
+	AtomSpacePtr _as;
 
 public:
 	RocksPersistSCM(AtomSpace*);

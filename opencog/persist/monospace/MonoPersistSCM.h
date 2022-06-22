@@ -44,7 +44,7 @@ private:
 	void init(void);
 
 	MonoStorageNodePtr _storage;
-	AtomSpace *_as;
+	AtomSpacePtr _as;
 
 public:
 	MonoPersistSCM(AtomSpace*);
