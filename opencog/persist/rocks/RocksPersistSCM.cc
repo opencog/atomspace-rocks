@@ -40,7 +40,8 @@ using namespace opencog;
 
 RocksPersistSCM::RocksPersistSCM(AtomSpace *as)
 {
-    _as = AtomSpaceCast(as->shared_from_this());
+    if (as)
+        _as = AtomSpaceCast(as->shared_from_this());
 
     static bool is_init = false;
     if (is_init) return;
@@ -175,5 +176,5 @@ void RocksPersistSCM::do_print(const Handle& h, const std::string& prefix)
 
 void opencog_persist_rocks_init(void)
 {
-    static RocksPersistSCM patty(NULL);
+    static RocksPersistSCM patty(nullptr);
 }

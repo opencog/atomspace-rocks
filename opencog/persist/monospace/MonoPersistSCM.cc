@@ -40,7 +40,8 @@ using namespace opencog;
 
 MonoPersistSCM::MonoPersistSCM(AtomSpace *as)
 {
-    _as = AtomSpaceCast(as->shared_from_this());
+    if (as)
+        _as = AtomSpaceCast(as->shared_from_this());
 
     static bool is_init = false;
     if (is_init) return;
@@ -175,5 +176,5 @@ void MonoPersistSCM::do_print(const Handle& h, const std::string& prefix)
 
 void opencog_persist_mono_init(void)
 {
-    static MonoPersistSCM patty(NULL);
+    static MonoPersistSCM patty(nullptr);
 }
