@@ -9,15 +9,23 @@ means that only one AtomSpace can connect to it at any given moment.
 In ASCII-art:
 
 ```
- +-------------+
- |  AtomSpace  |
- |             |
- +---- API-----+
- |             |
- |   RocksDB   |
- |    files    |
- +-------------+
+ +---------------------+
+ |                     |
+ |      AtomSpace      |
+ |                     |
+ +-- StorageNode API --+
+ |                     |
+ |  RocksStorageNode   |
+ |                     |
+ +---------------------+
+ |       RocksDB       |
+ +---------------------+
+ |     filesystem      |
+ +---------------------+
 ```
+Each box is a shared library. Library calls go downwards. The
+[StorageNode API](https://wiki.opencog.org/w/StorageNode) is the same
+for **all** `StorageNode`s; the `RocksStorageNode` is just one of them.
 
 RocksDB (see https://rocksdb.org/) is an "embeddable persistent key-value
 store for fast storage." The goal of layering the AtomSpace on top of it
