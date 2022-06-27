@@ -171,7 +171,8 @@ RocksStorage::RocksStorage(std::string uri) :
 {
 	const char *yuri = _name.c_str();
 	if (strncmp(yuri, "rocks://", URIX_LEN))
-		throw IOException(TRACE_INFO, "Unknown URI '%s'\n", yuri);
+		throw IOException(TRACE_INFO,
+			"Unknown URI '%s'\nValid URI's start with 'rocks://'\n", yuri);
 }
 
 RocksStorage::~RocksStorage()
