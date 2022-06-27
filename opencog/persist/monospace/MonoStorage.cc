@@ -172,7 +172,8 @@ MonoStorage::MonoStorage(std::string uri) :
 {
 	const char *yuri = _name.c_str();
 	if (strncmp(yuri, "monospace://", URIX_LEN))
-		throw IOException(TRACE_INFO, "Unknown URI '%s'\n", yuri);
+		throw IOException(TRACE_INFO,
+			"Unknown URI '%s'\nValid URI's start with 'monospace://'\n", yuri);
 }
 
 MonoStorage::~MonoStorage()
