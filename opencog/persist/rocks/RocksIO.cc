@@ -391,6 +391,20 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 	storeValue(pfx, vp);
 }
 
+/// Backing-store API.
+void RocksStorage::updateValue(const Handle& h, const Handle& key,
+                              const ValuePtr& delta)
+{
+	// Assume that the delta has been applied already.  This might
+	// seem like a weird assumption, but is correct. Here's why:
+	// The RocksStorageNode runs in the local AtomSpace, and if
+	// there were two open storage nodes, and we applied the delta
+	// do each, we'd be double-counting. That would be unwanted.
+	// So the correct assumption is that the delta has been applied
+	// already, and all we need to do is to save-to-disk.
+	storeValue(h, key);
+}
+
 /// Append to incoming set.
 /// Add `sid` to the list of other sids stored at key `klist`.
 void RocksStorage::appendToSidList(const std::string& klist,

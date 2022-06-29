@@ -139,6 +139,7 @@ class RocksStorage : public StorageNode
 		void storeAtom(const Handle&, bool synchronous = false);
 		void removeAtom(AtomSpace*, const Handle&, bool recursive);
 		void storeValue(const Handle& atom, const Handle& key);
+		void updateValue(const Handle&, const Handle&, const ValuePtr&);
 		void loadValue(const Handle& atom, const Handle& key);
 		void loadType(AtomSpace*, Type);
 		void loadAtomSpace(AtomSpace*); // Load entire contents
