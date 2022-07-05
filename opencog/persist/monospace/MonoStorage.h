@@ -153,11 +153,8 @@ class MonoStorageNode : public MonoStorage
 		static Handle factory(const Handle&);
 };
 
-typedef std::shared_ptr<MonoStorageNode> MonoStorageNodePtr;
-static inline MonoStorageNodePtr MonoStorageNodeCast(const Handle& h)
-	{ return std::dynamic_pointer_cast<MonoStorageNode>(h); }
-
-#define createMonoStorageNode std::make_shared<MonoStorageNode>
+NODE_PTR_DECL(MonoStorageNode)
+#define createMonoStorageNode CREATE_DECL(MonoStorageNode)
 
 /** @}*/
 } // namespace opencog

@@ -175,11 +175,8 @@ class RocksStorageNode : public RocksStorage
 		static Handle factory(const Handle&);
 };
 
-typedef std::shared_ptr<RocksStorageNode> RocksStorageNodePtr;
-static inline RocksStorageNodePtr RocksStorageNodeCast(const Handle& h)
-	{ return std::dynamic_pointer_cast<RocksStorageNode>(h); }
-
-#define createRocksStorageNode std::make_shared<RocksStorageNode>
+NODE_PTR_DECL(RocksStorageNode)
+#define createRocksStorageNode CREATE_DECL(RocksStorageNode)
 
 /** @}*/
 } // namespace opencog
