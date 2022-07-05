@@ -23,3 +23,8 @@ INSTALL (TARGETS persist-rocks
 	EXPORT AtomSpaceRocksTargets
 	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
 )
+
+INSTALL (FILES
+	RocksStorage.h
+	DESTINATION "include/opencog/persist/rocks"
+)
