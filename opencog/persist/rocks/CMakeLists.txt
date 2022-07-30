@@ -3,10 +3,10 @@
 #
 
 ADD_LIBRARY (persist-rocks SHARED
-	RocksDAG
-	RocksIO
-	RocksStorage
-	RocksPersistSCM
+	RocksDAG.cc
+	RocksIO.cc
+	RocksStorage.cc
+	RocksPersistSCM.cc
 )
 
 TARGET_LINK_LIBRARIES(persist-rocks

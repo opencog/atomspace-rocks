@@ -3,9 +3,9 @@
 #
 
 ADD_LIBRARY (persist-monospace SHARED
-	MonoIO
-	MonoStorage
-	MonoPersistSCM
+	MonoIO.cc
+	MonoStorage.cc
+	MonoPersistSCM.cc
 )
 
 TARGET_LINK_LIBRARIES(persist-monospace
