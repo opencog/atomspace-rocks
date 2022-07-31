@@ -178,6 +178,19 @@ RocksStorage::RocksStorage(std::string uri) :
 RocksStorage::~RocksStorage()
 {
 	close();
+
+	// Error message:
+	// ./db/column_family.cc:1494: rocksdb::ColumnFamilySet::~ColumnFamilySet(): Assertion `last_ref' failed.
+	std::vector<std::string> colfam;
+	rocksdb::DB::ListColumnFamilies(
+		rocksdb::DBOptions(),
+		rocksdb::kDefaultColumnFamilyName,
+		&colfam);
+
+printf("duuude colfam=%lu\n", colfam.size());
+for (size_t i=0; i< colfam.size(); i++)
+printf("duude %lu is %s\n", i, colfam[i].c_str());
+	// _rfile->DestroyColumnFamilyHandle(default_family_handle_);
 }
 
 void RocksStorage::close()
