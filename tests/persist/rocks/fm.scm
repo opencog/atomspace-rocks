@@ -97,35 +97,8 @@
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
+	; (load-atomspace)
 	(cog-close storage)
-
-	; Grab references into the inheritance hierarchy
-	(define surface-space top-space)
-	(define mid3-space (cog-outgoing-atom surface-space 0))
-	(define mid2-space (cog-outgoing-atom mid3-space 0))
-	(define mid1-space (cog-outgoing-atom mid2-space 0))
-	(define base-space (cog-outgoing-atom mid1-space 0))
-
-	; Should be present in the base space.
-	(cog-set-atomspace! base-space)
-	(test-assert "base-space" (cog-atom? (cog-node 'Concept "foo")))
-	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
-
-	; Should be absent in the next level.
-	(cog-set-atomspace! mid1-space)
-	(test-assert "mid1-absent" (nil? (cog-node 'Concept "foo")))
-
-	(cog-set-atomspace! mid2-space)
-	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
-	(test-equal "mid2-tv" 5 (get-cnt (cog-node 'Concept "foo")))
-
-	(cog-set-atomspace! mid3-space)
-	(test-assert "mid3-absent" (nil? (cog-node 'Concept "foo")))
-
-	(cog-set-atomspace! surface-space)
-	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
-	(test-equal "surface-tv" 7 (get-cnt (cog-node 'Concept "foo")))
 )
 
 (define deep-extract "test deep extract")
