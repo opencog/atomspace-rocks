@@ -1127,7 +1127,6 @@ void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 
 	loadAtomsPfx(frame_order, "n@");
 
-return;
 	size_t height = 1;
 	while (true)
 	{

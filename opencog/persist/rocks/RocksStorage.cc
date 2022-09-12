@@ -48,8 +48,6 @@ static const char* version_key = "*-Version-*";
 /* ================================================================ */
 // Constructors
 
-rocksdb::ColumnFamilyHandle* default_cf = nullptr;
-
 void RocksStorage::init(const char * uri)
 {
 	_uri = uri;
@@ -107,32 +105,10 @@ void RocksStorage::init(const char * uri)
 #endif
 
 	// Open the file.
-#if 1 // aUSE_SIMPLE_OPEN
 	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
-#else
-	std::vector<rocksdb::ColumnFamilyDescriptor> column_families;
-	column_families.push_back(rocksdb::ColumnFamilyDescriptor(
-		rocksdb::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions()));
-	std::vector<rocksdb::ColumnFamilyHandle*> handles;
-	rocksdb::Status s = rocksdb::DB::Open(options, file, column_families,
-&handles, &_rfile);
-
-printf("duuude handsize=%lu\n", handles.size());
-	default_cf = handles[0];
-#endif
-
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
-
-#if 0
-printf("duuude defcf=%p\n", default_cf);
-	_rfile->DestroyColumnFamilyHandle(default_cf);
-printf("duuude deleteing it\n");
-	delete _rfile;
-printf("duuude repoen\n");
-	s = rocksdb::DB::Open(options, file, &_rfile);
-#endif
 
 	// Verify the version number. Version numbers are not currently used;
 	// this is for future-proofing future versions.
@@ -210,10 +186,6 @@ void RocksStorage::close()
 	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
 	write_aid();
 
-#if 0
-printf("duuude defcf=%p\n", default_cf);
-	_rfile->DestroyColumnFamilyHandle(default_cf);
-#endif
 printf("duuude deleteing on the close\n");
 	delete _rfile;
 	_rfile = nullptr;
