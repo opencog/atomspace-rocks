@@ -1123,6 +1123,7 @@ void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 	std::map<uint64_t, Handle> frame_order;
 	makeOrder(HandleCast(as), frame_order);
 
+return;
 	loadAtomsPfx(frame_order, "n@");
 
 	size_t height = 1;
