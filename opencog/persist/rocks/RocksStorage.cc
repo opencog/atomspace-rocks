@@ -128,11 +128,11 @@ printf("duuude handsize=%lu\n", handles.size());
 #if 0
 printf("duuude defcf=%p\n", default_cf);
 	_rfile->DestroyColumnFamilyHandle(default_cf);
-#endif
 printf("duuude deleteing it\n");
 	delete _rfile;
 printf("duuude repoen\n");
 	s = rocksdb::DB::Open(options, file, &_rfile);
+#endif
 
 	// Verify the version number. Version numbers are not currently used;
 	// this is for future-proofing future versions.
