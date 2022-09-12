@@ -105,11 +105,32 @@ void RocksStorage::init(const char * uri)
 #endif
 
 	// Open the file.
+#if 0
 	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
+#else
+std::vector<rocksdb::DB::ColumnFamilyDescriptor> column_families;
+column_families.push_back(ColumnFamilyDescriptor(
+	    rocksdb::kDefaultColumnFamilyName, ColumnFamilyOptions()));
+std::vector<ColumnFamilyHandle*> handles;
+	rocksdb::Status s = rocksdb::DB::Open(options, file, column_families,
+&handles, &_rfile);
+#endif
 
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
+
+	std::vector<std::string> colfam;
+	rocksdb::DB::ListColumnFamilies(
+		rocksdb::DBOptions(),
+		rocksdb::kDefaultColumnFamilyName,
+		&colfam);
+printf("duuude defname=%s\n",
+rocksdb::kDefaultColumnFamilyName.c_str());
+
+printf("duuude open colfam size=%lu\n", colfam.size());
+for (size_t i=0; i< colfam.size(); i++)
+printf("duude %lu is %s\n", i, colfam[i].c_str());
 
 	// Verify the version number. Version numbers are not currently used;
 	// this is for future-proofing future versions.
@@ -177,8 +198,6 @@ RocksStorage::RocksStorage(std::string uri) :
 
 RocksStorage::~RocksStorage()
 {
-	close();
-
 	// Error message:
 	// ./db/column_family.cc:1494: rocksdb::ColumnFamilySet::~ColumnFamilySet(): Assertion `last_ref' failed.
 	std::vector<std::string> colfam;
@@ -187,10 +206,25 @@ RocksStorage::~RocksStorage()
 		rocksdb::kDefaultColumnFamilyName,
 		&colfam);
 
-printf("duuude colfam=%lu\n", colfam.size());
+printf("duuude colfam size=%lu\n", colfam.size());
 for (size_t i=0; i< colfam.size(); i++)
 printf("duude %lu is %s\n", i, colfam[i].c_str());
+
+	close();
+#if 0
+rocksdb::TransactionDBOptions tx_opt;
+std::vector<rocksdb::DB::ColumnFamilyDescriptor> column_families;
+column_families.push_back(ColumnFamilyDescriptor(
+	    rocksdb::kDefaultColumnFamilyName, ColumnFamilyOptions()));
+std::vector<ColumnFamilyHandle*> handles;
+s = TransactionDB::Open(options, tx_opt, db_path.c_str(), column_families, &handles, &ctx->db);
+if(!s.ok()){
+        printf( "Failed open db:%s, %s", db_path.c_str(), s.ToString().c_str());
+    }
+defaut_cf = handles[0];
+db->DestroyColumnFamilyHandle(default_cf);
 	// _rfile->DestroyColumnFamilyHandle(default_family_handle_);
+#endif
 }
 
 void RocksStorage::close()
