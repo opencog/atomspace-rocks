@@ -567,19 +567,21 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
-#if 0
 		const std::string& rks = it->key().ToString();
 
 		// Check for Atoms marked as deleted. Mark them up
 		// in the corresponding AtomSpace as well.
 		if ('-' == rks[kidoff])
 		{
+printf("duuuude extract\n");
 			bool extracted = as->extract_atom(h, true);
 			if (not extracted)
 				throw IOException(TRACE_INFO, "Internal Error!");
+	delete it;
 			return;
 		}
 
+#if 0
 		Handle key = getAtom(rks.substr(kidoff));
 		key = as->add_atom(key);
 
