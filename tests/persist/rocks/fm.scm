@@ -97,7 +97,7 @@
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
-	; (load-atomspace)
+	(load-atomspace)
 	(cog-close storage)
 )
 
