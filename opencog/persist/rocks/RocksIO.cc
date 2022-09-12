@@ -576,6 +576,7 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 			bool extracted = as->extract_atom(h, true);
 			if (not extracted)
 				throw IOException(TRACE_INFO, "Internal Error!");
+			delete it;
 			return;
 		}
 
