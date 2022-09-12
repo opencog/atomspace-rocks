@@ -579,6 +579,7 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 			return;
 		}
 
+#if 0
 		Handle key = getAtom(rks.substr(kidoff));
 		key = as->add_atom(key);
 
@@ -595,6 +596,7 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 			hv->clearValues();
 		}
 		as->set_value(hv, key, vp);
+#endif
 	}
 	delete it;
 }
@@ -1072,7 +1074,7 @@ size_t RocksStorage::loadAtomsPfx(
 		for (const auto& frit: frame_order)
 		{
 			AtomSpace* as = (AtomSpace*) frit.second.get();
-//			getKeysMulti(as, sid, h);
+			getKeysMulti(as, sid, h);
 		}
 	}
 	delete it;
