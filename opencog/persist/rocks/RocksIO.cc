@@ -581,7 +581,6 @@ printf("duuuude extract\n");
 			return;
 		}
 
-#if 0
 		Handle key = getAtom(rks.substr(kidoff));
 		key = as->add_atom(key);
 
@@ -598,7 +597,6 @@ printf("duuuude extract\n");
 			hv->clearValues();
 		}
 		as->set_value(hv, key, vp);
-#endif
 	}
 	delete it;
 }
