@@ -217,7 +217,6 @@ if(!s.ok()){
     }
 defaut_cf = handles[0];
 db->DestroyColumnFamilyHandle(default_cf);
-	// _rfile->DestroyColumnFamilyHandle(default_family_handle_);
 #endif
 }
 
@@ -240,6 +239,10 @@ printf("duude %lu is %s\n", i, colfam[i].c_str());
 
 	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
 	write_aid();
+
+printf("duuude defcf=%p\n", default_cf);
+	_rfile->DestroyColumnFamilyHandle(default_cf);
+printf("duuude deleteing it\n");
 	delete _rfile;
 	_rfile = nullptr;
 	_next_aid = 0;
