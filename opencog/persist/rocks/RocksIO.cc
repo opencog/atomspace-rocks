@@ -567,6 +567,7 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
+#if 0
 		const std::string& rks = it->key().ToString();
 
 		// Check for Atoms marked as deleted. Mark them up
@@ -579,7 +580,6 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 			return;
 		}
 
-#if 0
 		Handle key = getAtom(rks.substr(kidoff));
 		key = as->add_atom(key);
 
