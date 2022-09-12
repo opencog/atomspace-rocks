@@ -107,7 +107,7 @@ void RocksStorage::init(const char * uri)
 #endif
 
 	// Open the file.
-#if 0
+#if USE_SIMPLE_OPEN
 	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
 #else
 	std::vector<rocksdb::ColumnFamilyDescriptor> column_families;
@@ -124,18 +124,6 @@ printf("duuude handsize=%lu\n", handles.size());
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
-
-	std::vector<std::string> colfam;
-	rocksdb::DB::ListColumnFamilies(
-		rocksdb::DBOptions(),
-		rocksdb::kDefaultColumnFamilyName,
-		&colfam);
-printf("duuude defname=%s\n",
-rocksdb::kDefaultColumnFamilyName.c_str());
-
-printf("duuude open colfam size=%lu\n", colfam.size());
-for (size_t i=0; i< colfam.size(); i++)
-printf("duude %lu is %s\n", i, colfam[i].c_str());
 
 	// Verify the version number. Version numbers are not currently used;
 	// this is for future-proofing future versions.
@@ -187,7 +175,6 @@ void RocksStorage::open()
 	// User might call us twice. If so, ignore the second call.
 	if (_rfile) return;
 	init(_name.c_str());
-printf("duuude done with open \n");
 }
 
 RocksStorage::RocksStorage(std::string uri) :
@@ -205,37 +192,11 @@ RocksStorage::RocksStorage(std::string uri) :
 RocksStorage::~RocksStorage()
 {
 	close();
-#if 0
-rocksdb::TransactionDBOptions tx_opt;
-std::vector<rocksdb::DB::ColumnFamilyDescriptor> column_families;
-column_families.push_back(ColumnFamilyDescriptor(
-	    rocksdb::kDefaultColumnFamilyName, ColumnFamilyOptions()));
-std::vector<ColumnFamilyHandle*> handles;
-s = TransactionDB::Open(options, tx_opt, db_path.c_str(), column_families, &handles, &ctx->db);
-if(!s.ok()){
-        printf( "Failed open db:%s, %s", db_path.c_str(), s.ToString().c_str());
-    }
-defaut_cf = handles[0];
-db->DestroyColumnFamilyHandle(default_cf);
-#endif
 }
 
 void RocksStorage::close()
 {
 	if (nullptr == _rfile) return;
-
-printf("duuude enter dtor\n");
-	// Error message:
-	// ./db/column_family.cc:1494: rocksdb::ColumnFamilySet::~ColumnFamilySet(): Assertion `last_ref' failed.
-	std::vector<std::string> colfam;
-	rocksdb::DB::ListColumnFamilies(
-		rocksdb::DBOptions(),
-		rocksdb::kDefaultColumnFamilyName,
-		&colfam);
-
-printf("duuude colfam size=%lu\n", colfam.size());
-for (size_t i=0; i< colfam.size(); i++)
-printf("duude %lu is %s\n", i, colfam[i].c_str());
 
 	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
 	write_aid();
