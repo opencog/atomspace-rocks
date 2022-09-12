@@ -48,6 +48,8 @@ static const char* version_key = "*-Version-*";
 /* ================================================================ */
 // Constructors
 
+rocksdb::ColumnFamilyHandle* default_cf = nullptr;
+
 void RocksStorage::init(const char * uri)
 {
 	_uri = uri;
@@ -108,12 +110,15 @@ void RocksStorage::init(const char * uri)
 #if 0
 	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
 #else
-std::vector<rocksdb::DB::ColumnFamilyDescriptor> column_families;
-column_families.push_back(ColumnFamilyDescriptor(
-	    rocksdb::kDefaultColumnFamilyName, ColumnFamilyOptions()));
-std::vector<ColumnFamilyHandle*> handles;
+	std::vector<rocksdb::ColumnFamilyDescriptor> column_families;
+	column_families.push_back(rocksdb::ColumnFamilyDescriptor(
+		rocksdb::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions()));
+	std::vector<rocksdb::ColumnFamilyHandle*> handles;
 	rocksdb::Status s = rocksdb::DB::Open(options, file, column_families,
 &handles, &_rfile);
+
+printf("duuude handsize=%lu\n", handles.size());
+	default_cf = handles[0];
 #endif
 
 	if (not s.ok())
@@ -182,6 +187,7 @@ void RocksStorage::open()
 	// User might call us twice. If so, ignore the second call.
 	if (_rfile) return;
 	init(_name.c_str());
+printf("duuude done with open \n");
 }
 
 RocksStorage::RocksStorage(std::string uri) :
@@ -198,18 +204,6 @@ RocksStorage::RocksStorage(std::string uri) :
 
 RocksStorage::~RocksStorage()
 {
-	// Error message:
-	// ./db/column_family.cc:1494: rocksdb::ColumnFamilySet::~ColumnFamilySet(): Assertion `last_ref' failed.
-	std::vector<std::string> colfam;
-	rocksdb::DB::ListColumnFamilies(
-		rocksdb::DBOptions(),
-		rocksdb::kDefaultColumnFamilyName,
-		&colfam);
-
-printf("duuude colfam size=%lu\n", colfam.size());
-for (size_t i=0; i< colfam.size(); i++)
-printf("duude %lu is %s\n", i, colfam[i].c_str());
-
 	close();
 #if 0
 rocksdb::TransactionDBOptions tx_opt;
@@ -230,6 +224,19 @@ db->DestroyColumnFamilyHandle(default_cf);
 void RocksStorage::close()
 {
 	if (nullptr == _rfile) return;
+
+printf("duuude enter dtor\n");
+	// Error message:
+	// ./db/column_family.cc:1494: rocksdb::ColumnFamilySet::~ColumnFamilySet(): Assertion `last_ref' failed.
+	std::vector<std::string> colfam;
+	rocksdb::DB::ListColumnFamilies(
+		rocksdb::DBOptions(),
+		rocksdb::kDefaultColumnFamilyName,
+		&colfam);
+
+printf("duuude colfam size=%lu\n", colfam.size());
+for (size_t i=0; i< colfam.size(); i++)
+printf("duude %lu is %s\n", i, colfam[i].c_str());
 
 	logger().debug("Rocks: storing final aid=%lu\n", _next_aid.load());
 	write_aid();
