@@ -1148,7 +1148,7 @@ void RocksStorage::makeOrder(Handle hasp,
 		const auto& pr = _frame_map.find(hasp);
 		if (_frame_map.end() == pr)
 			throw IOException(TRACE_INFO,
-				"Cannot use an AtomSpace DAG inconsistent with stroed DAG!");
+				"Cannot use an AtomSpace DAG inconsistent with stored DAG!");
 
 		order.insert({strtoaid(pr->second), hasp});
 		size_t nas = hasp->get_arity();
