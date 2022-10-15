@@ -198,6 +198,16 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 	}
 	delete it;
 
+	// If no frames ae found, then someone tried to load frames from
+	// storage that didn't contain any. Preserve storage state until
+	// such time as frames are actually used and stored. i.e. reset
+	// the multi-space flag.
+	if (0 == _frame_map.size())
+	{
+		_multi_space = false;
+		return HandleSeq();
+	}
+
 	// Get all spaces that are subspaces
 	HandleSet all;
 	HandleSet subs;
