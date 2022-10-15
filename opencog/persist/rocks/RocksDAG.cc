@@ -29,15 +29,9 @@
 #include <opencog/persist/sexpr/Sexpr.h>
 
 #include "RocksStorage.h"
+#include "RocksUtils.h"
 
 using namespace opencog;
-
-// ======================================================================
-
-#define CHECK_OPEN \
-	if (nullptr == _rfile) \
-		throw IOException(TRACE_INFO, "RocksDB is not open! %s", \
-			_name.c_str());
 
 // =========================================================
 
