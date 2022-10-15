@@ -53,7 +53,9 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 		throw IOException(TRACE_INFO,
 			"Cannot find the AtomSpace in the AtomSpace DAG!\n");
 
-printf("hello world\n");
+	// OK, we've got the frame to delete.
+	// First, get rid of all the atoms in it.
+printf("hello world %s\n", pr->second.c_str());
 }
 
 // ======================== THE END ======================

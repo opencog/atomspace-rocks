@@ -720,18 +720,23 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 			"Did you forget to say `store-frames` first?",
 			h->to_string().c_str(), frame->get_name().c_str());
 
-	// Multi-space Atom remove is done via hiding...
-	if (_multi_space)
+	if (not _multi_space)
 	{
-		if (recursive)
-		{
-			for (const Handle& hi: h->getIncomingSet())
-				removeAtom(frame, hi, true);
-		}
-		storeMissingAtom(frame, h);
+		doRemoveAtom(h, recursive);
 		return;
 	}
 
+	// Multi-space Atom remove is done via hiding...
+	if (recursive)
+	{
+		for (const Handle& hi: h->getIncomingSet())
+			removeAtom(frame, hi, true);
+	}
+	storeMissingAtom(frame, h);
+}
+
+void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)
+{
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
 	rocksdb::Slice start, end;
