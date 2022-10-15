@@ -30,6 +30,7 @@
 #include <opencog/persist/sexpr/Sexpr.h>
 
 #include "RocksStorage.h"
+#include "RocksUtils.h"
 
 using namespace opencog;
 
@@ -236,13 +237,6 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // plus it's incoming set will be atomic. This was needed in an earlier
 // incoming-set design; it's not needed in the current design. It's been
 // left in the code, #ifdef'ed out, just in case something blows up.
-
-// ======================================================================
-
-#define CHECK_OPEN \
-	if (nullptr == _rfile) \
-		throw IOException(TRACE_INFO, "RocksDB is not open! %s", \
-			_name.c_str());
 
 // ======================================================================
 
