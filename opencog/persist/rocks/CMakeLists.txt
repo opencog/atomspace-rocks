@@ -4,6 +4,7 @@
 
 ADD_LIBRARY (persist-rocks SHARED
 	RocksDAG.cc
+	RocksFrame.cc
 	RocksIO.cc
 	RocksStorage.cc
 	RocksPersistSCM.cc
