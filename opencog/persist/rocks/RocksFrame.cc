@@ -29,24 +29,31 @@
 #include <opencog/persist/sexpr/Sexpr.h>
 
 #include "RocksStorage.h"
+#include "RocksUtils.h"
 
 using namespace opencog;
 
 // ======================================================================
 
-#define CHECK_OPEN \
-	if (nullptr == _rfile) \
-		throw IOException(TRACE_INFO, "RocksDB is not open! %s", \
-			_name.c_str());
-
-// =========================================================
-
 /// Load the entire collection of AtomSpace frames.
 void RocksStorage::deleteFrame(AtomSpace* frame)
 {
 	CHECK_OPEN;
+	if (not _multi_space)
+		throw IOException(TRACE_INFO, "There are no frames!");
+
+	Handle hasp = HandleCast(frame);
+
+	if (0 < hasp->getIncomingSetSize())
+		throw IOException(TRACE_INFO,
+			"Deletion of non-top frames is not currently supported!\n");
+
+	const auto& pr = _frame_map.find(hasp);
+	if (_frame_map.end() == pr)
+		throw IOException(TRACE_INFO,
+			"Cannot find the AtomSpace in the AtomSpace DAG!\n");
+
 printf("hello world\n");
-	_multi_space = true;
 }
 
 // ======================== THE END ======================
