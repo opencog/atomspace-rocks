@@ -89,7 +89,7 @@ class RocksStorage : public StorageNode
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
 		void storeMissingAtom(AtomSpace*, const Handle&);
-		void doRemoveAtom(const Handle&, bool recursive);
+		void doRemoveAtom(const Handle&, const std::string&, bool recursive);
 
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
@@ -109,7 +109,8 @@ class RocksStorage : public StorageNode
 		void appendToInset(const std::string&, const std::string&);
 		void remFromInset(const std::string&, const std::string&);
 
-		void removeSatom(const std::string&, const std::string&, bool, bool);
+		void removeSatom(const std::string&, const std::string&,
+		                 const std::string&, bool, bool);
 		void remIncoming(const std::string&, const std::string&,
 		                 const std::string&);
 

@@ -722,7 +722,8 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 
 	if (not _multi_space)
 	{
-		doRemoveAtom(h, recursive);
+		std::string empty;
+		doRemoveAtom(h, empty, recursive);
 		return;
 	}
 
@@ -735,7 +736,8 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 	storeMissingAtom(frame, h);
 }
 
-void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)
+void RocksStorage::doRemoveAtom(const Handle& h,
+                                const std::string& fid, bool recursive)
 {
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
@@ -770,7 +772,7 @@ void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)
 		if (0 == sid.size()) return;
 	}
 
-	removeSatom(satom, sid, h->is_node(), recursive);
+	removeSatom(satom, sid, fid, h->is_node(), recursive);
 }
 
 /// Remove `sid` from the incoming set of `osatom`.
@@ -844,6 +846,7 @@ void RocksStorage::remFromSidList(const std::string& klist,
 /// The flag `recursive` should be set to perform recursive deletes.
 void RocksStorage::removeSatom(const std::string& satom,
                                const std::string& sid,
+                               const std::string& fid,
                                bool is_node,
                                bool recursive)
 {
@@ -873,7 +876,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		// Its possible its been already removed. For example,
 		// delete a in (Link (Link a b) a)
 		if (0 < isatom.size())
-			removeSatom(isatom, isid, false, recursive);
+			removeSatom(isatom, isid, fid, false, recursive);
 	}
 	delete it;
 
@@ -955,8 +958,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		if (not s.ok())
 			throw IOException(TRACE_INFO, "Internal Error!");
 
-		pfx = "k@" + sid + ":";
-// xxxxxxx
+		pfx = "k@" + sid + ":" + fid + ":";
 	}
 	else
 	{
