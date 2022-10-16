@@ -748,10 +748,9 @@ void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)
 	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
 	std::string sid;
 	std::string satom;
-	std::string shash;
 	if (convertible)
 	{
-		shash = "h@" + aidtostr(h->get_hash());
+		std::string shash = "h@" + aidtostr(h->get_hash());
 		findAlpha(h, shash, sid);
 		if (0 == sid.size()) return;
 
@@ -855,7 +854,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
-		// If there is an incoming set, but were are not recursive,
+		// If there is an incoming set, but we are not recursive,
 		// then refuse to do anything more.
 		if (not recursive)
 		{
@@ -945,7 +944,24 @@ void RocksStorage::removeSatom(const std::string& satom,
 	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid + ":");
 
 	// Delete all values hanging on the atom ...
-	pfx = "k@" + sid + ":";
+	// Multi-space keys have a different representation than the
+	// Uni-space keys.
+	if (_multi_space)
+	{
+		size_t height = getHeight(h);
+		std::string key = "z" + aidtostr(height) + "@" + sid;
+
+		rocksdb::Status s = _rfile->Delete(rocksdb::WriteOptions(), key);
+		if (not s.ok())
+			throw IOException(TRACE_INFO, "Internal Error!");
+
+		pfx = "k@" + sid + ":";
+// xxxxxxx
+	}
+	else
+	{
+		pfx = "k@" + sid + ":";
+	}
 	it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());

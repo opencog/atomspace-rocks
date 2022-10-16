@@ -55,7 +55,16 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 
 	// OK, we've got the frame to delete.
 	// First, get rid of all the atoms in it.
-printf("hello world %s\n", pr->second.c_str());
+	HandleSeq all_atoms;
+	get_atoms_in_frame(frame, all_atoms);
+
+printf("hello world fid=%s num=%lu\n", pr->second.c_str(),
+all_atoms.size());
+
+	for (const Handle& h : all_atoms)
+	{
+		doRemoveAtom(h);
+	}
 }
 
 // ======================== THE END ======================
