@@ -345,7 +345,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		_rfile->Put(rocksdb::WriteOptions(), oid, "");
 
 		// If there are no keys(!!) record a bogus key to mark the frame.
-		if (not h->haveKeys())
+		if (not h->haveValues())
 			_rfile->Put(rocksdb::WriteOptions(), cid + "+1", "");
 	}
 
@@ -470,17 +470,6 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 // XXX this is adding to wrong atomspace!?
 	if (as and vp) vp = as->add_atoms(vp);
 	h->setValue(key, vp);
-}
-
-bool RocksStorage::haveKeys(const std::string& sid)
-{
-	std::string cid = "k@" + sid + ":";
-
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	it->Seek(cid);
-	bool have_keys = it->Valid() and it->key().starts_with(cid);
-	delete it;
-	return have_keys;
 }
 
 /// Get all of the key/value pairs for the Atom at `sid`, and attach
@@ -635,18 +624,6 @@ void RocksStorage::getAtom(const Handle& h)
 		throw IOException(TRACE_INFO,
 			"Attempting a multi-space fetch without known DAG. "
 			"Did you forget to say `load-frames` first?");
-
-	// Unusual situation. The atom has no keys on it, but it might
-	// still have been recorded as belonging to specific frames.
-	// It might belong to multiple frames, if it is created in one,
-	// deleted at a higher frame, and then restored again higher still.
-	// Place it in that frame.
-	if (not haveKeys(sid))
-	{
-getKeyless
-		return;
-	}
-xxxxxxx
 
 	// For multi-spaces, determine the path-DAG from the top space
 	// to the bottom, and load from the bottom-up.
@@ -1037,9 +1014,6 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 			continue;
 		}
 
-		if (not haveKeys(sid)) continue;
-xxxxxxxx
-
 		// If we are here, its a multi-space fetch.
 		for (const auto& frit: frame_order)
 		{
@@ -1103,8 +1077,6 @@ size_t RocksStorage::loadAtomsPfx(
 		cnt ++;
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		const std::string& sid = it->value().ToString();
-		if (not haveKeys(sid)) continue;
-xxxxx
 		for (const auto& frit: frame_order)
 		{
 			AtomSpace* as = (AtomSpace*) frit.second.get();
@@ -1131,8 +1103,6 @@ size_t RocksStorage::loadAtomsHeight(
 	{
 		cnt ++;
 		const std::string& sid = it->key().ToString().substr(zsid);
-		if (not haveKeys(sid)) continue;
-xxxxxxx
 
 		// Get the matching satom string.
 		std::string satom;
@@ -1178,6 +1148,8 @@ void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 void RocksStorage::makeOrder(Handle hasp,
                              std::map<uint64_t, Handle>& order)
 {
+// XXX TODO: we should probably cache the results, instead of
+// recomputing every time!?
 	// As long as there's a stack of Frames, just loop.
 	while (true)
 	{
