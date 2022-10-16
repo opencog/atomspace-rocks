@@ -93,13 +93,39 @@
 	(cog-set-atomspace! base-space)
 	(test-assert "yes-even-0" (not (nil? (cog-node 'Concept "even"))))
 	(test-assert "no-odd-0" (nil? (cog-node 'Concept "odd")))
-	(test-equal "even-0" base-space (cog-atomspace (cog-node 'Concept "even")))
+	(test-equal "even-0 as" base-space (cog-atomspace (cog-node 'Concept "even")))
 
 	(cog-set-atomspace! mid1-space)
 	(test-assert "yes-even-1" (not (nil? (cog-node 'Concept "even"))))
 	(test-assert "yes-odd-1" (not (nil? (cog-node 'Concept "odd"))))
-	(test-equal "even-1" base-space (cog-atomspace (cog-node 'Concept "even")))
-	(test-equal "odd-1" mid1-space (cog-atomspace (cog-node 'Concept "odd")))
+	(test-equal "even-1 as" base-space (cog-atomspace (cog-node 'Concept "even")))
+	(test-equal "odd-1 as" mid1-space (cog-atomspace (cog-node 'Concept "odd")))
+
+	(cog-set-atomspace! mid2-space)
+	(test-assert "no-even-2" (nil? (cog-node 'Concept "even")))
+	(test-assert "yes-odd-2" (not (nil? (cog-node 'Concept "odd"))))
+	(test-equal "odd-2 as" mid1-space (cog-atomspace (cog-node 'Concept "odd")))
+
+	(cog-set-atomspace! mid3-space)
+	(test-assert "no-even-3" (nil? (cog-node 'Concept "even")))
+	(test-assert "no-odd-3" (nil? (cog-node 'Concept "odd")))
+
+	(cog-set-atomspace! mid4-space)
+	(test-assert "yes-even-4" (not (nil? (cog-node 'Concept "even"))))
+	(test-assert "no-odd-4" (nil? (cog-node 'Concept "odd")))
+	(test-equal "even-4 as" mid4-space (cog-atomspace (cog-node 'Concept "even")))
+
+	(cog-set-atomspace! mid5-space)
+	(test-assert "yes-even-5" (not (nil? (cog-node 'Concept "even"))))
+	(test-assert "yes-odd-5" (not (nil? (cog-node 'Concept "odd"))))
+	(test-equal "even-5 as" mid4-space (cog-atomspace (cog-node 'Concept "even")))
+	(test-equal "odd-5 as" mid5-space (cog-atomspace (cog-node 'Concept "odd")))
+
+	(cog-set-atomspace! top-space)
+	(test-assert "yes-even-6" (not (nil? (cog-node 'Concept "even"))))
+	(test-assert "yes-odd-6" (not (nil? (cog-node 'Concept "odd"))))
+	(test-equal "even-6 as" mid4-space (cog-atomspace (cog-node 'Concept "even")))
+	(test-equal "odd-6 as" mid5-space (cog-atomspace (cog-node 'Concept "odd")))
 )
 
 (define valueless "test valueless atoms")
