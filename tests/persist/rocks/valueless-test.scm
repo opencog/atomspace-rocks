@@ -91,9 +91,15 @@
 
 	; Verify that atoms appear and disappear properly.
 	(cog-set-atomspace! base-space)
-	(test-assert "yes-even-0" (cog-atom 'Concept "even"))
-	(test-assert "no-odd-0" (nil? (cog-atom 'Concept "odd")))
-	(test-equal "even-0" base-space (cog-atomspace (cog-atom 'Concept "even")))
+	(test-assert "yes-even-0" (not (nil? (cog-node 'Concept "even"))))
+	(test-assert "no-odd-0" (nil? (cog-node 'Concept "odd")))
+	(test-equal "even-0" base-space (cog-atomspace (cog-node 'Concept "even")))
+
+	(cog-set-atomspace! mid1-space)
+	(test-assert "yes-even-1" (not (nil? (cog-node 'Concept "even"))))
+	(test-assert "yes-odd-1" (not (nil? (cog-node 'Concept "odd"))))
+	(test-equal "even-1" base-space (cog-atomspace (cog-node 'Concept "even")))
+	(test-equal "odd-1" mid1-space (cog-atomspace (cog-node 'Concept "odd")))
 )
 
 (define valueless "test valueless atoms")
