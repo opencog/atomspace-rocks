@@ -101,6 +101,7 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // "d@" fid . senc -- finds the AtomSpace frame (delta) for fid
 // "f@" senc . fid -- finds the fid associated with the AtomSpace
 // "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
+// "o@" fid:sid . (null) -- find Atoms in a given frame
 // "z" N@sid . (null) -- record height N of Link at sid
 //
 // General design:
@@ -330,12 +331,17 @@ std::string RocksStorage::writeAtom(const Handle& h)
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
 	CHECK_OPEN;
-	std::string sid = writeAtom(h);
+	const std::string& sid = writeAtom(h);
 
 	// Separator for keys
 	std::string cid = "k@" + sid + ":";
 	if (_multi_space)
-		cid += writeFrame(h->getAtomSpace()) + ":";
+	{
+		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
+		cid += fid;
+		std::string oid = "o@" + fid + sid;
+		_rfile->Put(rocksdb::WriteOptions(), oid, "");
+	}
 
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
@@ -607,12 +613,21 @@ void RocksStorage::getAtom(const Handle& h)
 		return;
 	}
 
-	if (not haveKeys(sid)) return;
-
 	if (0 == _frame_map.size())
 		throw IOException(TRACE_INFO,
 			"Attempting a multi-space fetch without known DAG. "
 			"Did you forget to say `load-frames` first?");
+
+	// Unusual situation. The atom has no keys on it, but it might
+	// still have been recorded as belonging to specific frames.
+	// It might belong to multiple frames, if it is created in one,
+	// deleted at a higher frame, and then restored again higher still.
+	// Place it in that frame.
+	if (not haveKeys(sid))
+	{
+		return;
+	}
+xxxxxxx
 
 	// For multi-spaces, determine the path-DAG from the top space
 	// to the bottom, and load from the bottom-up.
@@ -1004,6 +1019,7 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 		}
 
 		if (not haveKeys(sid)) continue;
+xxxxxxxx
 
 		// If we are here, its a multi-space fetch.
 		for (const auto& frit: frame_order)
@@ -1069,6 +1085,7 @@ size_t RocksStorage::loadAtomsPfx(
 		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
 		const std::string& sid = it->value().ToString();
 		if (not haveKeys(sid)) continue;
+xxxxx
 		for (const auto& frit: frame_order)
 		{
 			AtomSpace* as = (AtomSpace*) frit.second.get();
@@ -1096,6 +1113,7 @@ size_t RocksStorage::loadAtomsHeight(
 		cnt ++;
 		const std::string& sid = it->key().ToString().substr(zsid);
 		if (not haveKeys(sid)) continue;
+xxxxxxx
 
 		// Get the matching satom string.
 		std::string satom;
