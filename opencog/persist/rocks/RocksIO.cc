@@ -101,6 +101,8 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // "d@" fid . senc -- finds the AtomSpace frame (delta) for fid
 // "f@" senc . fid -- finds the fid associated with the AtomSpace
 // "k@" sid:fid:kid . sval -- find the Value for the Atom,AtomSpace,Key
+//                            Absent Atoms have a kid = -
+//                            Keyless Atoms have a kid = +
 // "o@" fid:sid . (null) -- find Atoms in a given frame
 // "z" N@sid . (null) -- record height N of Link at sid
 //
@@ -341,6 +343,10 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		cid += fid;
 		std::string oid = "o@" + fid + sid;
 		_rfile->Put(rocksdb::WriteOptions(), oid, "");
+
+		// If there are no keys(!!) record a bogus key to mark the frame.
+		if (not h->haveKeys())
+			_rfile->Put(rocksdb::WriteOptions(), cid + "+1", "");
 	}
 
 	// Always clobber the TV, set it back to default.
@@ -557,7 +563,7 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 ///
 /// Place the keys into the AtomSpace. Single AtomSpace version.
 void RocksStorage::getKeysMulti(AtomSpace* as,
-                           const std::string& sid, const Handle& h)
+                                const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":" + writeFrame(as) + ":";
 
@@ -570,12 +576,24 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 		const std::string& rks = it->key().ToString();
 
 		// Check for Atoms marked as deleted. Mark them up
-		// in the corresponding AtomSpace as well.
+		// in the corresponding AtomSpace as well. There will
+		// be only one per frame, so we can return immediately.
 		if ('-' == rks[kidoff])
 		{
 			bool extracted = as->extract_atom(h, true);
 			if (not extracted)
 				throw IOException(TRACE_INFO, "Internal Error!");
+			delete it;
+			return;
+		}
+
+		// If there is just a + instead of a key, this means that
+		// the atom is in this frame, but has no keys on it. Insert
+		// into frame, and return. There can never be more than one
+		// of these per frame, so we return immediately.
+		if ('+' == rks[kidoff])
+		{
+			as->add_atom(h);
 			delete it;
 			return;
 		}
@@ -625,6 +643,7 @@ void RocksStorage::getAtom(const Handle& h)
 	// Place it in that frame.
 	if (not haveKeys(sid))
 	{
+getKeyless
 		return;
 	}
 xxxxxxx
