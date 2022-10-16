@@ -94,7 +94,6 @@ class RocksStorage : public StorageNode
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
 		Handle findAlpha(const Handle&, const std::string&, std::string&);
-		bool haveKeys(const std::string&);
 		void getKeysMonospace(AtomSpace*, const std::string&, const Handle&);
 		void getKeysMulti(AtomSpace*, const std::string&, const Handle&);
 		void loadAtoms(AtomSpace*);
