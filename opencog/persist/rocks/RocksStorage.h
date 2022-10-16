@@ -110,7 +110,7 @@ class RocksStorage : public StorageNode
 		void remFromInset(const std::string&, const std::string&);
 
 		void removeSatom(const std::string&, const std::string&,
-		                 const std::string&, bool, bool);
+		                 const std::string&, size_t, bool);
 		void remIncoming(const std::string&, const std::string&,
 		                 const std::string&);
 

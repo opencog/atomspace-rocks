@@ -772,7 +772,9 @@ void RocksStorage::doRemoveAtom(const Handle& h,
 		if (0 == sid.size()) return;
 	}
 
-	removeSatom(satom, sid, fid, h->is_node(), recursive);
+	size_t height = h->is_node() ? 0 : 1;
+	if (_multi_space) height = getHeight(h);
+	removeSatom(satom, sid, fid, height, recursive);
 }
 
 /// Remove `sid` from the incoming set of `osatom`.
@@ -842,12 +844,14 @@ void RocksStorage::remFromSidList(const std::string& klist,
 /// Remove the given Atom from the database.
 /// The Atom is encoded both as `satom` (the s-expression)
 /// and also as `sid` (the matching Atom ID).
-/// The flag `is_node` should be true, if the Atom is a Node.
+/// If frames are being used, `fid` should be the frame id.
+/// The `height` should be zero, if the Atom is a Node.
+/// It should be accurate, in the case of multi-space storage.
 /// The flag `recursive` should be set to perform recursive deletes.
 void RocksStorage::removeSatom(const std::string& satom,
                                const std::string& sid,
                                const std::string& fid,
-                               bool is_node,
+                               size_t height,
                                bool recursive)
 {
 	// So first, iterate up to the top, chopping away the incoming set.
@@ -876,7 +880,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 		// Its possible its been already removed. For example,
 		// delete a in (Link (Link a b) a)
 		if (0 < isatom.size())
-			removeSatom(isatom, isid, fid, false, recursive);
+			removeSatom(isatom, isid, fid, height+1, recursive);
 	}
 	delete it;
 
@@ -893,7 +897,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// If the atom to be deleted is a link, we need to loop over
 	// it's outgoing set, and patch up the incoming sets of those
 	// atoms.
-	if (not is_node)
+	if (0 < height)
 	{
 		size_t pos = satom.find(' ', paren);
 		if (std::string::npos != pos)
@@ -942,7 +946,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	}
 
 	// Delete the Atom, next.
-	std::string pfx = is_node ? "n@" : "l@";
+	std::string pfx = (0==height) ? "n@" : "l@";
 	_rfile->Delete(rocksdb::WriteOptions(), pfx + satom.substr(paren));
 	_rfile->Delete(rocksdb::WriteOptions(), "a@" + sid + ":");
 
@@ -951,7 +955,6 @@ void RocksStorage::removeSatom(const std::string& satom,
 	// Uni-space keys.
 	if (_multi_space)
 	{
-		size_t height = getHeight(h);
 		std::string key = "z" + aidtostr(height) + "@" + sid;
 
 		rocksdb::Status s = _rfile->Delete(rocksdb::WriteOptions(), key);
