@@ -89,6 +89,7 @@ class RocksStorage : public StorageNode
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
 		void storeMissingAtom(AtomSpace*, const Handle&);
+		void doRemoveAtom(const Handle&, bool recursive);
 
 		ValuePtr getValue(const std::string&);
 		Handle getAtom(const std::string&);
@@ -144,7 +145,7 @@ class RocksStorage : public StorageNode
 		void loadType(AtomSpace*, Type);
 		void loadAtomSpace(AtomSpace*); // Load entire contents
 		void storeAtomSpace(const AtomSpace*); // Store entire contents
-		HandleSeq loadFrameDAG(void); // Load AtomSpace DAG
+		HandleSeq loadFrameDAG(void);   // Load AtomSpace DAG
 		void storeFrameDAG(AtomSpace*); // Store AtomSpace DAG
 		void barrier(AtomSpace* = nullptr);
 		std::string monitor();

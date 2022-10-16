@@ -720,18 +720,24 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 			"Did you forget to say `store-frames` first?",
 			h->to_string().c_str(), frame->get_name().c_str());
 
-	// Multi-space Atom remove is done via hiding...
-	if (_multi_space)
+	if (not _multi_space)
 	{
-		if (recursive)
-		{
-			for (const Handle& hi: h->getIncomingSet())
-				removeAtom(frame, hi, true);
-		}
-		storeMissingAtom(frame, h);
+		doRemoveAtom(h, recursive);
 		return;
 	}
 
+	if (recursive)
+	{
+		for (const Handle& hi: h->getIncomingSet())
+			removeAtom(frame, hi, true);
+	}
+
+	// Multi-space Atom remove is done via hiding...
+	storeMissingAtom(frame, h);
+}
+
+void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)
+{
 	CHECK_OPEN;
 #ifdef HAVE_DELETE_RANGE
 	rocksdb::Slice start, end;
@@ -743,10 +749,9 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
 	std::string sid;
 	std::string satom;
-	std::string shash;
 	if (convertible)
 	{
-		shash = "h@" + aidtostr(h->get_hash());
+		std::string shash = "h@" + aidtostr(h->get_hash());
 		findAlpha(h, shash, sid);
 		if (0 == sid.size()) return;
 
@@ -850,7 +855,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
 	{
-		// If there is an incoming set, but were are not recursive,
+		// If there is an incoming set, but we are not recursive,
 		// then refuse to do anything more.
 		if (not recursive)
 		{
