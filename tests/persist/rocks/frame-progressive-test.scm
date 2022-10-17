@@ -2,7 +2,7 @@
 ; frame-progressive-test.scm
 ;
 ; Verify that frames can be constructed and saved progressively,
-; including proper atom deletion durig the progress.
+; including proper atom deletion during the progress.
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog test-runner))
@@ -36,6 +36,10 @@
 	(define z (List x y))
 	(define z1 (cog-set-value! z (Predicate "bang") (ctv 1 0 (+ 2 N))))
 	(store-atom z1)
+
+	(define w (List z x))
+	(define w1 (cog-set-value! w (Predicate "bash") (ctv 1 0 (+ 3 N))))
+	(store-atom w1)
 )
 
 ; Recursive calls to above
@@ -82,6 +86,10 @@
 	(define z (cog-link 'List (Concept "foo") (Concept "bar")))
 	(test-assert "link-absent" (not (cog-atom? z)))
 
+	(define w (cog-link 'List (Link (Concept "foo") (Concept "bar"))
+                             (Concept "foo")))
+	(test-assert "l2-absent" (not (cog-atom? w)))
+
 	; Next one down should have all three atoms
 	(define downli (cog-atomspace-env))
 	(test-equal "num-childs" 1 (length downli))
@@ -96,6 +104,10 @@
 	(define z2 (cog-link 'List x2 y2))
 	(test-assert "link-present" (cog-atom? z2))
 	(test-equal "link-tv" (+ (* 3 N) 3) (get-val z2 "bang"))
+
+	(define w2 (cog-link 'List z2 x2))
+	(test-assert "l2-present" (cog-atom? w2))
+	(test-equal "l2-tv" (+ (* 3 N) 4) (get-val w2 "bash"))
 
 	; Recurse downwards
 	(define downext (cog-atomspace-env))
