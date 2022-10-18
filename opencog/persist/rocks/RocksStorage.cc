@@ -201,6 +201,15 @@ void RocksStorage::close()
 	_fid_map.clear();
 }
 
+std::string RocksStorage::get_version(void)
+{
+	std::string version;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), version_key, &version);
+	if (not s.ok())
+		throw IOException(TRACE_INFO, "Cannot find the DB version!");
+	return version;
+}
+
 void RocksStorage::write_aid(void)
 {
 	// We write the highest issued atom-id. This is the behavior that

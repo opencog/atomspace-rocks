@@ -42,6 +42,10 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 	if (not _multi_space)
 		throw IOException(TRACE_INFO, "There are no frames!");
 
+	std::string db_version = get_version();
+	if (0 != db_version.compare("2"))
+		throw IOException(TRACE_INFO, "DB too old to support frame deletion!");
+
 	Handle hasp = HandleCast(frame);
 
 	if (0 < hasp->getIncomingSetSize())
@@ -65,14 +69,15 @@ printf("hello world %s\n", fid.c_str());
 	for (it->Seek(oid); it->Valid() and it->key().starts_with(oid); it->Next())
 	{
 		const std::string& fis = it->key().ToString();
-printf("hello sid %s\n", fis.substr(sidoff).c_str());
+		const std::string& sid = fis.substr(sidoff);
+printf("hello sid %s\n", sid.c_str());
 
 		// Delete all values hanging on the atom ...
 		std::string pfx = "k@" + sid + ":" + fid;
 		auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
 		for (kt->Seek(pfx); kt->Valid() and kt->key().starts_with(pfx); kt->Next())
 			_rfile->Delete(rocksdb::WriteOptions(), kt->key());
-		delete kit;
+		delete kt;
 
 		// Delete the key itself
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());

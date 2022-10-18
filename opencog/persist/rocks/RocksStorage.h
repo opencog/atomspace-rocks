@@ -51,6 +51,9 @@ class RocksStorage : public StorageNode
 		std::string _uri;
 		rocksdb::DB* _rfile;
 
+		// Get the DB version string.
+		std::string get_version(void);
+
 		// True if file contains more than one atomspace.
 		bool _multi_space;
 		// The Handles are *always* AtomSpacePtr's
