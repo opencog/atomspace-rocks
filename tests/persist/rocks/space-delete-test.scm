@@ -63,7 +63,7 @@
 	; (cog-rocks-print storage "")
 
 	(define top-space (car (load-frames)))
-	(delete-frame top-space)
+	(delete-frame! top-space)
 	(cog-close storage)
 )
 
@@ -97,7 +97,7 @@
 	(load-atomspace)
 	(cog-close storage)
 
-	(test-equal "top-depth" 4 (count-depth top-space 0))
+	(test-equal "top-depth" 4 (count-depth top-space 1))
 
 	(delete-top-frame)
 
@@ -109,7 +109,7 @@
 	(load-atomspace)
 	(cog-close storage)
 
-	(test-equal "top-depth" 3 (count-depth top-space 0))
+	(test-equal "top-depth" 3 (count-depth top-space 1))
 
 	(delete-top-frame)
 
@@ -121,7 +121,7 @@
 	(load-atomspace)
 	(cog-close storage)
 
-	(test-equal "top-depth" 2 (count-depth top-space 0))
+	(test-equal "top-depth" 2 (count-depth top-space 1))
 
 	; Grab references into the inheritance hierarchy
 	(define mid1-space top-space)
