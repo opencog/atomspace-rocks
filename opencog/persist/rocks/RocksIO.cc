@@ -1349,23 +1349,24 @@ void RocksStorage::checkdb()
 		{
 			std::string akey = it->key().ToString();
 			akey[0] = 'k';
-printf("duuude sid=%s\n", akey.c_str());
-			std::string sval;
-			rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), akey, &sval);
-			if (not s.ok())
+			auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
+			kt->Seek(akey);
+			if (not (kt->Valid() and kt->key().starts_with(akey)))
 			{
 				// `a@1:` is the key for (PredicateNode "*-TruthValueKey-*")
 				// and ignore that as a special case.
 				if (akey.compare("k@1:"))
 					cnt++;
 			}
+			delete kt;
 		}
 		delete it;
 
 		if (cnt)
 		{
 			db_ok = false;
-			printf("Error: found %zu orphaned Atoms!\n", cnt);
+			printf("Info: found %zu orphaned Atoms!\n", cnt);
+			printf("These can be removed by running `cog-rocks-scrub`\n");
 		}
 	}
 
