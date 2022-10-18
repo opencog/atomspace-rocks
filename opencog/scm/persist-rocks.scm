@@ -26,20 +26,27 @@ cog-rocks-stats cog-rocks-print)
 (set-procedure-property! cog-rocks-close 'documentation
 "
  cog-rocks-close - close the currently open RocksDB backend.
+
     Close open connections to the currently-open backend, after flushing
     any pending writes in the write queues. After the close, atoms can
     no longer be stored to or fetched from the database.
+
+    As a side-effect, this will extract from the AtomSpace the
+    RocksStorageNode holding the URL of the DB. This might be surprising.
 ")
 
 (set-procedure-property! cog-rocks-open 'documentation
 "
  cog-rocks-open URL - Open a connection to a RocksDB.
 
-  The URL must be of the form:
-     rocks://path/to/file
+   The URL must be of the form:
+      rocks://path/to/file
 
-  Examples of use with valid URL's:
-     (cog-rocks-open \"rocks://var/local/opencog/data/rocks.db\")
+   This will create a RocksStorageNode holding the URL, and place it
+   in the current AtomSpace.
+
+   Examples of use with valid URL's:
+      (cog-rocks-open \"rocks://var/local/opencog/data/rocks.db\")
 ")
 
 (set-procedure-property! cog-rocks-stats 'documentation
