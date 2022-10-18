@@ -55,7 +55,25 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 
 	// OK, we've got the frame to delete.
 	// First, get rid of all the atoms in it.
-printf("hello world %s\n", pr->second.c_str());
+	std::string fid = pr->second + ":";
+	std::string oid = "o@" + fid;
+printf("hello world %s\n", fid.c_str());
+
+	size_t sidoff = oid.size();
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(oid); it->Valid() and it->key().starts_with(oid); it->Next())
+	{
+		const std::string& fis = it->key().ToString();
+printf("hello sid %s\n", fis.substr(sidoff).c_str());
+
+		// Delete all values hanging on the atom ...
+		std::string pfx = "k@" + sid + ":" + fid;
+		auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
+		for (kt->Seek(pfx); kt->Valid() and kt->key().starts_with(pfx); kt->Next())
+			_rfile->Delete(rocksdb::WrkteOptions(), kt->key());
+		delete kit;
+	}
+	delete it;
 }
 
 // ======================== THE END ======================
