@@ -104,4 +104,12 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 	_frame_map.erase(hasp);
 }
 
+// ======================================================================
+
+/// Scrube away any orphaned Atoms resulting from frame deletion.
+void RocksStorage::scrubFrames(void)
+{
+printf("hello scrub\n");
+}
+
 // ======================== THE END ======================

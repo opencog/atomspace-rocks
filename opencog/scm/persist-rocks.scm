@@ -11,7 +11,9 @@
 	"opencog_persist_rocks_init")
 
 (export cog-rocks-clear-stats cog-rocks-close cog-rocks-open
-cog-rocks-stats cog-rocks-print)
+cog-rocks-stats cog-rocks-get cog-rocks-print
+cog-rocks-check cog-rocks-scrub
+)
 
 ; --------------------------------------------------------------
 
@@ -59,14 +61,6 @@ cog-rocks-stats cog-rocks-print)
     and are useful primarily to the developers of the backend.
 ")
 
-(set-procedure-property! cog-rocks-print 'documentation
-"
- cog-rocks-print RSN PREFIX - internal-use-only debugging utility.
-
-    RSN must be a RocksStorageNode.
-    PREFIX must be a prefix, for example \"a@\" or \"n@\" and so on.
-")
-
 (set-procedure-property! cog-rocks-get 'documentation
 "
  cog-rocks-get PREFIX - internal-use-only debugging utility.
@@ -75,4 +69,31 @@ cog-rocks-stats cog-rocks-print)
 
     The DB must have been previously opened with `cog-rocks-open`.
     You probably want to use `cog-rocks-print` instead; it's simpler.
+")
+
+(set-procedure-property! cog-rocks-print 'documentation
+"
+ cog-rocks-print RSN PREFIX - internal-use-only debugging utility.
+
+    RSN must be a RocksStorageNode.
+    PREFIX must be a prefix, for example \"a@\" or \"n@\" and so on.
+")
+
+(set-procedure-property! cog-rocks-check 'documentation
+"
+ cog-rocks-check RSN - internal-use-only debugging utility.
+
+    RSN must be a RocksStorageNode.
+
+    Check self-consistency of the database.
+")
+
+(set-procedure-property! cog-rocks-scrub 'documentation
+"
+ cog-rocks-scrub RSN - Perform garbage collection.
+
+    RSN must be a RocksStorageNode.
+
+    After frame deletions, the databae might contain records of Atoms
+    that are not in any frame. This function will delete them.
 ")

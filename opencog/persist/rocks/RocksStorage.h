@@ -69,6 +69,7 @@ class RocksStorage : public StorageNode
 		}
 		Handle decodeFrame(const std::string&);
 		Handle getFrame(const std::string&);
+		void scrubFrames(void);
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
@@ -157,6 +158,7 @@ class RocksStorage : public StorageNode
 		void print_stats(void);
 		void clear_stats(void); // reset stats counters.
 		void checkdb(void);
+		void scrubdb(void);
 };
 
 class RocksStorageNode : public RocksStorage
