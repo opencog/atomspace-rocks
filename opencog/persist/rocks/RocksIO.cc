@@ -1311,6 +1311,8 @@ void RocksStorage::checkdb()
 {
 	CHECK_OPEN;
 
+	bool db_ok = true;
+
 	// Look for orphaned Values -- Values not attached to any Atom.
 	// These are in the form of "k@sid:" which have no matching "a@sid:"
 	// Note the use of the colon to terminate the sid!
@@ -1331,9 +1333,21 @@ void RocksStorage::checkdb()
 	delete it;
 
 	if (cnt)
+	{
+		db_ok = false;
 		printf("Error: found %zu orphaned Values!\n", cnt);
-	else
-		printf("Completed DB consistency check w/o errors\n");
+	}
+
+	// Check the frame structure, too.
+	db_ok = db_ok and checkFrames();
+
+	if (db_ok)
+		printf("Completed DB consistency check w/o errors.\n");
+}
+
+void RocksStorage::scrubdb()
+{
+	scrubFrames();
 }
 
 // ======================== THE END ======================

@@ -51,6 +51,9 @@ class RocksStorage : public StorageNode
 		std::string _uri;
 		rocksdb::DB* _rfile;
 
+		// Get the DB version string.
+		std::string get_version(void);
+
 		// True if file contains more than one atomspace.
 		bool _multi_space;
 		// The Handles are *always* AtomSpacePtr's
@@ -66,6 +69,8 @@ class RocksStorage : public StorageNode
 		}
 		Handle decodeFrame(const std::string&);
 		Handle getFrame(const std::string&);
+		bool checkFrames(void);
+		void scrubFrames(void);
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
@@ -146,6 +151,7 @@ class RocksStorage : public StorageNode
 		void storeAtomSpace(const AtomSpace*); // Store entire contents
 		HandleSeq loadFrameDAG(void);   // Load AtomSpace DAG
 		void storeFrameDAG(AtomSpace*); // Store AtomSpace DAG
+		void deleteFrame(AtomSpace*);   // Delete the entire frame
 		void barrier(AtomSpace* = nullptr);
 		std::string monitor();
 
@@ -153,6 +159,7 @@ class RocksStorage : public StorageNode
 		void print_stats(void);
 		void clear_stats(void); // reset stats counters.
 		void checkdb(void);
+		void scrubdb(void);
 };
 
 class RocksStorageNode : public RocksStorage
