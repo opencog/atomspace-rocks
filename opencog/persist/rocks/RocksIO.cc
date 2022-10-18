@@ -1342,7 +1342,7 @@ void RocksStorage::checkdb()
 	db_ok = db_ok and checkFrames();
 
 	if (db_ok)
-		printf("Completed DB consistency check w/o errors\n");
+		printf("Completed DB consistency check w/o errors.\n");
 }
 
 void RocksStorage::scrubdb()

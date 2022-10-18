@@ -147,7 +147,8 @@ bool RocksStorage::checkFrames(void)
 /// Scrube away any orphaned Atoms resulting from frame deletion.
 void RocksStorage::scrubFrames(void)
 {
-printf("hello scrub\n");
+	size_t cnt = 0;
+
 	std::string pfx = "a@";
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
@@ -165,9 +166,22 @@ printf("hello scrub\n");
 		// Ignore it as a special case.
 		if (0 == akey.compare("k@1:")) continue;
 
+		// We've found an orphan. Delete the `a@` index entry.
 		std::string satom = it->value().ToString();
-printf("duuude delete %s\n", satom.c_str());
+		akey[0] = 'a';
+		_rfile->Delete(rocksdb::WriteOptions(), akey);
+
+		// We won't know if it is a Node or Link till we decode it.
+		Handle orph =  Sexpr::decode_atom(satom);
+		if (orph->is_node())
+			_rfile->Delete(rocksdb::WriteOptions(), "n@" + satom);
+		else
+			_rfile->Delete(rocksdb::WriteOptions(), "l@" + satom);
+
+		cnt++;
 	}
+
+	printf("Deleted %lu orphaned Atoms.\n", cnt);
 }
 
 // ======================== THE END ======================
