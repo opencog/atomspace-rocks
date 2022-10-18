@@ -59,6 +59,7 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 	std::string oid = "o@" + fid;
 printf("hello world %s\n", fid.c_str());
 
+	// Loop over all atoms in the frame, and delete any keys on them.
 	size_t sidoff = oid.size();
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(oid); it->Valid() and it->key().starts_with(oid); it->Next())
@@ -70,10 +71,15 @@ printf("hello sid %s\n", fis.substr(sidoff).c_str());
 		std::string pfx = "k@" + sid + ":" + fid;
 		auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
 		for (kt->Seek(pfx); kt->Valid() and kt->key().starts_with(pfx); kt->Next())
-			_rfile->Delete(rocksdb::WrkteOptions(), kt->key());
+			_rfile->Delete(rocksdb::WriteOptions(), kt->key());
 		delete kit;
+
+		// Delete the key itself
+		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	}
 	delete it;
+
+	// Delete the frame encoding, too.
 }
 
 // ======================== THE END ======================

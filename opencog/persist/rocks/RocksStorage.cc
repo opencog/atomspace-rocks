@@ -111,17 +111,22 @@ void RocksStorage::init(const char * uri)
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
 
-	// Verify the version number. Version numbers are not currently used;
-	// this is for future-proofing future versions.
+	// Verify the version number.
+	// If there is no version number, then the DB has no frames;
+	//    its a mono-space DB (and the mono driver should be used).
+	// Version 1 DB's might have frames. They work with current code.
+	// Version 2 DB's have frame reversed indexes ("o@") for frame
+	//    deletion. Frames cannot be deleted without this. Added Oct 2022.
 	std::string version;
 	s = _rfile->Get(rocksdb::ReadOptions(), version_key, &version);
 	if (not s.ok())
 	{
-		s = _rfile->Put(rocksdb::WriteOptions(), version_key, "1");
+		s = _rfile->Put(rocksdb::WriteOptions(), version_key, "2");
 	}
 	else
 	{
-		if (0 != version.compare("1"))
+		if (0 != version.compare("1") and
+		    0 != version.compare("2"))
 			throw IOException(TRACE_INFO,
 				"Unsupported DB version '%s'\n", version.c_str());
 	}
