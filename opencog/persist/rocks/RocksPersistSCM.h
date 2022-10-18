@@ -60,6 +60,8 @@ public:
 
 	void do_get(const std::string&);
 	void do_print(const Handle&, const std::string&);
+	void do_check(const Handle&);
+	void do_scrub(const Handle&);
 }; // class
 
 /** @}*/

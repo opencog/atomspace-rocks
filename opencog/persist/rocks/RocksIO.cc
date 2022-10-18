@@ -1339,9 +1339,34 @@ void RocksStorage::checkdb()
 	}
 
 	// ------------------------------------------------------------
-	// For multi-spaces, look for atoms that have no keyes on them.
+	// For multi-spaces, look for atoms that have no keys on them.
 	if (_multi_space)
 	{
+		std::string pfx = "a@";
+		size_t cnt = 0;
+		auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+		for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+		{
+			std::string akey = it->key().ToString();
+			akey[0] = 'k';
+printf("duuude sid=%s\n", akey.c_str());
+			std::string sval;
+			rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), akey, &sval);
+			if (not s.ok())
+			{
+				// `a@1:` is the key for (PredicateNode "*-TruthValueKey-*")
+				// and ignore that as a special case.
+				if (akey.compare("k@1:"))
+					cnt++;
+			}
+		}
+		delete it;
+
+		if (cnt)
+		{
+			db_ok = false;
+			printf("Error: found %zu orphaned Atoms!\n", cnt);
+		}
 	}
 
 	if (db_ok)
@@ -1350,7 +1375,7 @@ void RocksStorage::checkdb()
 
 void RocksStorage::scrubdb()
 {
-	scrubeFrames();
+	scrubFrames();
 }
 
 // ======================== THE END ======================
