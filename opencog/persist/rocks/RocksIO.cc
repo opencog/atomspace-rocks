@@ -1338,37 +1338,8 @@ void RocksStorage::checkdb()
 		printf("Error: found %zu orphaned Values!\n", cnt);
 	}
 
-	// ------------------------------------------------------------
-	// For multi-spaces, look for atoms that have no keys on them.
-	if (_multi_space)
-	{
-		std::string pfx = "a@";
-		size_t cnt = 0;
-		auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-		for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
-		{
-			std::string akey = it->key().ToString();
-			akey[0] = 'k';
-			auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
-			kt->Seek(akey);
-			if (not (kt->Valid() and kt->key().starts_with(akey)))
-			{
-				// `a@1:` is the key for (PredicateNode "*-TruthValueKey-*")
-				// and ignore that as a special case.
-				if (akey.compare("k@1:"))
-					cnt++;
-			}
-			delete kt;
-		}
-		delete it;
-
-		if (cnt)
-		{
-			db_ok = false;
-			printf("Info: found %zu orphaned Atoms!\n", cnt);
-			printf("These can be removed by running `cog-rocks-scrub`\n");
-		}
-	}
+	// Check the frame structure, too.
+	db_ok = db_ok and checkFrames();
 
 	if (db_ok)
 		printf("Completed DB consistency check w/o errors\n");

@@ -69,6 +69,7 @@ class RocksStorage : public StorageNode
 		}
 		Handle decodeFrame(const std::string&);
 		Handle getFrame(const std::string&);
+		bool checkFrames(void);
 		void scrubFrames(void);
 
 		// unique ID's
