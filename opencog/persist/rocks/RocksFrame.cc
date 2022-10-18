@@ -35,7 +35,13 @@ using namespace opencog;
 
 // ======================================================================
 
-/// Load the entire collection of AtomSpace frames.
+/// Delete all keys on all atoms in the indicated frame, and
+/// then delete the record of the frame itself. This will leak
+/// atoms, if the frame contains Atoms that do not appear in any
+/// other frame. These will remain behind in the DB, orphaned.
+/// These can be easily found, by searching for sids that have
+/// no k@ on them.  A DB scrub routine (not implemented) could
+/// "easily" remove them.
 void RocksStorage::deleteFrame(AtomSpace* frame)
 {
 	CHECK_OPEN;
@@ -85,6 +91,16 @@ printf("hello sid %s\n", sid.c_str());
 	delete it;
 
 	// Delete the frame encoding, too.
+	fid = pr->second;
+	std::string did = "d@" + fid;
+	std::string senc;
+	_rfile->Get(rocksdb::ReadOptions(), did, &senc);
+	_rfile->Delete(rocksdb::WriteOptions(), did);
+	_rfile->Delete(rocksdb::WriteOptions(), "f@" + senc);
+printf("duude goodby delete senc=%s\n", senc.c_str());
+
+	// Finally, remove it from out own tables.
+	x
 }
 
 // ======================== THE END ======================
