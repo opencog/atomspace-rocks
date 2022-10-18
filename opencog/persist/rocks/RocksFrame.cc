@@ -70,7 +70,6 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 	// First, get rid of all the atoms in it.
 	std::string fid = pr->second + ":";
 	std::string oid = "o@" + fid;
-printf("hello world %s\n", fid.c_str());
 
 	// Loop over all atoms in the frame, and delete any keys on them.
 	size_t sidoff = oid.size();
@@ -79,7 +78,6 @@ printf("hello world %s\n", fid.c_str());
 	{
 		const std::string& fis = it->key().ToString();
 		const std::string& sid = fis.substr(sidoff);
-printf("hello sid %s\n", sid.c_str());
 
 		// Delete all values hanging on the atom ...
 		std::string pfx = "k@" + sid + ":" + fid;
@@ -100,7 +98,6 @@ printf("hello sid %s\n", sid.c_str());
 	_rfile->Get(rocksdb::ReadOptions(), did, &senc);
 	_rfile->Delete(rocksdb::WriteOptions(), did);
 	_rfile->Delete(rocksdb::WriteOptions(), "f@" + senc);
-printf("duude goodby delete senc=%s\n", senc.c_str());
 
 	// Finally, remove it from out own tables.
 	_fid_map.erase(fid);

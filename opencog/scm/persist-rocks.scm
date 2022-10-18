@@ -18,6 +18,7 @@ cog-rocks-stats cog-rocks-print)
 (set-procedure-property! cog-rocks-clear-stats 'documentation
 "
  cog-rocks-clear-stats - reset the performance statistics counters.
+
     This will zero out the various counters used to track the
     performance of the RocksDB backend.  Statistics will continue to
     be accumulated.
@@ -52,6 +53,7 @@ cog-rocks-stats cog-rocks-print)
 (set-procedure-property! cog-rocks-stats 'documentation
 "
  cog-rocks-stats - report performance statistics.
+
     This will cause some database performance statistics to be printed
     to the stdout of the server. These statistics can be quite arcane
     and are useful primarily to the developers of the backend.
@@ -60,6 +62,17 @@ cog-rocks-stats cog-rocks-print)
 (set-procedure-property! cog-rocks-print 'documentation
 "
  cog-rocks-print RSN PREFIX - internal-use-only debugging utility.
+
     RSN must be a RocksStorageNode.
     PREFIX must be a prefix, for example \"a@\" or \"n@\" and so on.
+")
+
+(set-procedure-property! cog-rocks-get 'documentation
+"
+ cog-rocks-get PREFIX - internal-use-only debugging utility.
+
+    PREFIX must be a prefix, for example \"a@\" or \"n@\" and so on.
+
+    The DB must have been previously opened with `cog-rocks-open`.
+    You probably want to use `cog-rocks-print` instead; it's simpler.
 ")

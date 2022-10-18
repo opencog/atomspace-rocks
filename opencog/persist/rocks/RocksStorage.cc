@@ -152,7 +152,8 @@ void RocksStorage::init(const char * uri)
 
 // Informational prints.
 printf("Rocks: opened=%s\n", file.c_str());
-printf("Rocks: multi-space=%d initial aid=%lu\n", _multi_space, _next_aid.load());
+printf("Rocks: DB-version=%s multi-space=%d initial aid=%lu\n",
+version.c_str(), _multi_space, _next_aid.load());
 
 	// Set up a SID for the TV predicate key.
 	// This must match what the AtomSpace is using.
