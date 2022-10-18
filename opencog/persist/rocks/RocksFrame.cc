@@ -110,6 +110,26 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 void RocksStorage::scrubFrames(void)
 {
 printf("hello scrub\n");
+	std::string pfx = "a@";
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+	{
+		std::string akey = it->key().ToString();
+		akey[0] = 'k';
+		auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
+		kt->Seek(akey);
+		if (kt->Valid() and kt->key().starts_with(akey))
+		  { delete kt; continue; }
+
+		delete kt;
+
+		// `a@1:` is the key for (PredicateNode "*-TruthValueKey-*")
+		// Ignore it as a special case.
+		if (0 == akey.compare("k@1:")) continue;
+
+		std::string satom = it->value().ToString();
+printf("duuude delete %s\n", satom.c_str());
+	}
 }
 
 // ======================== THE END ======================
