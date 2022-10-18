@@ -58,6 +58,9 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 		throw IOException(TRACE_INFO,
 			"Deletion of non-top frames is not currently supported!\n");
 
+	// Everything under here proceeds with the frame lock held.
+	std::lock_guard<std::mutex> flck(_mtx_frame);
+
 	const auto& pr = _frame_map.find(hasp);
 	if (_frame_map.end() == pr)
 		throw IOException(TRACE_INFO,
@@ -100,7 +103,8 @@ printf("hello sid %s\n", sid.c_str());
 printf("duude goodby delete senc=%s\n", senc.c_str());
 
 	// Finally, remove it from out own tables.
-	x
+	_fid_map.erase(fid);
+	_frame_map.erase(hasp);
 }
 
 // ======================== THE END ======================
