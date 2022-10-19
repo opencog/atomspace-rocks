@@ -111,6 +111,13 @@ void RocksStorage::init(const char * uri)
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
 
+	// Does the file contain multiple atomspaces?
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it->Seek("f@");
+	if (it->Valid() and it->key().starts_with("f@"))
+		_multi_space = true;
+	delete it;
+
 	// Verify the version number.
 	// If there is no version number, then the DB has no frames;
 	//    its a mono-space DB (and the mono driver should be used).
@@ -121,7 +128,7 @@ void RocksStorage::init(const char * uri)
 	s = _rfile->Get(rocksdb::ReadOptions(), version_key, &version);
 	if (not s.ok())
 	{
-		s = _rfile->Put(rocksdb::WriteOptions(), version_key, "2");
+		_rfile->Put(rocksdb::WriteOptions(), version_key, "2");
 	}
 	else
 	{
@@ -129,6 +136,11 @@ void RocksStorage::init(const char * uri)
 		    0 != version.compare("2"))
 			throw IOException(TRACE_INFO,
 				"Unsupported DB version '%s'\n", version.c_str());
+
+		// If it's version 1, and does not (yet) contain multiple
+		// spaces, it is safe to upgrade to version 2.
+		if (0 == version.compare("1") and not _multi_space)
+			_rfile->Put(rocksdb::WriteOptions(), version_key, "2");
 	}
 
 	// If the file was created just now, then set the UUID to 1.
@@ -143,17 +155,10 @@ void RocksStorage::init(const char * uri)
 	else
 		_next_aid = strtoaid(sid) + 1; // next unused...
 
-	// Does the file contain multiple atomspaces?
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-	it->Seek("f@");
-	if (it->Valid() and it->key().starts_with("f@"))
-		_multi_space = true;
-	delete it;
-
 // Informational prints.
 printf("Rocks: opened=%s\n", file.c_str());
 printf("Rocks: DB-version=%s multi-space=%d initial aid=%lu\n",
-version.c_str(), _multi_space, _next_aid.load());
+get_version().c_str(), _multi_space, _next_aid.load());
 
 	// Set up a SID for the TV predicate key.
 	// This must match what the AtomSpace is using.
