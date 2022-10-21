@@ -229,4 +229,58 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 	writeFrame(HandleCast(top));
 }
 
+// =========================================================
+// General utility
+
+/// Create a total order out of a partial order, such that earlier
+/// AtomSpaces *always* appear before later ones.
+/// `hasp` is an AtomSpacePtr.
+/// `order` is the total order being created.
+void RocksStorage::makeOrder(Handle hasp,
+                             std::map<uint64_t, Handle>& order)
+{
+// XXX TODO: we should probably cache the results, instead of
+// recomputing every time!?
+	// As long as there's a stack of Frames, just loop.
+	while (true)
+	{
+		const auto& pr = _frame_map.find(hasp);
+		if (_frame_map.end() == pr)
+			throw IOException(TRACE_INFO,
+				"Cannot use an AtomSpace DAG inconsistent with stored DAG!\n"
+				"Did you forget to call `(load-frames)`?");
+
+		order.insert({strtoaid(pr->second), hasp});
+		size_t nas = hasp->get_arity();
+		if (0 == nas) return;
+		if (1 < nas) break;
+		hasp = hasp->getOutgoingAtom(0);
+	}
+
+	// Recurse if there are more than one.
+	for (const Handle& ho: hasp->getOutgoingSet())
+		makeOrder(ho, order);
+}
+
+// =========================================================
+// Debug utility
+
+HandleSeq RocksStorage::topFrames(void)
+{
+	HandleSeq tops;
+	for (const auto& pr : _frame_map)
+	{
+		const Handle& hasp = pr.first;
+
+		bool found = false;
+		for (const Handle& hi : hasp->getIncomingSet())
+		{
+			if (_frame_map.end() != _frame_map.find(hi))
+			{ found = true; break; }
+		}
+		if (not found) tops.push_back(hasp);
+	}
+	return tops;
+}
+
 // ======================== THE END ======================

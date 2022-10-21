@@ -153,7 +153,6 @@ void RocksPersistSCM::do_get(const std::string& prefix)
 void RocksPersistSCM::do_stats(const Handle& h)
 {
 	GET_SNP("cog-rocks-stats")
-	printf("cog-rocks-stats: Atomspace holds %zu atoms\n", _as->get_size());
 	snp->print_stats();
 }
 
