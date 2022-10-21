@@ -282,6 +282,20 @@ std::string RocksStorage::monitor(void)
 	rs += " h@: " + std::to_string(count_records("h@"));
 	rs += "\n";
 
+	if (_multi_space)
+	{
+		rs += "\n";
+		rs += "  Height Distribution:\n";
+		size_t height = 0;
+		while (true)
+		{
+			std::string zed = "z" + aidtostr(height) + "@";
+			size_t nrec = count_records(zed);
+			rs += "    " + zed + ": " + std::to_string(nrec) + "\n";
+			if (0 == nrec) break;
+		}
+	}
+
 	struct rlimit maxfh;
 	getrlimit(RLIMIT_NOFILE, &maxfh);
 	rs += "Unix max open files rlimit= " + std::to_string(maxfh.rlim_cur);
