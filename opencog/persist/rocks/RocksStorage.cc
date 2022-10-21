@@ -294,7 +294,19 @@ std::string RocksStorage::monitor(void)
 			rs += "    " + zed + ": " + std::to_string(nrec) + "\n";
 			if (0 == nrec) break;
 		}
+
+		HandleSeq tops = topFrames();
+		rs += "\n";
+		rs += "  Frame tops: " + std::to_string(tops.size()) + "\n";
+		for (const Handle& ht: tops)
+		{
+			// total order
+			std::map<uint64_t, Handle> totor;
+			makeOrder(ht, totor);
+		}
 	}
+
+	rs += "\n";
 
 	struct rlimit maxfh;
 	getrlimit(RLIMIT_NOFILE, &maxfh);
