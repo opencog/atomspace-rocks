@@ -397,6 +397,13 @@ void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 	// The below will revise as needed.
 	_rfile->Delete(rocksdb::WriteOptions(), skid + tv_pred_sid);
 
+	// If there is a previous marker, erase it!
+	std::string marker = skid + "+1";
+	std::string slop;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), marker, &slop);
+	if (s.ok())
+		_rfile->Delete(rocksdb::WriteOptions(), marker);
+
 	// Store an intentionally invalid key.
 	_rfile->Put(rocksdb::WriteOptions(), skid + "-1", "");
 }
