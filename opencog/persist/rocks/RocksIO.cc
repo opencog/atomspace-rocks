@@ -257,7 +257,7 @@ size_t RocksStorage::getHeight(const Handle& h)
 
 /// Place Atom into storage.
 /// Return the matching sid.
-std::string RocksStorage::writeAtom(const Handle& h)
+std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 {
 	AtomSpace* as = h->getAtomSpace();
 	if (_atom_space and as and as != _atom_space)
@@ -325,6 +325,24 @@ std::string RocksStorage::writeAtom(const Handle& h)
 		size_t height = getHeight(h);
 		_rfile->Put(rocksdb::WriteOptions(),
 			"z" + aidtostr(height) + "@" + sid, "");
+
+		// Need to record which frame this Atom first appears in.
+		// This is done using k@ records. There needs to be at least
+		// one such record, somewhere. If there are none, use "+1"
+		// as a blank marker. We don't need to do this, if we know
+		// that keys will be written shortly.
+		if (need_mark or not h->haveValues())
+		{
+			std::string kid = "k@" + sid + ":";
+			auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
+			kt->Seek(kid);
+			if (not (kt->Valid() and kt->key().starts_with(kid)))
+			{
+				_rfile->Put(rocksdb::WriteOptions(),
+					kid + writeFrame(as) + ":+1", "");
+			}
+			delete kt;
+		}
 	}
 
 	return sid;
@@ -333,7 +351,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
 	CHECK_OPEN;
-	const std::string& sid = writeAtom(h);
+	const std::string& sid = writeAtom(h, false);
 
 	// Separator for keys
 	std::string cid = "k@" + sid + ":";
@@ -360,7 +378,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 
 void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 {
-	std::string sid = writeAtom(h);
+	std::string sid = writeAtom(h, false);
 
 	// Separator for keys
 	std::string skid = "k@" + sid + ":" + writeFrame(as) + ":";
@@ -386,7 +404,7 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 	CHECK_OPEN;
 
 	// k@fid:sid:kid
-	std::string pfx = "k@" + writeAtom(h) + ":";
+	std::string pfx = "k@" + writeAtom(h, false) + ":";
 	if (_multi_space)
 		pfx += writeFrame(h->getAtomSpace()) + ":";
 	pfx += writeAtom(key);
