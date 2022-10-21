@@ -291,8 +291,8 @@ std::string RocksStorage::monitor(void)
 		{
 			std::string zed = "z" + aidtostr(height) + "@";
 			size_t nrec = count_records(zed);
-			rs += "    " + zed + ": " + std::to_string(nrec) + "\n";
 			if (0 == nrec) break;
+			rs += "    " + zed + ": " + std::to_string(nrec) + "\n";
 			height ++;
 		}
 
@@ -301,8 +301,8 @@ std::string RocksStorage::monitor(void)
 		rs += "  Number of Frame tops: " + std::to_string(tops.size()) + "\n";
 		for (const Handle& ht: tops)
 		{
-			rs += "  Frame top: " + AtomSpaceCast(ht)->get_name() + "\n";
-			rs += "  Size Name\n";
+			rs += "  Frame top: `" + AtomSpaceCast(ht)->get_name() + "`\n";
+			rs += "  Size   Name\n";
 			// total order
 			std::map<uint64_t, Handle> totor;
 			makeOrder(ht, totor);
@@ -312,8 +312,8 @@ std::string RocksStorage::monitor(void)
 				const AtomSpacePtr asp = AtomSpaceCast(hasp);
 				std::string fid = aidtostr(pr.first);
 				size_t nrec = count_records("o@" + fid);
-				rs += "    " + std::to_string(nrec) + "\t";
-				rs += asp->get_name() + "\n";
+				rs += "    " + std::to_string(nrec) + "\t`";
+				rs += asp->get_name() + "`\n";
 			}
 		}
 	}
@@ -322,8 +322,8 @@ std::string RocksStorage::monitor(void)
 
 	struct rlimit maxfh;
 	getrlimit(RLIMIT_NOFILE, &maxfh);
-	rs += "Unix max open files rlimit= " + std::to_string(maxfh.rlim_cur);
-	rs += " " + std::to_string(maxfh.rlim_max);
+	rs += "Unix max open files rlimit cur: " + std::to_string(maxfh.rlim_cur);
+	rs += " rlimit max: " + std::to_string(maxfh.rlim_max);
 	rs += "\n";
 	return rs;
 }
