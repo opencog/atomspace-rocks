@@ -297,10 +297,11 @@ std::string RocksStorage::monitor(void)
 
 		HandleSeq tops = topFrames();
 		rs += "\n";
-		rs += "  Frame tops: " + std::to_string(tops.size()) + "\n";
-		rs += "  Size Name\n";
+		rs += "  Number of Frame tops: " + std::to_string(tops.size()) + "\n";
 		for (const Handle& ht: tops)
 		{
+			rs += "  Frame top: " + AtomSpaceCast(ht)->get_name() + "\n";
+			rs += "  Size Name\n";
 			// total order
 			std::map<uint64_t, Handle> totor;
 			makeOrder(ht, totor);
@@ -311,7 +312,7 @@ std::string RocksStorage::monitor(void)
 				std::string fid = aidtostr(pr.first);
 				size_t nrec = count_records("o@" + fid);
 				rs += "    " + std::to_string(nrec) + "\t";
-				rs += asp->get_name();
+				rs += asp->get_name() + "\n";
 			}
 		}
 	}
