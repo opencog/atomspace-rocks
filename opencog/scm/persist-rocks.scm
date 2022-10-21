@@ -19,11 +19,12 @@ cog-rocks-check cog-rocks-scrub
 
 (set-procedure-property! cog-rocks-clear-stats 'documentation
 "
- cog-rocks-clear-stats - reset the performance statistics counters.
+ cog-rocks-clear-stats RSN - reset the performance statistics counters.
 
     This will zero out the various counters used to track the
-    performance of the RocksDB backend.  Statistics will continue to
-    be accumulated.
+    performance of the RocksDB backend.  Statistics will continue
+    to be accumulated. RSN must be a RocksStorageNode, and it must
+    be open.
 ")
 
 (set-procedure-property! cog-rocks-close 'documentation
@@ -54,11 +55,13 @@ cog-rocks-check cog-rocks-scrub
 
 (set-procedure-property! cog-rocks-stats 'documentation
 "
- cog-rocks-stats - report performance statistics.
+ cog-rocks-stats RSN - report performance statistics.
 
     This will cause some database performance statistics to be printed
     to the stdout of the server. These statistics can be quite arcane
     and are useful primarily to the developers of the backend.
+
+    RSN must be a RocksStorageNode, and it must be open.
 ")
 
 (set-procedure-property! cog-rocks-get 'documentation

@@ -54,11 +54,12 @@ public:
 	void do_close(void);
 	void do_load(void);
 	void do_store(void);
-
-	void do_stats(void);
-	void do_clear_stats(void);
-
 	void do_get(const std::string&);
+
+	// Handle must be a RocksStorageNode, and it must be open.
+	void do_stats(const Handle&);
+	void do_clear_stats(const Handle&);
+
 	void do_print(const Handle&, const std::string&);
 	void do_check(const Handle&);
 	void do_scrub(const Handle&);

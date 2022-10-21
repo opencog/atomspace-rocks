@@ -79,6 +79,7 @@ RocksPersistSCM::~RocksPersistSCM()
     _storage = nullptr;
 }
 
+// XXX FIXME -- are open and close actually needed for anything?
 void RocksPersistSCM::do_open(const std::string& uri)
 {
     if (_storage)
@@ -132,46 +133,35 @@ void RocksPersistSCM::do_close(void)
     _storage = nullptr;
 }
 
-void RocksPersistSCM::do_stats(void)
-{
-    if (nullptr == _storage) {
-        printf("cog-rocks-stats: AtomSpace not connected to database!\n");
-        return;
-    }
-
-    printf("cog-rocks-stats: Atomspace holds %zu atoms\n", _as->get_size());
-    _storage->print_stats();
-
-    // Optionally validate the database contents for corruption.
-    // We're not doing this, because everything seems to be OK.
-    // _storage->checkdb();
-}
-
-void RocksPersistSCM::do_clear_stats(void)
-{
-    if (nullptr == _storage) {
-        printf("cog-rocks-clear-stats: AtomSpace not connected to database!\n");
-        return;
-    }
-
-    _storage->clear_stats();
-}
-
 void RocksPersistSCM::do_get(const std::string& prefix)
 {
-    if (nullptr == _storage) {
-        printf("cog-rocks-get: AtomSpace not connected to database!\n");
-        return;
-    }
-    _storage->print_range(prefix);
+	if (nullptr == _storage) {
+		printf("cog-rocks-get: AtomSpace not connected to database!\n");
+		return;
+	}
+	_storage->print_range(prefix);
 }
 
 #define GET_SNP(FUN) \
 	RocksStorageNodePtr snp = RocksStorageNodeCast(h); \
 	if (nullptr == snp) { \
-		printf(FUN ": Not a storage node!\n"); \
+		throw RuntimeException(TRACE_INFO, \
+			FUN ": Error: Not a RocksStorageNode!"); \
 		return; \
 	}
+
+void RocksPersistSCM::do_stats(const Handle& h)
+{
+	GET_SNP("cog-rocks-stats")
+	printf("cog-rocks-stats: Atomspace holds %zu atoms\n", _as->get_size());
+	snp->print_stats();
+}
+
+void RocksPersistSCM::do_clear_stats(const Handle& h)
+{
+	GET_SNP("cog-rocks-clear-stats")
+	snp->clear_stats();
+}
 
 void RocksPersistSCM::do_print(const Handle& h, const std::string& prefix)
 {
