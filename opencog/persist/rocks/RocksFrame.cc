@@ -148,9 +148,12 @@ bool RocksStorage::checkFrames(void)
 
 // ======================================================================
 
-/// Scrube away any orphaned Atoms resulting from frame deletion.
+/// Scrub away any orphaned Atoms resulting from frame deletion.
 void RocksStorage::scrubFrames(void)
 {
+	CHECK_OPEN;
+	if (not _multi_space) return;
+
 	size_t cnt = 0;
 
 	std::string pfx = "a@";
@@ -181,6 +184,8 @@ void RocksStorage::scrubFrames(void)
 			_rfile->Delete(rocksdb::WriteOptions(), "n@" + satom);
 		else
 			_rfile->Delete(rocksdb::WriteOptions(), "l@" + satom);
+
+		// TODO also delete the z's
 
 		cnt++;
 	}
