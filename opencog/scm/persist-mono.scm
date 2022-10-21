@@ -17,10 +17,12 @@ cog-mono-stats cog-mono-print)
 
 (set-procedure-property! cog-mono-clear-stats 'documentation
 "
- cog-mono-clear-stats - reset the performance statistics counters.
+ cog-mono-clear-stats MSN - reset the performance statistics counters.
     This will zero out the various counters used to track the
     performance of the RocksDB backend.  Statistics will continue to
     be accumulated.
+
+    MSN must be a MonoStorageNode, and it must be open for reading.
 ")
 
 (set-procedure-property! cog-mono-close 'documentation
@@ -44,15 +46,17 @@ cog-mono-stats cog-mono-print)
 
 (set-procedure-property! cog-mono-stats 'documentation
 "
- cog-mono-stats - report performance statistics.
+ cog-mono-stats MSN - report performance statistics.
     This will cause some database performance statistics to be printed
     to the stdout of the server. These statistics can be quite arcane
     and are useful primarily to the developers of the backend.
+
+    MSN must be a MonoStorageNode, and it must be open for reading.
 ")
 
 (set-procedure-property! cog-mono-print 'documentation
 "
- cog-mono-print RSN PREFIX - internal-use-only debugging utility.
-    RSN must be a RocksStorageNode.
+ cog-mono-print MSN PREFIX - internal-use-only debugging utility.
+    MSN must be a MonoStorageNode.
     PREFIX must be a prefix, for example \"a@\" or \"n@\" and so on.
 ")
