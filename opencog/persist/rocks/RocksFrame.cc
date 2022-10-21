@@ -183,9 +183,15 @@ void RocksStorage::scrubFrames(void)
 		if (orph->is_node())
 			_rfile->Delete(rocksdb::WriteOptions(), "n@" + satom);
 		else
+		{
 			_rfile->Delete(rocksdb::WriteOptions(), "l@" + satom);
 
-		// TODO also delete the z's
+			// Also delete the zN@sid entries.
+			size_t height = getHeight(orph);
+			const std::string& sid = akey.substr(2);
+			_rfile->Delete(rocksdb::WriteOptions(),
+				"z" + aidtostr(height) + "@" + sid);
+		}
 
 		cnt++;
 	}
