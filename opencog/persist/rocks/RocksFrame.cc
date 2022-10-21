@@ -178,6 +178,16 @@ void RocksStorage::scrubFrames(void)
 		akey[0] = 'a';
 		_rfile->Delete(rocksdb::WriteOptions(), akey);
 
+		// Delete the incoming sets, too.
+		// To get fancy, could use DeleteRange() here.
+		akey[0] = 'i';
+		auto ic = _rfile->NewIterator(rocksdb::ReadOptions());
+		for (ic->Seek(akey); ic->Valid() and ic->key().starts_with(akey); ic->Next())
+		{
+			std::string inky = ic->key().ToString();
+			_rfile->Delete(rocksdb::WriteOptions(), inky);
+		}
+
 		// We won't know if it is a Node or Link till we decode it.
 		Handle orph =  Sexpr::decode_atom(satom);
 		if (orph->is_node())
