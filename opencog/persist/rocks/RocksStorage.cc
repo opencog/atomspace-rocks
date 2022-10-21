@@ -286,13 +286,14 @@ std::string RocksStorage::monitor(void)
 	{
 		rs += "\n";
 		rs += "  Height Distribution:\n";
-		size_t height = 0;
+		size_t height = 1;
 		while (true)
 		{
 			std::string zed = "z" + aidtostr(height) + "@";
 			size_t nrec = count_records(zed);
 			rs += "    " + zed + ": " + std::to_string(nrec) + "\n";
 			if (0 == nrec) break;
+			height ++;
 		}
 
 		HandleSeq tops = topFrames();
