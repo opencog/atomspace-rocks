@@ -1,5 +1,5 @@
 ;
-; value-store-test.scm
+; mono-value-store-test.scm
 ; Verify that only the top values are stored.
 ;
 (use-modules (srfi srfi-1))
