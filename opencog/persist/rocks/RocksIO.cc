@@ -363,8 +363,18 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		_rfile->Put(rocksdb::WriteOptions(), oid, "");
 
 		// If there are no keys(!!) record a bogus key to mark the frame.
+		// If there are keys, then clobber any pre-existing marker!
+		std::string marker = cid + "+1";
 		if (not h->haveValues())
-			_rfile->Put(rocksdb::WriteOptions(), cid + "+1", "");
+			_rfile->Put(rocksdb::WriteOptions(), marker, "");
+		else
+		{
+			std::string slop;
+			rocksdb::Status s =
+				_rfile->Get(rocksdb::ReadOptions(), marker, &slop);
+			if (s.ok())
+				_rfile->Delete(rocksdb::WriteOptions(), marker);
+		}
 	}
 
 	// Always clobber the TV, set it back to default.
