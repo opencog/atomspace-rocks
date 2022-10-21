@@ -130,31 +130,6 @@ void MonoPersistSCM::do_close(void)
     _storage = nullptr;
 }
 
-void MonoPersistSCM::do_stats(void)
-{
-    if (nullptr == _storage) {
-        printf("cog-mono-stats: AtomSpace not connected to database!\n");
-        return;
-    }
-
-    printf("cog-mono-stats: Atomspace holds %zu atoms\n", _as->get_size());
-    _storage->print_stats();
-
-    // Optionally validate the database contents for corruption.
-    // We're not doing this, because everything seems to be OK.
-    // _storage->checkdb();
-}
-
-void MonoPersistSCM::do_clear_stats(void)
-{
-    if (nullptr == _storage) {
-        printf("cog-mono-clear-stats: AtomSpace not connected to database!\n");
-        return;
-    }
-
-    _storage->clear_stats();
-}
-
 void MonoPersistSCM::do_get(const std::string& prefix)
 {
     if (nullptr == _storage) {
@@ -164,17 +139,30 @@ void MonoPersistSCM::do_get(const std::string& prefix)
     _storage->print_range(prefix);
 }
 
+#define GET_SNP(FUN) \
+	MonoStorageNodePtr snp = MonoStorageNodeCast(h); \
+	if (nullptr == snp) \
+		throw RuntimeException(TRACE_INFO, FUN ": Not a MonoStorageNode!\n");
+
+void MonoPersistSCM::do_stats(const Handle& h)
+{
+	GET_SNP("cog-mono-stats")
+	snp->print_stats();
+}
+
+void MonoPersistSCM::do_clear_stats(const Handle& h)
+{
+	GET_SNP("cog-mono-clear-stats")
+	snp->clear_stats();
+}
+
 void MonoPersistSCM::do_print(const Handle& h, const std::string& prefix)
 {
-    MonoStorageNodePtr snp = MonoStorageNodeCast(h);
-    if (nullptr == snp) {
-        printf("cog-mono-print: Not a storage node!\n");
-        return;
-    }
-    snp->print_range(prefix);
+	GET_SNP("cog-mono-print")
+	snp->print_range(prefix);
 }
 
 void opencog_persist_mono_init(void)
 {
-    static MonoPersistSCM patty(nullptr);
+	static MonoPersistSCM patty(nullptr);
 }
