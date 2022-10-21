@@ -303,22 +303,28 @@ std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 	if (convertible)
 		appendToSidList(shash, sid);
 
-	// Need to record which frame this Atom first appears in.
-	// This is done using k@ records. There needs to be at least
-	// one such record, somewhere. If there are none, use "+1"
-	// as a blank marker. We don't need to do this, if we know
-	// that keys will be written shortly.
-	if (_multi_space and (need_mark or not h->haveValues()))
+	if (_multi_space)
 	{
-		std::string kid = "k@" + sid + ":";
-		auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
-		kt->Seek(kid);
-		if (not (kt->Valid() and kt->key().starts_with(kid)))
+		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
+		std::string oid = "o@" + fid + sid;
+		_rfile->Put(rocksdb::WriteOptions(), oid, "");
+
+		// Need to record which frame this Atom first appears in.
+		// This is done using k@ records. There needs to be at least
+		// one such record, somewhere. If there are none, use "+1"
+		// as a blank marker. We don't need to do this, if we know
+		// that keys will be written shortly.
+		if (need_mark or not h->haveValues())
 		{
-			_rfile->Put(rocksdb::WriteOptions(),
-				kid + writeFrame(as) + ":+1", "");
+			std::string kid = "k@" + sid + ":";
+			auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
+			kt->Seek(kid);
+			if (not (kt->Valid() and kt->key().starts_with(kid)))
+			{
+				_rfile->Put(rocksdb::WriteOptions(), kid + fid + "+1", "");
+			}
+			delete kt;
 		}
-		delete kt;
 	}
 
 	// If its a Node, we are done.
@@ -359,8 +365,6 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 	{
 		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
 		cid += fid;
-		std::string oid = "o@" + fid + sid;
-		_rfile->Put(rocksdb::WriteOptions(), oid, "");
 
 		// If there are no keys(!!) record a bogus key to mark the frame.
 		// If there are keys, then clobber any pre-existing marker!
