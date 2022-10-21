@@ -25,4 +25,4 @@ ADD_CXXTEST(MonoQueryPersistUTest)
 ADD_CXXTEST(MonoLargeFlatUTest)
 ADD_CXXTEST(MonoLargeZipfUTest)
 
-ADD_GUILE_TEST(MonoValueStore value-store-test.scm)
+ADD_GUILE_TEST(MonoValueStore mono-value-store-test.scm)
