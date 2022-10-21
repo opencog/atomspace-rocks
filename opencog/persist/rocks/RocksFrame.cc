@@ -54,17 +54,21 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 
 	Handle hasp = HandleCast(frame);
 
-	if (0 < hasp->getIncomingSetSize())
-		throw IOException(TRACE_INFO,
-			"Deletion of non-top frames is not currently supported!\n");
-
 	// Everything under here proceeds with the frame lock held.
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 
+	// Silent return if we don't know if this AtomSpace.
+	// Presumably, it was deleted earlier, or never stored.
 	const auto& pr = _frame_map.find(hasp);
 	if (_frame_map.end() == pr)
-		throw IOException(TRACE_INFO,
-			"Cannot find the AtomSpace in the AtomSpace DAG!\n");
+		return;
+
+	// I'm too lazy to implement delete-from-the-middle. So throw
+	// if this is a non-top frame.
+	for (const Handle& hi : hasp->getIncomingSet())
+		if (_frame_map.end() != _frame_map.find(hi))
+			throw IOException(TRACE_INFO,
+				"Deletion of non-top frames is not currently supported!\n");
 
 	// OK, we've got the frame to delete.
 	// First, get rid of all the atoms in it.
