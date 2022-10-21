@@ -229,4 +229,25 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 	writeFrame(HandleCast(top));
 }
 
+// =========================================================
+// Debug utility
+
+HandleSeq RocksStorage::topFrames(void)
+{
+	HandleSeq tops;
+	for (const auto& pr : _frame_map)
+	{
+		const Handle& hasp = pr.first;
+
+		bool found = false;
+		for (const Handle& hi : hasp->getIncomingSet())
+		{
+			if (_frame_map.end() != _frame_map.find(hi))
+			{ found = true; break; }
+		}
+		if (not found) tops.push_back(hasp);
+	}
+	return tops;
+}
+
 // ======================== THE END ======================
