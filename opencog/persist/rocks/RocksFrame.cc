@@ -145,9 +145,8 @@ void RocksStorage::convertForFrames(const Handle& top)
 		{
 			std::string kid = kit->key().ToString();
 			std::string skid = kid;
-			skid.insert(skid.find(':'), fid);
+			skid.insert(skid.find(':') + 1, fid);
 
-printf("duude skid=%s\n", skid.c_str());
 			const std::string& kval = kit->value().ToString();
 			_rfile->Put(rocksdb::WriteOptions(), skid, kval);
 
@@ -156,7 +155,12 @@ printf("duude skid=%s\n", skid.c_str());
 		}
 		delete kit;
 
-		// if (0 == nkeys)
+		// If there were no keys, write the marker.
+		if (0 == nkeys)
+			_rfile->Put(rocksdb::WriteOptions(), akey + fid + "+1", "");
+
+		// Write the frame membership.
+		_rfile->Put(rocksdb::WriteOptions(), "o@" + fid + akey.substr(2), "");
 	}
 	delete it;
 }
