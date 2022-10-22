@@ -94,12 +94,12 @@
 
 	; Verify appropriate atomspace membership
 	(test-equal "link-space" mid3-space (cog-atomspace lilly))
-	(test-equal "foo-space" mid2-space (cog-atomspace (gar lilly)))
+	(test-equal "foo-space" base-space (cog-atomspace (gar lilly)))
 	(test-equal "bar-space" base-space (cog-atomspace (gdr lilly)))
 
 	; Verify appropriate values
 	(test-equal "link-top-tv" 7 (get-cnt lilly))
-	(test-equal "foo-top-tv" 6 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "foo-top-tv" 0 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
 
 	; ----------------------------------
@@ -108,10 +108,10 @@
 		(cog-link 'List (Concept "foo") (List (Concept "bar")))))
 	(test-assert "link-2fa" (not (nil?
 		(cog-link 'List (Concept "foo") (List (Concept "faa"))))))
-	(test-equal "foo2-space" mid2-space (cog-atomspace (cog-node 'Concept "foo")))
+	(test-equal "foo2-space" base-space (cog-atomspace (cog-node 'Concept "foo")))
 	(test-equal "bar2-space" base-space (cog-atomspace (cog-node 'Concept "bar")))
 
-	(test-equal "foo2-tv" 6 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "foo2-tv" 0 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
 
 	; ----------------------------------
