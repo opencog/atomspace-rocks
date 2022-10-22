@@ -366,6 +366,14 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
 		cid += fid;
 
+		// If this atom has a delete-mark on it, then undelete it.
+		std::string delmark = cid + "-1";
+		std::string slop;
+		rocksdb::Status s;
+		s = _rfile->Get(rocksdb::ReadOptions(), delmark, &slop);
+		if (s.ok())
+			_rfile->Delete(rocksdb::WriteOptions(), delmark);
+
 		// If there are no keys(!!) record a bogus key to mark the frame.
 		// If there are keys, then clobber any pre-existing marker!
 		std::string marker = cid + "+1";
@@ -373,9 +381,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 			_rfile->Put(rocksdb::WriteOptions(), marker, "");
 		else
 		{
-			std::string slop;
-			rocksdb::Status s =
-				_rfile->Get(rocksdb::ReadOptions(), marker, &slop);
+			s = _rfile->Get(rocksdb::ReadOptions(), marker, &slop);
 			if (s.ok())
 				_rfile->Delete(rocksdb::WriteOptions(), marker);
 		}

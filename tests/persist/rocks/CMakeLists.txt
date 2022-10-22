@@ -23,6 +23,7 @@ ADD_CXXTEST(MultiDeleteUTest)
 ADD_CXXTEST(QueryPersistUTest)
 #
 ADD_GUILE_TEST(ValueStore value-store-test.scm)
+ADD_GUILE_TEST(ValueResave value-resave-test.scm)
 ADD_GUILE_TEST(SpaceFrame space-frame-test.scm)
 ADD_GUILE_TEST(ValueFrame value-frame-test.scm)
 ADD_GUILE_TEST(SpaceDiamond space-diamond-test.scm)
