@@ -65,8 +65,6 @@
 	(load-atomspace)
 	(cog-close storage)
 
-	(cog-set-atomspace! top-space)
-
 	; Verify the ListLink is as expected.
 	(define lilly (ListLink (Concept "foo") (List (Concept "bar"))))
 
@@ -84,12 +82,54 @@
 	(test-equal "foo-tv" 3 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "bar-tv" 4 (get-cnt (cog-node 'Concept "bar")))
 	(test-equal "link-bar-tv" 0 (get-cnt (cog-link 'List (Concept "bar"))))
-
 )
+
+(define (kill-top-store)
+
+	; Start with a blank slate.
+	(cog-atomspace-clear (cog-atomspace))
+
+	; Load enought to get started.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+	; (cog-rocks-stats storage)
+	; (cog-rocks-print storage "")
+	(define top-space (car (load-frames)))
+	(delete-frame! top-space)
+	(cog-close storage)
+)
+
+; Verify what's left a the bottom
+(define (test-remainder)
+
+	; Start with a blank slate.
+	(cog-atomspace-clear (cog-atomspace))
+
+	; Load everything.
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(cog-open storage)
+	; (cog-rocks-stats storage)
+	; (cog-rocks-print storage "")
+	(define top-space (car (load-frames)))
+	(cog-set-atomspace! top-space)
+	(load-atomspace)
+	(cog-close storage)
+
+	; Verify the ListLink is as expected.
+	(define lilly (ListLink (Concept "foo") (List (Concept "bar"))))
+
+	(test-equal "link-tv" 6 (get-cnt lilly))
+	(test-equal "foo-tv" 3 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "bar-tv" 4 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "link-bar-tv" 0 (get-cnt (cog-link 'List (Concept "bar"))))
+)
+
 
 (define promotion "test promotion")
 (test-begin promotion)
 (test-promotion)
+(kill-top-store)
+(test-remainder)
 (test-end promotion)
 
 ; ===================================================================
