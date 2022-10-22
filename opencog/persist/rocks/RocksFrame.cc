@@ -110,6 +110,14 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 
 // ======================================================================
 
+void RocksStorage::convertForFrames(void)
+{
+	if (_multi_space) return;
+	_multi_space = true;
+}
+
+// ======================================================================
+
 /// Perform some consistency checks
 bool RocksStorage::checkFrames(void)
 {

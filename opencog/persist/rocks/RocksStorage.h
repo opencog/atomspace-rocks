@@ -73,6 +73,8 @@ class RocksStorage : public StorageNode
 		void scrubFrames(void);
 		HandleSeq topFrames(void);
 
+		void convertForFrames(void);
+
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
 		uint64_t strtoaid(const std::string&) const;
