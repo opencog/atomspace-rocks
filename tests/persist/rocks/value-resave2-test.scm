@@ -1,7 +1,7 @@
 ;
-; value-resave-test.scm
+; value-resave2-test.scm
 ; Store, delete and then store again a value.
-; Test that only limited values are stored.
+; Minor variant of value-resave-test.scm
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog test-runner))
@@ -39,7 +39,7 @@
 	; but then restore it (which writes again).
 	(cog-delete-recursive! (Concept "foo"))
 	(Concept "foo" (ctv 1 0 6))
-	(store-atom (Concept "foo"))
+	(store-atom (ListLink (Concept "foo") (Concept "faa")))
 
 	(define mid3-space (cog-new-atomspace mid2-space))
 	(cog-set-atomspace! mid3-space)
@@ -94,22 +94,24 @@
 
 	; Verify appropriate atomspace membership
 	(test-equal "link-space" mid3-space (cog-atomspace lilly))
-	(test-equal "foo-space" mid2-space (cog-atomspace (gar lilly)))
+	(test-equal "foo-space" base-space (cog-atomspace (gar lilly)))
 	(test-equal "bar-space" base-space (cog-atomspace (gdr lilly)))
 
 	; Verify appropriate values
 	(test-equal "link-top-tv" 7 (get-cnt lilly))
-	(test-equal "foo-top-tv" 6 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "foo-top-tv" 0 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
 
 	; ----------------------------------
 	(cog-set-atomspace! mid2-space)
 	(test-assert "no-link-2" (nil?
 		(cog-link 'List (Concept "foo") (Concept "bar"))))
-	(test-equal "foo2-space" mid2-space (cog-atomspace (cog-node 'Concept "foo")))
+	(test-assert "link-2fa" (not (nil?
+		(cog-link 'List (Concept "foo") (Concept "faa")))))
+	(test-equal "foo2-space" base-space (cog-atomspace (cog-node 'Concept "foo")))
 	(test-equal "bar2-space" base-space (cog-atomspace (cog-node 'Concept "bar")))
 
-	(test-equal "foo2-tv" 6 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "foo2-tv" 0 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
 
 	; ----------------------------------
@@ -126,7 +128,7 @@
 
 )
 
-(define resave-value "test resave links")
+(define resave-value "test resave2 links")
 (test-begin resave-value)
 (test-resave-value)
 (test-end resave-value)

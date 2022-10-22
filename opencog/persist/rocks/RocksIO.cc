@@ -259,10 +259,6 @@ size_t RocksStorage::getHeight(const Handle& h)
 /// Return the matching sid.
 std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 {
-	AtomSpace* as = h->getAtomSpace();
-	if (_atom_space and as and as != _atom_space)
-		writeFrame(as);
-
 	// The issuance of new sids needs to be atomic, as otherwise we
 	// risk having the Get(pfx + satom) fail in parallel, and have
 	// two different sids issued for the same atom.
@@ -283,11 +279,32 @@ std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 	satom = Sexpr::encode_atom(h);
 	pfx = h->is_node() ? "n@" : "l@";
 
+	// Have we previously stored this atom?
 	if (not convertible)
 	{
 		lck.lock();
 		_rfile->Get(rocksdb::ReadOptions(), pfx + satom, &sid);
-		if (0 < sid.size()) return sid;
+		if (0 < sid.size())
+		{
+			lck.unlock();
+
+			// (Predicate "*-TruthValueKey-*") is often without an as.
+			AtomSpace* as = h->getAtomSpace();
+			if (_multi_space and as)
+			{
+				const std::string& fid = writeFrame(as) + ":";
+
+				// If this atom has a delete-mark on it, then undelete it.
+				std::string kid = "k@" + sid + ":" + fid;
+				std::string delmark = kid + "-1";
+				std::string slop;
+				rocksdb::Status s;
+				s = _rfile->Get(rocksdb::ReadOptions(), delmark, &slop);
+				if (s.ok())
+					_rfile->Delete(rocksdb::WriteOptions(), delmark);
+			}
+			return sid;
+		}
 	}
 
 	// Issue a brand new sid for this atom.
@@ -305,9 +322,19 @@ std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 
 	if (_multi_space)
 	{
-		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
+		AtomSpace* as = h->getAtomSpace();
+		const std::string& fid = writeFrame(as) + ":";
 		std::string oid = "o@" + fid + sid;
 		_rfile->Put(rocksdb::WriteOptions(), oid, "");
+
+		// If this atom has a delete-mark on it, then undelete it.
+		std::string kid = "k@" + sid + ":" + fid;
+		std::string delmark = kid + "-1";
+		std::string slop;
+		rocksdb::Status s;
+		s = _rfile->Get(rocksdb::ReadOptions(), delmark, &slop);
+		if (s.ok())
+			_rfile->Delete(rocksdb::WriteOptions(), delmark);
 
 		// Need to record which frame this Atom first appears in.
 		// This is done using k@ records. There needs to be at least
@@ -316,13 +343,10 @@ std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 		// that keys will be written shortly.
 		if (need_mark or not h->haveValues())
 		{
-			std::string kid = "k@" + sid + ":";
 			auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
 			kt->Seek(kid);
 			if (not (kt->Valid() and kt->key().starts_with(kid)))
-			{
-				_rfile->Put(rocksdb::WriteOptions(), kid + fid + "+1", "");
-			}
+				_rfile->Put(rocksdb::WriteOptions(), kid + "+1", "");
 			delete kt;
 		}
 	}
@@ -366,14 +390,6 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
 		cid += fid;
 
-		// If this atom has a delete-mark on it, then undelete it.
-		std::string delmark = cid + "-1";
-		std::string slop;
-		rocksdb::Status s;
-		s = _rfile->Get(rocksdb::ReadOptions(), delmark, &slop);
-		if (s.ok())
-			_rfile->Delete(rocksdb::WriteOptions(), delmark);
-
 		// If there are no keys(!!) record a bogus key to mark the frame.
 		// If there are keys, then clobber any pre-existing marker!
 		std::string marker = cid + "+1";
@@ -381,6 +397,8 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 			_rfile->Put(rocksdb::WriteOptions(), marker, "");
 		else
 		{
+			std::string slop;
+			rocksdb::Status s;
 			s = _rfile->Get(rocksdb::ReadOptions(), marker, &slop);
 			if (s.ok())
 				_rfile->Delete(rocksdb::WriteOptions(), marker);
