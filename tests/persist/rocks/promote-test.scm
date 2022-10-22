@@ -61,6 +61,7 @@
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
 	(define top-space (car (load-frames)))
+	(cog-set-atomspace! top-space)
 	(load-atomspace)
 	(cog-close storage)
 
