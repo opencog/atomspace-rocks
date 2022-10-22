@@ -288,20 +288,14 @@ std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 		{
 			lck.unlock();
 
+			// If this atom has a delete-mark on it, then undelete it.
 			// (Predicate "*-TruthValueKey-*") is often without an as.
 			AtomSpace* as = h->getAtomSpace();
 			if (_multi_space and as)
 			{
 				const std::string& fid = writeFrame(as) + ":";
-
-				// If this atom has a delete-mark on it, then undelete it.
-				std::string kid = "k@" + sid + ":" + fid;
-				std::string delmark = kid + "-1";
-				std::string slop;
-				rocksdb::Status s;
-				s = _rfile->Get(rocksdb::ReadOptions(), delmark, &slop);
-				if (s.ok())
-					_rfile->Delete(rocksdb::WriteOptions(), delmark);
+				std::string delmark = "k@" + sid + ":" + fid + "-1";
+				_rfile->Delete(rocksdb::WriteOptions(), delmark);
 			}
 			return sid;
 		}
@@ -330,11 +324,7 @@ std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 		// If this atom has a delete-mark on it, then undelete it.
 		std::string kid = "k@" + sid + ":" + fid;
 		std::string delmark = kid + "-1";
-		std::string slop;
-		rocksdb::Status s;
-		s = _rfile->Get(rocksdb::ReadOptions(), delmark, &slop);
-		if (s.ok())
-			_rfile->Delete(rocksdb::WriteOptions(), delmark);
+		_rfile->Delete(rocksdb::WriteOptions(), delmark);
 
 		// Need to record which frame this Atom first appears in.
 		// This is done using k@ records. There needs to be at least
@@ -396,13 +386,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		if (not h->haveValues())
 			_rfile->Put(rocksdb::WriteOptions(), marker, "");
 		else
-		{
-			std::string slop;
-			rocksdb::Status s;
-			s = _rfile->Get(rocksdb::ReadOptions(), marker, &slop);
-			if (s.ok())
-				_rfile->Delete(rocksdb::WriteOptions(), marker);
-		}
+			_rfile->Delete(rocksdb::WriteOptions(), marker);
 	}
 
 	// Always clobber the TV, set it back to default.
@@ -427,10 +411,7 @@ void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 
 	// If there is a previous marker, erase it!
 	std::string marker = skid + "+1";
-	std::string slop;
-	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), marker, &slop);
-	if (s.ok())
-		_rfile->Delete(rocksdb::WriteOptions(), marker);
+	_rfile->Delete(rocksdb::WriteOptions(), marker);
 
 	// Store an intentionally invalid key.
 	_rfile->Put(rocksdb::WriteOptions(), skid + "-1", "");
