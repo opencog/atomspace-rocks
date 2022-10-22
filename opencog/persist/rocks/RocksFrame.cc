@@ -110,6 +110,83 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 
 // ======================================================================
 
+void RocksStorage::convertForFrames(const Handle& top)
+{
+	if (_multi_space) return;
+	_multi_space = true;
+
+	writeFrame(top);
+
+	// Do we need to perform a conversion?
+	std::string pfx = "a@";
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it->Seek(pfx);
+	it->Next(); // skip over (PredicateNode "*-TruthValueKey-*")
+	if (not (it->Valid() and it->key().starts_with(pfx)))
+	{
+		delete it;
+		return;
+	}
+	delete it;
+
+	// Find the bottom-most frame, and assume that is the intended base.
+	Handle bot = top;
+	size_t osz = bot->get_arity();
+	while (0 < osz)
+	{
+		if (1 < osz)
+			throw IOException(TRACE_INFO, "Non-unique bottom frame!");
+		bot = bot->getOutgoingAtom(0);
+		osz = bot->get_arity();
+	}
+
+	// Get the frame ID to which everything will be consigned to.
+	std::string fid = writeFrame(bot) + ":";
+
+	// Loop over all atoms, and convert keys.
+	it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+	{
+		std::string akey = it->key().ToString();
+		const std::string& sid = akey.substr(2, akey.length()-3);
+
+		size_t nkeys = 0;
+		akey[0] = 'k';
+		auto kit = _rfile->NewIterator(rocksdb::ReadOptions());
+		for (kit->Seek(akey);
+			kit->Valid() and kit->key().starts_with(akey); kit->Next())
+		{
+			std::string kid = kit->key().ToString();
+			std::string skid = kid;
+			skid.insert(skid.find(':') + 1, fid);
+
+			const std::string& kval = kit->value().ToString();
+			_rfile->Put(rocksdb::WriteOptions(), skid, kval);
+
+			_rfile->Delete(rocksdb::WriteOptions(), kid);
+			nkeys ++;
+		}
+		delete kit;
+
+		// If there were no keys, write the marker.
+		if (0 == nkeys)
+			_rfile->Put(rocksdb::WriteOptions(), akey + fid + "+1", "");
+
+		// Write the frame membership.
+		_rfile->Put(rocksdb::WriteOptions(), "o@" + fid + sid, "");
+
+		// Compute the height, and store that.
+		Handle h = Sexpr::decode_atom(it->value().ToString());
+		size_t height = getHeight(h);
+		if (0 < height)
+			_rfile->Put(rocksdb::WriteOptions(),
+				"z" + aidtostr(height) + "@" + sid, "");
+	}
+	delete it;
+}
+
+// ======================================================================
+
 /// Perform some consistency checks
 bool RocksStorage::checkFrames(void)
 {

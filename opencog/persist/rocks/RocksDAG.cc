@@ -181,8 +181,6 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 {
 	CHECK_OPEN;
 
-	_multi_space = true;
-
 	// Load all frames.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek("d@"); it->Valid() and it->key().starts_with("d@"); it->Next())
@@ -192,15 +190,9 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 	}
 	delete it;
 
-	// If no frames ae found, then someone tried to load frames from
-	// storage that didn't contain any. Preserve storage state until
-	// such time as frames are actually used and stored. i.e. reset
-	// the multi-space flag.
+	// Huh. There weren't any.
 	if (0 == _frame_map.size())
-	{
-		_multi_space = false;
 		return HandleSeq();
-	}
 
 	// Get all spaces that are subspaces
 	HandleSet all;
@@ -225,7 +217,12 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 void RocksStorage::storeFrameDAG(AtomSpace* top)
 {
 	CHECK_OPEN;
-	_multi_space = true;
+	if (not _multi_space)
+	{
+		convertForFrames(HandleCast(top));
+		return;
+	}
+
 	writeFrame(HandleCast(top));
 }
 
