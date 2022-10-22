@@ -110,10 +110,55 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 
 // ======================================================================
 
-void RocksStorage::convertForFrames(void)
+void RocksStorage::convertForFrames(const Handle& top)
 {
 	if (_multi_space) return;
 	_multi_space = true;
+
+	writeFrame(top);
+
+	// Find the bottom-most frame, and assume that is the intended base.
+	Handle bot = top;
+	size_t osz = bot->get_arity();
+	while (0 < osz)
+	{
+		if (1 < osz)
+			throw IOException(TRACE_INFO, "Non-unique bottom frame!");
+		bot = bot->getOutgoingAtom(0);
+		osz = bot->get_arity();
+	}
+
+	// Get the frame ID to which everything will be consigned to.
+	std::string fid = writeFrame(bot) + ":";
+
+	// Loop over all atoms, and convert keys.
+	std::string pfx = "a@";
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
+	{
+		size_t nkeys = 0;
+		std::string akey = it->key().ToString();
+		akey[0] = 'k';
+		auto kit = _rfile->NewIterator(rocksdb::ReadOptions());
+		for (kit->Seek(akey);
+			kit->Valid() and kit->key().starts_with(akey); kit->Next())
+		{
+			std::string kid = kit->key().ToString();
+			std::string skid = kid;
+			skid.insert(skid.find(':'), fid);
+
+printf("duude skid=%s\n", skid.c_str());
+			const std::string& kval = kit->value().ToString();
+			_rfile->Put(rocksdb::WriteOptions(), skid, kval);
+
+			_rfile->Delete(rocksdb::WriteOptions(), kid);
+			nkeys ++;
+		}
+		delete kit;
+
+		// if (0 == nkeys)
+	}
+	delete it;
 }
 
 // ======================================================================

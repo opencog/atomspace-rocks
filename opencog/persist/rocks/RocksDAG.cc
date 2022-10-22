@@ -218,7 +218,10 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 {
 	CHECK_OPEN;
 	if (not _multi_space)
-		convertForFrames();
+	{
+		convertForFrames(HandleCast(top));
+		return;
+	}
 
 	writeFrame(HandleCast(top));
 }
