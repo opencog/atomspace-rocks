@@ -79,7 +79,8 @@
 	; drop down one
 	(cog-set-atomspace! (gar top-space))
 
-	(test-equal "link-tv" 6 (get-cnt lilly))
+	(test-equal "link-tv" 6 (get-cnt
+		(cog-link 'List (Concept "foo") (List (Concept "bar")))))
 	(test-equal "foo-tv" 3 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "bar-tv" 4 (get-cnt (cog-node 'Concept "bar")))
 	(test-equal "link-bar-tv" 0 (get-cnt (cog-link 'List (Concept "bar"))))
