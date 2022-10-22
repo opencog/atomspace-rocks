@@ -89,7 +89,7 @@ class RocksStorage : public StorageNode
 		// Assorted helper functions
 		size_t getHeight(const Handle&);
 		std::string findAtom(const Handle&);
-		std::string writeAtom(const Handle&);
+		std::string writeAtom(const Handle&, bool = true);
 		void appendToSidList(const std::string&, const std::string&);
 		void remFromSidList(const std::string&, const std::string&);
 		void storeValue(const std::string& skid,

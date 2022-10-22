@@ -298,7 +298,10 @@ std::string RocksStorage::monitor(void)
 
 		HandleSeq tops = topFrames();
 		rs += "\n";
-		rs += "  Number of Frame tops: " + std::to_string(tops.size()) + "\n";
+		rs += "  Number of Frame tops: " + std::to_string(tops.size());
+		if (0 == tops.size())
+			rs += " (Frames must be loaded to see frame stats)";
+		rs += "\n";
 		for (const Handle& ht: tops)
 		{
 			rs += "  Frame top: `" + AtomSpaceCast(ht)->get_name() + "`\n";

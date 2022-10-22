@@ -257,7 +257,7 @@ size_t RocksStorage::getHeight(const Handle& h)
 
 /// Place Atom into storage.
 /// Return the matching sid.
-std::string RocksStorage::writeAtom(const Handle& h)
+std::string RocksStorage::writeAtom(const Handle& h, bool need_mark)
 {
 	AtomSpace* as = h->getAtomSpace();
 	if (_atom_space and as and as != _atom_space)
@@ -303,6 +303,30 @@ std::string RocksStorage::writeAtom(const Handle& h)
 	if (convertible)
 		appendToSidList(shash, sid);
 
+	if (_multi_space)
+	{
+		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
+		std::string oid = "o@" + fid + sid;
+		_rfile->Put(rocksdb::WriteOptions(), oid, "");
+
+		// Need to record which frame this Atom first appears in.
+		// This is done using k@ records. There needs to be at least
+		// one such record, somewhere. If there are none, use "+1"
+		// as a blank marker. We don't need to do this, if we know
+		// that keys will be written shortly.
+		if (need_mark or not h->haveValues())
+		{
+			std::string kid = "k@" + sid + ":";
+			auto kt = _rfile->NewIterator(rocksdb::ReadOptions());
+			kt->Seek(kid);
+			if (not (kt->Valid() and kt->key().starts_with(kid)))
+			{
+				_rfile->Put(rocksdb::WriteOptions(), kid + fid + "+1", "");
+			}
+			delete kt;
+		}
+	}
+
 	// If its a Node, we are done.
 	if (not h->is_link()) return sid;
 
@@ -333,7 +357,7 @@ std::string RocksStorage::writeAtom(const Handle& h)
 void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 {
 	CHECK_OPEN;
-	const std::string& sid = writeAtom(h);
+	const std::string& sid = writeAtom(h, false);
 
 	// Separator for keys
 	std::string cid = "k@" + sid + ":";
@@ -341,12 +365,20 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 	{
 		const std::string& fid = writeFrame(h->getAtomSpace()) + ":";
 		cid += fid;
-		std::string oid = "o@" + fid + sid;
-		_rfile->Put(rocksdb::WriteOptions(), oid, "");
 
 		// If there are no keys(!!) record a bogus key to mark the frame.
+		// If there are keys, then clobber any pre-existing marker!
+		std::string marker = cid + "+1";
 		if (not h->haveValues())
-			_rfile->Put(rocksdb::WriteOptions(), cid + "+1", "");
+			_rfile->Put(rocksdb::WriteOptions(), marker, "");
+		else
+		{
+			std::string slop;
+			rocksdb::Status s =
+				_rfile->Get(rocksdb::ReadOptions(), marker, &slop);
+			if (s.ok())
+				_rfile->Delete(rocksdb::WriteOptions(), marker);
+		}
 	}
 
 	// Always clobber the TV, set it back to default.
@@ -360,7 +392,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 
 void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 {
-	std::string sid = writeAtom(h);
+	std::string sid = writeAtom(h, false);
 
 	// Separator for keys
 	std::string skid = "k@" + sid + ":" + writeFrame(as) + ":";
@@ -368,6 +400,13 @@ void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 	// Always clobber the TV, set it back to default.
 	// The below will revise as needed.
 	_rfile->Delete(rocksdb::WriteOptions(), skid + tv_pred_sid);
+
+	// If there is a previous marker, erase it!
+	std::string marker = skid + "+1";
+	std::string slop;
+	rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), marker, &slop);
+	if (s.ok())
+		_rfile->Delete(rocksdb::WriteOptions(), marker);
 
 	// Store an intentionally invalid key.
 	_rfile->Put(rocksdb::WriteOptions(), skid + "-1", "");
@@ -386,7 +425,7 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 	CHECK_OPEN;
 
 	// k@fid:sid:kid
-	std::string pfx = "k@" + writeAtom(h) + ":";
+	std::string pfx = "k@" + writeAtom(h, false) + ":";
 	if (_multi_space)
 		pfx += writeFrame(h->getAtomSpace()) + ":";
 	pfx += writeAtom(key);
