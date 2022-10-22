@@ -432,7 +432,11 @@ void RocksStorage::storeValue(const Handle& h, const Handle& key)
 	// k@fid:sid:kid
 	std::string pfx = "k@" + writeAtom(h, false) + ":";
 	if (_multi_space)
+	{
 		pfx += writeFrame(h->getAtomSpace()) + ":";
+		// Clobber any marker that might be present.
+		_rfile->Delete(rocksdb::WriteOptions(), pfx + "+1");
+	}
 	pfx += writeAtom(key);
 
 	ValuePtr vp = h->getValue(key);
