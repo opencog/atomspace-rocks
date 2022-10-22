@@ -136,8 +136,10 @@ void RocksStorage::convertForFrames(const Handle& top)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
-		size_t nkeys = 0;
 		std::string akey = it->key().ToString();
+		const std::string& sid = akey.substr(2);
+
+		size_t nkeys = 0;
 		akey[0] = 'k';
 		auto kit = _rfile->NewIterator(rocksdb::ReadOptions());
 		for (kit->Seek(akey);
@@ -160,7 +162,14 @@ void RocksStorage::convertForFrames(const Handle& top)
 			_rfile->Put(rocksdb::WriteOptions(), akey + fid + "+1", "");
 
 		// Write the frame membership.
-		_rfile->Put(rocksdb::WriteOptions(), "o@" + fid + akey.substr(2), "");
+		_rfile->Put(rocksdb::WriteOptions(), "o@" + fid + sid, "");
+
+		// Compute the height, and store that.
+		Handle h = Sexpr::decode_atom(it->value().ToString());
+		size_t height = getHeight(h);
+		if (0 < height)
+			_rfile->Put(rocksdb::WriteOptions(),
+				"z" + aidtostr(height) + "@" + sid, "");
 	}
 	delete it;
 }
