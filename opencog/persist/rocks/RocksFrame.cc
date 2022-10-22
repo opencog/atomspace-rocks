@@ -117,6 +117,18 @@ void RocksStorage::convertForFrames(const Handle& top)
 
 	writeFrame(top);
 
+	// Do we need to perform a conversion?
+	std::string pfx = "a@";
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it->Seek(pfx);
+	it->Next(); // skip over (PredicateNode "*-TruthValueKey-*")
+	if (not (it->Valid() and it->key().starts_with(pfx)))
+	{
+		delete it;
+		return;
+	}
+	delete it;
+
 	// Find the bottom-most frame, and assume that is the intended base.
 	Handle bot = top;
 	size_t osz = bot->get_arity();
@@ -132,8 +144,7 @@ void RocksStorage::convertForFrames(const Handle& top)
 	std::string fid = writeFrame(bot) + ":";
 
 	// Loop over all atoms, and convert keys.
-	std::string pfx = "a@";
-	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+	it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		std::string akey = it->key().ToString();
