@@ -48,6 +48,7 @@
 
 	(define surface-space (cog-new-atomspace mid3-space))
 	(cog-set-atomspace! surface-space)
+	(store-frames surface-space)
 
 	(cog-close storage)
 
@@ -105,7 +106,7 @@
 	(cog-set-atomspace! mid2-space)
 	(test-assert "no-link-2" (nil?
 		(cog-link 'List (Concept "foo") (List (Concept "bar")))))
-	(test-equal "foo2-space" mid3-space (cog-atomspace (cog-node 'Concept "foo")))
+	(test-equal "foo2-space" mid2-space (cog-atomspace (cog-node 'Concept "foo")))
 	(test-equal "bar2-space" base-space (cog-atomspace (cog-node 'Concept "bar")))
 
 	(test-equal "foo2-tv" 6 (get-cnt (cog-node 'Concept "foo")))
@@ -113,13 +114,15 @@
 
 	; ----------------------------------
 	(cog-set-atomspace! mid1-space)
-	(test-equal "link1-space" mid1-space (cog-atomspace lilly))
 	(test-equal "foo1-space" base-space (cog-atomspace (cog-node 'Concept "foo")))
 	(test-equal "bar1-space" base-space (cog-atomspace (cog-node 'Concept "bar")))
+	(test-equal "link1-space" mid1-space
+		(cog-atomspace (cog-link 'List (Concept "foo") (Concept "bar"))))
 
-	(test-equal "link-1-tv" 5 (get-cnt lilly))
-	(test-equal "foo1-tv" 3 (get-cnt (cog-node 'Concept "foo")))
+	(test-equal "foo1-tv" 0 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "link-1-tv" 5
+		(get-cnt (cog-link 'List (Concept "foo") (Concept "bar"))))
 
 )
 
