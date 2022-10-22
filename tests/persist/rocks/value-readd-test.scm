@@ -1,5 +1,5 @@
 ;
-; value-resave2-test.scm
+; value-readd-test.scm
 ; Store, delete and then store again a value.
 ; Minor variant of value-resave-test.scm
 ;
