@@ -1,6 +1,7 @@
 ;
 ; promote-test.scm
 ; Verify that plain stores can be upgraded to frame stores.
+; Also verify frame deletion (simplest case only)
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog test-runner))
