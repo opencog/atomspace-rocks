@@ -148,7 +148,7 @@ void RocksStorage::convertForFrames(const Handle& top)
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		std::string akey = it->key().ToString();
-		const std::string& sid = akey.substr(2);
+		const std::string& sid = akey.substr(2, akey.length()-3);
 
 		size_t nkeys = 0;
 		akey[0] = 'k';
