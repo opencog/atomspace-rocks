@@ -90,7 +90,7 @@
 
 	; Verify the ListLink is as expected.
 	(cog-set-atomspace! top-space)
-	(define lilly (ListLink (Concept "foo") (List (Concept "bar"))))
+	(define lilly (ListLink (Concept "foo") (Concept "bar")))
 
 	; Verify appropriate atomspace membership
 	(test-equal "link-space" mid3-space (cog-atomspace lilly))
