@@ -502,6 +502,13 @@ ValuePtr RocksStorage::getValue(const std::string& skid)
 }
 
 /// Backend callback
+// XXX FIXME (and in MonoSpace, too). According to the BackingStore
+// docs, it says if the Value is absent, i.e. not in storage, that
+// means it has been deleted, and that it should be deleted in the
+// userspace, also. Clearly, we don't do that here. Equally clearly,
+// there is no unit test that tests for this. And there does not seem
+// to be any existing code that expects this behavior. So, technically,
+// we're out of spec here ... but no one has noticed or complained.
 void RocksStorage::loadValue(const Handle& h, const Handle& key)
 {
 	CHECK_OPEN;
