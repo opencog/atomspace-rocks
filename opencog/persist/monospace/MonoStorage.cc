@@ -27,6 +27,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <filesystem>
 #include <sys/resource.h>
 
 #include "rocksdb/db.h"
@@ -50,8 +51,6 @@ static const char* version_key = "*-Version-*";
 
 void MonoStorage::init(const char * uri)
 {
-	_uri = uri;
-
 #define URIX_LEN (sizeof("monospace://") - 1)  // Should be 12
 	// We expect the URI to be for the form (note: three slashes)
 	//    monospace:///path/to/file
@@ -171,9 +170,21 @@ MonoStorage::MonoStorage(std::string uri) :
 	_next_aid(0)
 {
 	const char *yuri = _name.c_str();
+
+	// We expect the URI to be for the form (note: three slashes)
+	//    monospace:///path/to/file
 	if (strncmp(yuri, "monospace://", URIX_LEN))
 		throw IOException(TRACE_INFO,
 			"Unknown URI '%s'\nValid URI's start with 'monospace://'\n", yuri);
+
+	// Normalize the filename. This avoids multiple different
+	// StorageNodes refering to exactly the same file.
+	std::string file(yuri + URIX_LEN);
+	std::filesystem::path fpath(file);
+	std::filesystem::path npath(fpath.lexically_normal());
+	file = npath.string();
+	_uri = "monospace://" + file;
+	_name = _uri;
 }
 
 MonoStorage::~MonoStorage()

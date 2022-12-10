@@ -27,6 +27,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <filesystem>
 #include <sys/resource.h>
 
 #include "rocksdb/db.h"
@@ -50,8 +51,6 @@ static const char* version_key = "*-Version-*";
 
 void RocksStorage::init(const char * uri)
 {
-	_uri = uri;
-
 #define URIX_LEN (sizeof("rocks://") - 1)  // Should be 8
 	// We expect the URI to be for the form (note: three slashes)
 	//    rocks:///path/to/file
@@ -181,9 +180,21 @@ RocksStorage::RocksStorage(std::string uri) :
 	_next_aid(0)
 {
 	const char *yuri = _name.c_str();
+
+	// We expect the URI to be for the form (note: three slashes)
+	//    rocks:///path/to/file
 	if (strncmp(yuri, "rocks://", URIX_LEN))
 		throw IOException(TRACE_INFO,
 			"Unknown URI '%s'\nValid URI's start with 'rocks://'\n", yuri);
+
+	// Normalize the filename. This avoids multiple different
+	// StorageNodes refering to exactly the same file.
+	std::string file(yuri + URIX_LEN);
+	std::filesystem::path fpath(file);
+	std::filesystem::path npath(fpath.lexically_normal());
+	file = npath.string();
+	_uri = "rocks://" + file;
+	_name = _uri;
 }
 
 RocksStorage::~RocksStorage()
