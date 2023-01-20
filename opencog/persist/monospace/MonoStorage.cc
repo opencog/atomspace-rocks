@@ -178,7 +178,7 @@ MonoStorage::MonoStorage(std::string uri) :
 			"Unknown URI '%s'\nValid URI's start with 'monospace://'\n", yuri);
 
 	// Normalize the filename. This avoids multiple different
-	// StorageNodes refering to exactly the same file.
+	// StorageNodes referring to exactly the same file.
 	std::string file(yuri + URIX_LEN);
 	std::filesystem::path fpath(file);
 	std::filesystem::path npath(fpath.lexically_normal());

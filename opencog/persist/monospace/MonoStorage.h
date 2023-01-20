@@ -67,7 +67,7 @@ class MonoStorage : public StorageNode
 		std::mutex _mtx_sid;
 
 #ifdef NEED_LIST_LOCK
-		// Gaurantee atomic update of atom plus it's incoming set.
+		// Guarantee atomic update of atom plus it's incoming set.
 		std::recursive_mutex _mtx_list;
 #endif
 

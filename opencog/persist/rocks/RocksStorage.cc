@@ -188,7 +188,7 @@ RocksStorage::RocksStorage(std::string uri) :
 			"Unknown URI '%s'\nValid URI's start with 'rocks://'\n", yuri);
 
 	// Normalize the filename. This avoids multiple different
-	// StorageNodes refering to exactly the same file.
+	// StorageNodes referring to exactly the same file.
 	std::string file(yuri + URIX_LEN);
 	std::filesystem::path fpath(file);
 	std::filesystem::path npath(fpath.lexically_normal());
@@ -246,7 +246,7 @@ std::string RocksStorage::get_new_aid(void)
 	// This isn't "really" necessary, because our dtor ~RocksStorage()
 	// updates this value. But if someone crashes before our dtor runs,
 	// we want to make sure the new bumped value is written, before we
-	// start using it in other records.  We want to avoid issueing it
+	// start using it in other records.  We want to avoid issuing it
 	// twice.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 

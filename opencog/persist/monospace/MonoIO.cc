@@ -233,7 +233,7 @@ std::string MonoStorage::writeAtom(const Handle& h)
 	// This isn't "really" necessary, because our dtor ~MonoStorage()
 	// updates this value. But if someone crashes before our dtor runs,
 	// we want to make sure the new bumped value is written, before we
-	// start using it in other records.  We want to avoid issueing it
+	// start using it in other records.  We want to avoid issuing it
 	// twice.
 	_rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
 
@@ -615,7 +615,7 @@ void MonoStorage::remFromSidList(const std::string& klist,
 		throw NotFoundException(TRACE_INFO, "Internal Error!");
 
 	// Search for the sid in the sidlist. If must be either the
-	// very first sid in the list, or it must be preceeded and
+	// very first sid in the list, or it must be preceded and
 	// followed by whitespace. Else we risk finding a substring
 	// of some other sid. We don't want substrings!
 	std::string sidblank = sid + " ";
@@ -764,7 +764,7 @@ void MonoStorage::removeSatom(const std::string& satom,
 			// Perform the deduplicated delete.
 			for (const std::string& osatom : soset)
 			{
-				// Two diferent threads may be racing to delete the same
+				// Two different threads may be racing to delete the same
 				// atom. If so, the second thread loses and throws a
 				// consistency check error. If it lost, we just ignore
 				// the error here. Triggered by MultiDeleteUTest.
@@ -1004,7 +1004,7 @@ void MonoStorage::checkdb()
 
 	// Look for orphaned Values -- Values not attached to any Atom.
 	// These are in the form of "k@sid:" which have no matching "a@sid:"
-	// Note the use of the colon to terminate te sid!
+	// Note the use of the colon to terminate the sid!
 	std::string pfx = "k@";
 	size_t cnt = 0;
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());

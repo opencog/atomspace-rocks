@@ -18,7 +18,7 @@ TARGET_LINK_LIBRARIES(persist-rocks
 ADD_GUILE_EXTENSION(SCM_CONFIG persist-rocks
 	"opencog-ext-path-persist-rocks")
 
-# The EXPORT is neeed to autogenerate CMake boilerplate in the lib
+# The EXPORT is need to autogenerate CMake boilerplate in the lib
 # directory that lets other packages FIND_PACKAGE(AtomSpaceRocks)
 INSTALL (TARGETS persist-rocks
 	EXPORT AtomSpaceRocksTargets

@@ -600,7 +600,7 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 ///
 /// The intent of this is to ease bulk loads from storage, where some
 /// upper frames may have Atoms with deleted keys. (An alternaitve
-/// design would be to explictly mark deleted keys in storage, but
+/// design would be to explicitly mark deleted keys in storage, but
 /// this seems unweildy.) At any rate, the current design risks some
 /// unexpected, subtle side-effects. It's not clear what the best
 /// answer is; this is the current pragmatic best solution.
@@ -879,7 +879,7 @@ void RocksStorage::remFromSidList(const std::string& klist,
 		throw NotFoundException(TRACE_INFO, "Internal Error!");
 
 	// Search for the sid in the sidlist. If must be either the
-	// very first sid in the list, or it must be preceeded and
+	// very first sid in the list, or it must be preceded and
 	// followed by whitespace. Else we risk finding a substring
 	// of some other sid. We don't want substrings!
 	std::string sidblank = sid + " ";
@@ -986,7 +986,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 			// Perform the deduplicated delete.
 			for (const std::string& osatom : soset)
 			{
-				// Two diferent threads may be racing to delete the same
+				// Two different threads may be racing to delete the same
 				// atom. If so, the second thread loses and throws a
 				// consistency check error. If it lost, we just ignore
 				// the error here. Triggered by MultiDeleteUTest.
