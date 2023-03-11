@@ -1,0 +1,205 @@
+/*
+ * tests/persist/rocks/ThreadCountUTest.cxxtest
+ *
+ * Verify that racing Value increments on Atoms still end up with the
+ * correct final count.
+ *
+ * Copyright (C) 2008, 2009, 2019, 2021, 2023 Linas Vepstas <linasvepstas@gmail.com>
+ *
+ * LICENSE:
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License v3 as
+ * published by the Free Software Foundation and including the exceptions
+ * at http://opencog.org/wiki/Licenses
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program; if not, write to:
+ * Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+#include <cstdio>
+#include <random>
+#include <string>
+
+#include <opencog/atoms/base/Atom.h>
+#include <opencog/atoms/truthvalue/CountTruthValue.h>
+#include <opencog/atomspace/AtomSpace.h>
+#include <opencog/guile/SchemeEval.h>
+
+#include <opencog/persist/api/StorageNode.h>
+
+#include <opencog/util/Logger.h>
+
+using namespace opencog;
+
+class ThreadCountUTest :  public CxxTest::TestSuite
+{
+	private:
+		std::string uri;
+		AtomSpacePtr as;
+		SchemeEval* eval;
+
+	public:
+
+		ThreadCountUTest(void)
+		{
+			logger().set_level(Logger::INFO);
+			// logger().set_level(Logger::DEBUG);
+			logger().set_print_to_stdout_flag(true);
+
+			uri = "rocks:///tmp/cog-rocks-unit-test";
+		}
+
+		~ThreadCountUTest()
+		{
+			// erase the log file if no assertions failed
+			if (!CxxTest::TestTracker::tracker().suiteFailed())
+				std::remove(logger().get_filename().c_str());
+		}
+
+		void setUp(void);
+		void tearDown(void);
+
+		void worker(int, int, const char*);
+		void harness(int, const char*);
+		void test_tv_incr(void);
+		void test_push_pop(void);
+};
+
+/*
+ * This is called once before each test, for each test (!!)
+ */
+void ThreadCountUTest::setUp(void)
+{
+	as = createAtomSpace();
+	eval = new SchemeEval(as);
+	eval->eval("(add-to-load-path \"" PROJECT_SOURCE_DIR "\")");
+	eval->eval("(load-from-path \"tests/persist/rocks/thread-count.scm\")");
+}
+
+void ThreadCountUTest::tearDown(void)
+{
+	delete eval;
+	as = nullptr;
+}
+
+// ============================================================
+
+// Increment counts on a collection of Atoms.
+void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
+{
+	SchemeEval* tev = new SchemeEval(as);
+
+	for (int i=0; i<nloops; i++)
+	{
+		char a = (std::rand() % 26) + 'A';
+		char b = (std::rand() % 26) + 'A';
+
+		// Create string `(cmd "foo-XXX" "foo-YYY")`
+		std::string obs = "(";
+		obs += cmd;
+		obs += " \"foo-";
+		obs += a;
+		obs += a;
+		obs += a;
+		obs += "\" \"foo-";
+		obs += b;
+		obs += b;
+		obs += b;
+		obs += "\")";
+		tev->eval(obs);
+	}
+
+	delete tev;
+}
+
+// ============================================================
+
+void ThreadCountUTest::harness(int n_loops, const char* cmd)
+{
+	// Configuration. Number of actual running threads may be less,
+	// depending on the CPU architecture.
+	int n_threads = 10;
+
+	// Open the storage node.
+	eval->eval("(open-sto)");
+
+	Handle hsn = eval->eval_h("(cog-storage-node)");
+	StorageNodePtr store = StorageNodeCast(hsn);
+
+	TS_ASSERT(store->connected())
+
+	// Clear out left-over junk, just in case.
+	store->erase();
+
+	printf("Start creating %d threads\n", n_threads);
+	std::vector<std::thread> thread_pool;
+	for (int i=0; i < n_threads; i++) {
+		thread_pool.push_back(
+			std::thread(&ThreadCountUTest::worker, this, i, n_loops, cmd));
+	}
+
+	for (std::thread& t : thread_pool) t.join();
+	store->barrier();
+	printf("Done joining threads\n");
+
+	printf("Final atomspace size=%lu\n", as->get_size());
+	// Verify the atomspace size
+	// TS_ASSERT_EQUALS(as->get_size(), 2);
+
+	std::string stats = eval->eval("(gc-stats)");
+	printf("GC Stats = %s\n", stats.c_str());
+
+	size_t totcnt = 0;
+	HandleSeq edges;
+	as->get_root_set_by_type(edges, EDGE_LINK);
+	for (const Handle& e : edges)
+	{
+		TruthValuePtr tvp = e->getTruthValue();
+		CountTruthValuePtr ctv = CountTruthValueCast(tvp);
+		if (ctv) totcnt += ctv->get_count();
+		// printf("Got %s\n", e->to_string().c_str());
+	}
+
+	printf("Observed total count of %lu\n", totcnt);
+	TS_ASSERT_EQUALS(totcnt, n_threads * n_loops);
+
+	store->erase();
+	eval->eval("(close-sto)");
+	store = nullptr;
+}
+
+// ============================================================
+
+void ThreadCountUTest::test_tv_incr(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	// Number of loops inside each thread.
+	int n_loops = 25000;
+
+	harness(n_loops, "observe");
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// ============================================================
+
+void ThreadCountUTest::test_push_pop(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	// Number of loops inside each thread.
+	int n_loops = 1500;
+
+	harness(n_loops, "pushy");
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+/* ============================= END OF FILE ================= */

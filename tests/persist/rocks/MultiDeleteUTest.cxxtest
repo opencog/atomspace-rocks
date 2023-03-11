@@ -133,9 +133,8 @@ void MultiDeleteUTest::test_add_delete(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	// Configuration. On my machine, the locks allow about 2.5 to
-	// 3 threads run in parallel, and of that time, a third is spent
-	// in the kernel (I assume that's kernel time for file-writes.)
+	// Configuration. Number of actual running threads may be less,
+	// depending on the CPU architecture.
 	int n_threads = 10;
 
 	as = createAtomSpace();

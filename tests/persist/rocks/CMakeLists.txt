@@ -20,6 +20,7 @@ ADD_CXXTEST(DeleteUTest)
 ADD_CXXTEST(AlphaEquivUTest)
 ADD_CXXTEST(MultiPersistUTest)
 ADD_CXXTEST(MultiDeleteUTest)
+ADD_CXXTEST(ThreadCountUTest)
 ADD_CXXTEST(QueryPersistUTest)
 #
 ADD_GUILE_TEST(ValueStore value-store-test.scm)
