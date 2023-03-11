@@ -68,9 +68,9 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 		void tearDown(void);
 
 		void worker(int, int, const char*);
-		void harness(const char*);
+		void harness(int, const char*);
 		void test_tv_incr(void);
-		//void test_push_pop(void);
+		void test_push_pop(void);
 };
 
 /*
@@ -115,14 +115,11 @@ void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 
 // ============================================================
 
-void ThreadCountUTest::harness(const char* cmd)
+void ThreadCountUTest::harness(int n_loops, const char* cmd)
 {
 	// Configuration. Number of actual running threads may be less,
 	// depending on the CPU architecture.
 	int n_threads = 10;
-
-	// Number of loops inside each thread.
-	int n_loops = 35000;
 
 	// Open the storage node.
 	eval->eval("(open-sto)");
@@ -143,6 +140,7 @@ void ThreadCountUTest::harness(const char* cmd)
 	}
 
 	for (std::thread& t : thread_pool) t.join();
+	store->barrier();
 	printf("Done joining threads\n");
 
 	printf("Final atomspace size=%lu\n", as->get_size());
@@ -176,7 +174,24 @@ void ThreadCountUTest::harness(const char* cmd)
 void ThreadCountUTest::test_tv_incr(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
-	harness("observe");
+
+	// Number of loops inside each thread.
+	int n_loops = 25000;
+
+	harness(n_loops, "observe");
+	logger().debug("END TEST: %s", __FUNCTION__);
+}
+
+// ============================================================
+
+void ThreadCountUTest::test_push_pop(void)
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+
+	// Number of loops inside each thread.
+	int n_loops = 5000;
+
+	harness(n_loops, "pushy");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
