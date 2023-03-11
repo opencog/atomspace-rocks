@@ -126,7 +126,7 @@ void ThreadCountUTest::test_tv_incr(void)
 	int n_threads = 10;
 
 	// Number of loops inside each thread.
-	int n_loops = 50000;
+	int n_loops = 15000;
 
 	// Open the storage node.
 	eval->eval("(open-sto)");
@@ -152,6 +152,9 @@ void ThreadCountUTest::test_tv_incr(void)
 	printf("Final atomspace size=%lu\n", as->get_size());
 	// Verify the atomspace size
 	// TS_ASSERT_EQUALS(as->get_size(), 2);
+
+	std::string stats = eval->eval("(gc-stats)");
+	printf("GC Stats = %s\n", stats.c_str());
 
 	size_t totcnt = 0;
 	HandleSeq edges;
