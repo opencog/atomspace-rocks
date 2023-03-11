@@ -172,7 +172,7 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 	TS_ASSERT_EQUALS(totcnt, n_threads * n_loops);
 
 	store->erase();
-	store->close();
+	eval->eval("(close-sto)");
 	store = nullptr;
 }
 
@@ -180,26 +180,26 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 
 void ThreadCountUTest::test_tv_incr(void)
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Number of loops inside each thread.
-	int n_loops = 2500;
+	int n_loops = 25000;
 
 	harness(n_loops, "observe");
-	logger().debug("END TEST: %s", __FUNCTION__);
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 // ============================================================
 
 void ThreadCountUTest::test_push_pop(void)
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Number of loops inside each thread.
-	int n_loops = 500;
+	int n_loops = 1500;
 
 	harness(n_loops, "pushy");
-	logger().debug("END TEST: %s", __FUNCTION__);
+	logger().info("END TEST: %s", __FUNCTION__);
 }
 
 /* ============================= END OF FILE ================= */
