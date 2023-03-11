@@ -117,6 +117,14 @@ void ThreadCountUTest::test_tv_incr(void)
 	// Open the storage node.
 	eval->eval("(open-sto)");
 
+	Handle hsn = eval->eval_h("(cog-storage-node)");
+	StorageNodePtr store = StorageNodeCast(hsn);
+
+	TS_ASSERT(store->connected())
+
+	// Clear out left-over junk, just in case.
+	store->erase();
+
 	printf("Start creating %d threads\n", n_threads);
 	std::vector<std::thread> thread_pool;
 	for (int i=0; i < n_threads; i++) {

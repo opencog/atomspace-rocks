@@ -7,8 +7,8 @@
 (use-modules (opencog persist-rocks))
 
 (define sto (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
-(define open-sto (cog-open sto))
-(define close-sto (cog-close sto))
+(define (open-sto) (cog-open sto))
+(define (close-sto) (cog-close sto))
 
 ; Increment and store.
 (define (observe TXTA TXTB)
