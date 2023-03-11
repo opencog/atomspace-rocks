@@ -30,10 +30,8 @@
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/atoms/atom_types/atom_types.h>
-#include <opencog/atoms/value/FloatValue.h>
-#include <opencog/atoms/value/LinkValue.h>
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/guile/SchemeEval.h>
 
 #include <opencog/persist/api/StorageNode.h>
 
@@ -70,7 +68,7 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 		void tearDown(void);
 
 		void worker(int);
-		void test_add_delete(void);
+		void test_tv_incr(void);
 };
 
 /*
@@ -86,56 +84,34 @@ void ThreadCountUTest::tearDown(void)
 
 // ============================================================
 
-// Add and then remove a bunch of links.
-// This is designed so that multiple threads will be
-// touching the same atoms, adding and removing the same atoms.
-// This should not cause any failures or crashes.
+// Increment counts on a collection of Atoms.
 void ThreadCountUTest::worker(int thread_id)
 {
+	SchemeEval* eval = new SchemeEval(as);
+	eval->eval("(add-to-load-path \"" PROJECT_SOURCE_DIR "\")");
+	eval->eval("(load-from-path \"tests/persist/rocks/thread-count.scm\")");
+
 	int nloops = 50;
-	int nsplice = 50;
 
-	Handle ha(as->add_node(CONCEPT_NODE, "a"));
-
-	for (int j=0; j<nsplice; j++)
+	for (int i=0; i<nloops; i++)
 	{
-		for (int i=0; i<nloops; i++)
-		{
-			int id = (thread_id + i) % (thread_id + 7);
-			Handle hb(as->add_node(CONCEPT_NODE, std::to_string(id)));
-			Handle li(as->add_link(LIST_LINK, ha, hb, ha, hb));
-
-			// Store the link.
-			store->store_atom(li);
-		}
-
-		for (int i=0; i<nloops; i++)
-		{
-			int id = (thread_id + i) % (thread_id + 7);
-			Handle hb(as->get_node(CONCEPT_NODE, std::to_string(id)));
-			Handle li(as->get_link(LIST_LINK, ha, hb, ha, hb));
-
-			// If it's already gone, do nothing.
-			if (nullptr == li) continue;
-
-			// Remove the link.
-			store->remove_atom(as, li);
-		}
+		eval->eval("(observe \"foo\")");
 	}
 
 	// Just one barrier, at the end.
 	store->barrier();
+
+	delete eval;
 }
 
 // ============================================================
 
-void ThreadCountUTest::test_add_delete(void)
+void ThreadCountUTest::test_tv_incr(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	// Configuration. On my machine, the locks allow about 2.5 to
-	// 3 threads run in parallel, and of that time, a third is spent
-	// in the kernel (I assume that's kernel time for file-writes.)
+	// Configuration. Number of actual running threads may be less,
+	// depending on the CPU architecture.
 	int n_threads = 10;
 
 	as = createAtomSpace();
