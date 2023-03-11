@@ -44,7 +44,7 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 	private:
 		std::string uri;
 		AtomSpacePtr as;
-		StorageNodePtr store;
+		SchemeEval* eval;
 
 	public:
 
@@ -76,10 +76,15 @@ class ThreadCountUTest :  public CxxTest::TestSuite
  */
 void ThreadCountUTest::setUp(void)
 {
+	as = createAtomSpace();
+	eval = new SchemeEval(as);
+	eval->eval("(add-to-load-path \"" PROJECT_SOURCE_DIR "\")");
+	eval->eval("(load-from-path \"tests/persist/rocks/thread-count.scm\")");
 }
 
 void ThreadCountUTest::tearDown(void)
 {
+	delete eval;
 }
 
 // ============================================================
@@ -87,21 +92,16 @@ void ThreadCountUTest::tearDown(void)
 // Increment counts on a collection of Atoms.
 void ThreadCountUTest::worker(int thread_id)
 {
-	SchemeEval* eval = new SchemeEval(as);
-	eval->eval("(add-to-load-path \"" PROJECT_SOURCE_DIR "\")");
-	eval->eval("(load-from-path \"tests/persist/rocks/thread-count.scm\")");
+	SchemeEval* tev = new SchemeEval(as);
 
 	int nloops = 50;
 
 	for (int i=0; i<nloops; i++)
 	{
-		eval->eval("(observe \"foo\")");
+		tev->eval("(observe \"foo\" \"bar\")");
 	}
 
-	// Just one barrier, at the end.
-	store->barrier();
-
-	delete eval;
+	delete tev;
 }
 
 // ============================================================
@@ -114,19 +114,10 @@ void ThreadCountUTest::test_tv_incr(void)
 	// depending on the CPU architecture.
 	int n_threads = 10;
 
-	as = createAtomSpace();
-
-	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
-	store = StorageNodeCast(hsn);
-
-	store->open();
-	TS_ASSERT(store->connected())
-
-	// Clear out left-over junk, just in case.
-	store->erase();
+	// Open the storage node.
+	eval->eval("(open-sto)");
 
 	printf("Start creating %d threads\n", n_threads);
-
 	std::vector<std::thread> thread_pool;
 	for (int i=0; i < n_threads; i++) {
 		thread_pool.push_back(
@@ -140,9 +131,28 @@ void ThreadCountUTest::test_tv_incr(void)
 	// Verify the atomspace size
 	// TS_ASSERT_EQUALS(as->get_size(), 2);
 
+	HandleSeq edges;
+	as->get_root_set_by_type(edges, EDGE_LINK);
+	for (const Handle& e : edges)
+	{
+printf("got %s\n", e->to_string().c_str());
+	}
+
+#if 0
+	Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store;
+	store = StorageNodeCast(hsn);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	// Clear out left-over junk, just in case.
+	store->erase();
+
 	store->erase();
 	store->close();
 	store = nullptr;
+#endif
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
