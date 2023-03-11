@@ -67,8 +67,10 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 		void setUp(void);
 		void tearDown(void);
 
-		void worker(int, int);
+		void worker(int, int, const char*);
+		void harness(const char*);
 		void test_tv_incr(void);
+		//void test_push_pop(void);
 };
 
 /*
@@ -90,7 +92,7 @@ void ThreadCountUTest::tearDown(void)
 // ============================================================
 
 // Increment counts on a collection of Atoms.
-void ThreadCountUTest::worker(int thread_id, int nloops)
+void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 {
 	SchemeEval* tev = new SchemeEval(as);
 
@@ -99,15 +101,11 @@ void ThreadCountUTest::worker(int thread_id, int nloops)
 		char a = (std::rand() % 26) + 'A';
 		char b = (std::rand() % 26) + 'A';
 
-		// create string (observe "foo-XXX" "foo-YYY")
-		std::string obs = "(observe \"foo-";
-		obs += a;
-		obs += a;
-		obs += a;
-		obs += "\" \"foo-";
-		obs += b;
-		obs += b;
-		obs += b;
+		// Create string `(cmd "foo-XXX" "foo-YYY")`
+		std::string obs = "(";
+		obs += cmd;
+		obs += " \"foo-" + a + a + a;
+		obs += "\" \"foo-" + b + b + b;
 		obs += "\")";
 		tev->eval(obs);
 	}
@@ -117,16 +115,14 @@ void ThreadCountUTest::worker(int thread_id, int nloops)
 
 // ============================================================
 
-void ThreadCountUTest::test_tv_incr(void)
+void ThreadCountUTest::harness(const char* cmd)
 {
-	logger().debug("BEGIN TEST: %s", __FUNCTION__);
-
 	// Configuration. Number of actual running threads may be less,
 	// depending on the CPU architecture.
 	int n_threads = 10;
 
 	// Number of loops inside each thread.
-	int n_loops = 15000;
+	int n_loops = 35000;
 
 	// Open the storage node.
 	eval->eval("(open-sto)");
@@ -143,7 +139,7 @@ void ThreadCountUTest::test_tv_incr(void)
 	std::vector<std::thread> thread_pool;
 	for (int i=0; i < n_threads; i++) {
 		thread_pool.push_back(
-			std::thread(&ThreadCountUTest::worker, this, i, n_loops));
+			std::thread(&ThreadCountUTest::worker, this, i, n_loops, cmd));
 	}
 
 	for (std::thread& t : thread_pool) t.join();
@@ -173,7 +169,14 @@ void ThreadCountUTest::test_tv_incr(void)
 	store->erase();
 	store->close();
 	store = nullptr;
+}
 
+// ============================================================
+
+void ThreadCountUTest::test_tv_incr(void)
+{
+	logger().debug("BEGIN TEST: %s", __FUNCTION__);
+	harness("observe");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
