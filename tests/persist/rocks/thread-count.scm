@@ -73,6 +73,8 @@
 
 ; Fetch, increment and store.
 ; Unlike above, the increment is not under a lock.
+; That means that it's still racey. This reduces the size of the
+; racing window, but does not eliminate it.
 (define (letch TXTA TXTB)
 	(define ca (Concept TXTA))
 	(define cb (Concept TXTB))
