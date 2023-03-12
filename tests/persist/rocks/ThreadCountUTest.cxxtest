@@ -74,6 +74,7 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 
 		void test_tv_incr(void);
 		void test_push_pop(void);
+		void test_fetch(void);
 };
 
 /*
@@ -227,6 +228,19 @@ void ThreadCountUTest::test_push_pop(void)
 	int n_loops = 1500;
 
 	harness(n_loops, "pushy");
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// ============================================================
+
+void ThreadCountUTest::test_fetch(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	// Number of loops inside each thread.
+	int n_loops = 17800;
+
+	harness(n_loops, "fetchy");
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
