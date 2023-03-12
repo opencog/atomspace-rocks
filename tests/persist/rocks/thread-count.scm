@@ -71,4 +71,30 @@
 	(store-atom edge)
 )
 
+; Fetch, increment and store.
+; Unlike above, the increment is not under a lock.
+(define (letch TXTA TXTB)
+	(define ca (Concept TXTA))
+	(define cb (Concept TXTB))
+	(define edge (Edge (Predicate "foo") (List ca cb)))
+
+	; Provide a safe fetch that does not race.
+	(when (not (cog-ctv? (cog-tv edge)))
+		(lock-mutex mtx)
+		(if (not (cog-ctv? (cog-tv edge)))
+			(fetch-atom edge))
+		(unlock-mutex mtx))
+
+	(cog-inc-count! edge 1)
+
+	; These will race and ruin the counts.
+	(fetch-atom ca)
+	(fetch-atom cb)
+	(cog-inc-count! ca 1)
+	(cog-inc-count! cb 1)
+	(store-atom ca)
+	(store-atom cb)
+	(store-atom edge)
+)
+
 ; ---------- the end --------
