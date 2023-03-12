@@ -74,7 +74,7 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 
 		void test_tv_incr(void);
 		void test_push_pop(void);
-		void xtest_fetch(void);
+		void test_fetch(void);
 };
 
 /*
@@ -233,15 +233,12 @@ void ThreadCountUTest::test_push_pop(void)
 
 // ============================================================
 
-// This test cannot pass as written, because fetches will
-// necessarily be racey. Do we need to provide users with
-// a non-racey fetch? Perhaps we do...
-void ThreadCountUTest::xtest_fetch(void)
+void ThreadCountUTest::test_fetch(void)
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 
 	// Number of loops inside each thread.
-	int n_loops = 17800;
+	int n_loops = 27800;
 
 	harness(n_loops, "fetchy");
 	logger().info("END TEST: %s", __FUNCTION__);
