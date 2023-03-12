@@ -40,3 +40,21 @@
 
 	(cog-pop-atomspace)
 )
+
+; Fetch, increment and store.
+(define (fetchy TXTA TXTB)
+	(define ca (Concept TXTA))
+	(define cb (Concept TXTB))
+	(define edge (Edge (Predicate "foo") (List ca cb)))
+	(fetch-atom ca)
+	(fetch-atom cb)
+	(fetch-atom edge)
+	(cog-inc-count! ca 1)
+	(cog-inc-count! cb 1)
+	(cog-inc-count! edge 1)
+	(store-atom ca)
+	(store-atom cb)
+	(store-atom edge)
+)
+
+; ---------- the end --------
