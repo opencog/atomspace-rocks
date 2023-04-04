@@ -23,6 +23,7 @@ ADD_CXXTEST(MultiDeleteUTest)
 ADD_CXXTEST(ThreadCountUTest)
 ADD_CXXTEST(QueryPersistUTest)
 #
+ADD_GUILE_TEST(DtorClose dtor-close-test.scm)
 ADD_GUILE_TEST(ValueStore value-store-test.scm)
 ADD_GUILE_TEST(ValueResave value-resave-test.scm)
 ADD_GUILE_TEST(ValueReadd value-readd-test.scm)
