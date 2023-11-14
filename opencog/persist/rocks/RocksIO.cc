@@ -398,7 +398,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		storeValue(cid + writeAtom(key), h->getValue(key));
 }
 
-void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
+void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h, bool tmpMarker)
 {
 	std::string sid = writeAtom(h, false);
 
@@ -414,7 +414,8 @@ void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 	_rfile->Delete(rocksdb::WriteOptions(), marker);
 
 	// Store an intentionally invalid key.
-	_rfile->Put(rocksdb::WriteOptions(), skid + "-1", "");
+	marker = skid + (tmpMarker ? "-2" : "-1");
+	_rfile->Put(rocksdb::WriteOptions(), marker, "");
 }
 
 void RocksStorage::storeValue(const std::string& skid,
@@ -799,7 +800,7 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 	}
 
 	// Multi-space Atom remove is done via hiding...
-	storeMissingAtom(frame, h);
+	storeMissingAtom(frame, h, true);
 }
 
 void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)

@@ -96,7 +96,7 @@ class RocksStorage : public StorageNode
 		void remFromSidList(const std::string&, const std::string&);
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
-		void storeMissingAtom(AtomSpace*, const Handle&);
+		void storeMissingAtom(AtomSpace*, const Handle&, bool tmpMarker = false);
 		void doRemoveAtom(const Handle&, bool recursive);
 
 		ValuePtr getValue(const std::string&);
