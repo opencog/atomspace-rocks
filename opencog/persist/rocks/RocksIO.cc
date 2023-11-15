@@ -1022,7 +1022,13 @@ void RocksStorage::removeSatom(const std::string& satom,
 void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h, 
 					bool recursive, bool extracted)
 {
+	std::string pfx = "k@";
+	size_t cnt = 0;
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next()){
+		
+	}
 }
 
 // =========================================================
