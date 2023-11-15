@@ -1019,6 +1019,12 @@ void RocksStorage::removeSatom(const std::string& satom,
 	delete it;
 }
 
+void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h, 
+					bool recursive, bool extracted)
+{
+
+}
+
 // =========================================================
 // Work with the incoming set
 

@@ -149,6 +149,7 @@ class RocksStorage : public StorageNode
 		void preRemoveAtom(AtomSpace* as, const Handle& h, bool recursive) {
 			return removeAtom(as, h, recursive);
 		}
+		void postRemoveAtom(AtomSpace* as, const Handle& h, bool recursive, bool extracted);
 		void storeValue(const Handle& atom, const Handle& key);
 		void updateValue(const Handle&, const Handle&, const ValuePtr&);
 		void loadValue(const Handle& atom, const Handle& key);
