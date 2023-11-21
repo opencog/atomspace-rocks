@@ -1036,7 +1036,11 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), vkey,  &satom);
 		if (not s.ok())
 			throw IOException(TRACE_INFO, "Internal Error!");
-
+		
+		// don't know if this is enough to get the atom from the correct frame
+		// it looks like in decode_atom a function decode_frame is called
+		// but atm this is a wild guess ()
+		Handle h = Sexpr::decode_atom(satom);
 	}
 }
 
