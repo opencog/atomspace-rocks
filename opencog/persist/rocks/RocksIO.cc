@@ -1041,6 +1041,18 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		// it looks like in decode_atom a function decode_frame is called
 		// but atm this is a wild guess ()
 		Handle h = Sexpr::decode_atom(satom);
+
+		// Atom::isAbsent is private atm, is this a problem ...?
+		if (h->isAbsent()){
+			_rfile->Delete(rocksdb::WriteOptions(), it->key());
+			// Store an intentionally invalid key.
+			std::string newkey = it->key().ToString();
+			newkey.substr(); // do some string stuff
+			_rfile->Put(rocksdb::WriteOptions(), newkey, "");
+		} else {
+			// 1. find the "a@ record and delete"
+			// 2. delete the "k@" record
+		}
 	}
 }
 
