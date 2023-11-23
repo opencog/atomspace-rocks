@@ -1050,7 +1050,7 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 			newkey.substr(); // do some string stuff
 			_rfile->Put(rocksdb::WriteOptions(), newkey, "");
 		} else {
-			// 1. find the "a@ record and delete"
+			// 1. find the "a@ record and delete" (see lines 1009-1019)
 			// 2. delete the "k@" record
 		}
 	}
