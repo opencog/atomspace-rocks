@@ -1028,12 +1028,12 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx) and it->key().ends_with(sfx); it->Next()){
-		std::string vkey = it->key().ToString();
-		vkey[0] = 'a';
-		vkey.resize(vkey.find(':') + 1);
+		std::string akey = it->key().ToString();
+		akey[0] = 'a';
+		akey.resize(vkey.find(':') + 1);
 		
 		std::string satom;
-		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), vkey,  &satom);
+		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), akey,  &satom);
 		if (not s.ok())
 			throw IOException(TRACE_INFO, "Internal Error!");
 		
