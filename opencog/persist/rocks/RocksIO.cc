@@ -1045,9 +1045,9 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		// Atom::isAbsent is private atm, is this a problem ...?
 		if (h->isAbsent()){
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
-			// Store an intentionally invalid key.
+			// replace "-2" with "-1"
 			std::string newkey = it->key().ToString();
-			newkey.substr(); // do some string stuff
+			newkey = newkey.substr(newkey.size() - 2) + "-1";
 			_rfile->Put(rocksdb::WriteOptions(), newkey, "");
 		} else {
 			// 1. find the "a@ record and delete" (see lines 1009-1019)
