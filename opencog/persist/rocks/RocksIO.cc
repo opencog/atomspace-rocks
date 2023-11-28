@@ -1052,8 +1052,11 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		} else {
 			// 1. find the "a@ record and delete" (see lines 1009-1019)
 			// do we have to worry also about "n@" : "l@" ?
+			// do we need do check if this exists ?
 			_rfile->Delete(rocksdb::WriteOptions(), akey);
 			// 2. delete the "k@" record
+			// have to be careful, we have to delete the DB entry our loop is sitting on ....!
+			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 		}
 	}
 }
