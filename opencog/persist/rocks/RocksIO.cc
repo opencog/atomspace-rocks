@@ -1043,7 +1043,9 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		Handle h = Sexpr::decode_atom(satom);
 
 		// Atom::isAbsent is private atm, is this a problem ...?
-		if (h->isAbsent()){
+		// also if extracted is false (some error in As extract function),
+		// we also set back to -1 in DB (as it was before)
+		if (not extracted or h->isAbsent()){
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
 			// replace "-2" with "-1"
 			std::string newkey = it->key().ToString();
