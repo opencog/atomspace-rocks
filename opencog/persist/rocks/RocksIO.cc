@@ -1024,7 +1024,7 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 {
 	std::string pfx = "k@";
 	std::string sfx = "-2";
-	size_t cnt = 0;
+	
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx) and it->key().ends_with(sfx); it->Next()){
@@ -1040,7 +1040,7 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		// don't know if this is enough to get the atom from the correct frame
 		// it looks like in decode_atom a function decode_frame is called
 		// but atm this is a wild guess ()
-		Handle h = Sexpr::decode_atom(satom);
+		Handle h = Sexpr::decode_atom(satom.substr(2));
 
 		// Atom::isAbsent is private atm, is this a problem ...?
 		// also if extracted is false (some error in As extract function),
@@ -1054,7 +1054,9 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		} else {
 			// 1. find the "a@ record and delete" (see lines 1009-1019)
 			// do we have to worry also about "n@" : "l@" ?
+			// yes, I think we should delete "n@", they are the same as "a@" with rev. order!
 			// do we need do check if this exists ?
+			// or maybe use "removeSatom" ?
 			_rfile->Delete(rocksdb::WriteOptions(), akey);
 			// 2. delete the "k@" record
 			// have to be careful, we have to delete the DB entry our loop is sitting on ....!
