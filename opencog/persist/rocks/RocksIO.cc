@@ -1019,6 +1019,7 @@ void RocksStorage::removeSatom(const std::string& satom,
 	delete it;
 }
 
+// under construction...
 void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h, 
 					bool recursive, bool extracted)
 {
@@ -1052,15 +1053,23 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 			newkey = newkey.substr(newkey.size() - 2) + "-1";
 			_rfile->Put(rocksdb::WriteOptions(), newkey, "");
 		} else {
+			// First: try if it we can use the function for the
+			// single frame case
+			// just look what happens with the samples
+			// do we call "removeSatom" or its calling function "doRemoveAtom"  ?: 
+			removeSatom(satom, akey, h->is_node(), recursive);
+
+			// alternative: 
 			// 1. find the "a@ record and delete" (see lines 1009-1019)
 			// do we have to worry also about "n@" : "l@" ?
 			// yes, I think we should delete "n@", they are the same as "a@" with rev. order!
 			// do we need do check if this exists ?
 			// or maybe use "removeSatom" ?
-			_rfile->Delete(rocksdb::WriteOptions(), akey);
+			// _rfile->Delete(rocksdb::WriteOptions(), akey);
 			// 2. delete the "k@" record
 			// have to be careful, we have to delete the DB entry our loop is sitting on ....!
-			_rfile->Delete(rocksdb::WriteOptions(), it->key());
+			// _rfile->Delete(rocksdb::WriteOptions(), it->key());
+			
 		}
 	}
 }
