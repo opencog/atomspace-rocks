@@ -1041,7 +1041,7 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		// don't know if this is enough to get the atom from the correct frame
 		// it looks like in decode_atom a function decode_frame is called
 		// but atm this is a wild guess ()
-		Handle h = Sexpr::decode_atom(satom.substr(2));
+		Handle h = Sexpr::decode_atom(satom);
 
 		// Atom::isAbsent is private atm, is this a problem ...?
 		// also if extracted is false (some error in As extract function),
