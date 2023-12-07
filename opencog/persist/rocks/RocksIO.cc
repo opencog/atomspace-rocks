@@ -1028,7 +1028,10 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 	
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 
-	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx) and it->key().ends_with(sfx); it->Next()){
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next()){
+		if (not it->key().ends_with(sfx))
+			continue;
+
 		std::string akey = it->key().ToString();
 		akey[0] = 'a';
 		akey.resize(akey.find(':') + 1);
