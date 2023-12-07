@@ -1047,10 +1047,10 @@ void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h,
 		// also if extracted is false (some error in As extract function),
 		// we also set back to -1 in DB (as it was before)
 		if (not extracted or isAtomAbsent(h)){
+			std::string newkey = it->key().ToString();			
+			// replace "-2" with "-1"			
+			newkey = newkey.substr(newkey.size() - 2) + "-1";			
 			_rfile->Delete(rocksdb::WriteOptions(), it->key());
-			// replace "-2" with "-1"
-			std::string newkey = it->key().ToString();
-			newkey = newkey.substr(newkey.size() - 2) + "-1";
 			_rfile->Put(rocksdb::WriteOptions(), newkey, "");
 		} else {
 			// First: try if it we can use the function for the
