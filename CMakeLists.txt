@@ -9,16 +9,14 @@
 # -- print pretty summary
 #
 
-# cogutils already requires 2.8.12.2, so may as well ask for that.
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12.2)
+# cogutils already requires 3.0.2, so may as well ask for that.
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0.2)
 IF (COMMAND CMAKE_POLICY)
+	# These must be explicitly set, as otherwise warnings are printed.
 	CMAKE_POLICY(SET CMP0003 NEW)
-ENDIF (COMMAND CMAKE_POLICY)
-
-IF(CMAKE_VERSION VERSION_GREATER 3.0.2)
 	CMAKE_POLICY(SET CMP0037 NEW)
 	CMAKE_POLICY(SET CMP0045 NEW)
-ENDIF(CMAKE_VERSION VERSION_GREATER 3.0.2)
+ENDIF (COMMAND CMAKE_POLICY)
 
 PROJECT(atomspace-rocks)
 
@@ -177,10 +175,6 @@ IF (CXXTEST_FOUND)
 			COMMENT "Running tests..."
 		)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-
-	# When CMP00037 is finally turned off, just remove these two lines.
-	ADD_CUSTOM_TARGET(test)
-	ADD_DEPENDENCIES(test check)
 
 	ADD_CUSTOM_TARGET(test_mono
 		DEPENDS tests
