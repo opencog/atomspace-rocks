@@ -1262,9 +1262,19 @@ void RocksStorage::loadType(AtomSpace* as, Type t)
 	loadTypeAllFrames(as, t);
 }
 
+// Store entire contents of the AtomSpace.
 void RocksStorage::storeAtomSpace(const AtomSpace* table)
 {
 	CHECK_OPEN;
+
+	// Is this a request to store more than one AtomSpace? If so,
+	// autoconvert to multi-space. Assume the base space is the one
+	// containing the StorageNode. (Under strange situations, e.g.
+	// the BasicSaveUTest, this may be nullptr.)
+	if (not _multi_space and table != getAtomSpace()
+	                        and nullptr != getAtomSpace())
+		convertForFrames(HandleCast(getAtomSpace()));
+
 	HandleSeq all_atoms;
 	table->get_handles_by_type(all_atoms, ATOM, true);
 	for (const Handle& h : all_atoms)
