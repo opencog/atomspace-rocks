@@ -110,6 +110,10 @@ void RocksStorage::deleteFrame(AtomSpace* frame)
 
 // ======================================================================
 
+// If the existing open database is not in multi-space format, then
+// convert it to the multi-space format. This requires looping over
+// all keys in the database, and changing their format: the key
+// indexes must now include an ID of which AtomSpace they belong to.
 void RocksStorage::convertForFrames(const Handle& top)
 {
 	if (_multi_space) return;

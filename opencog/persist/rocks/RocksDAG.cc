@@ -213,7 +213,7 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 	return tops;
 }
 
-/// Load the entire collection of AtomSpace frames.
+/// Store the entire collection of AtomSpace frames.
 void RocksStorage::storeFrameDAG(AtomSpace* top)
 {
 	CHECK_OPEN;
