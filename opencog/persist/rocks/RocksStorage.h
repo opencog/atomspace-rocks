@@ -56,6 +56,7 @@ class RocksStorage : public StorageNode
 
 		// True if file contains more than one atomspace.
 		bool _multi_space;
+
 		// The Handles are *always* AtomSpacePtr's
 		std::unordered_map<Handle, const std::string> _frame_map;
 		std::unordered_map<std::string, Handle> _fid_map;

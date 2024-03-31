@@ -675,10 +675,11 @@ void RocksStorage::getAtom(const Handle& h)
 		return;
 	}
 
-	if (0 == _frame_map.size())
-		throw IOException(TRACE_INFO,
-			"Attempting a multi-space fetch without known DAG. "
-			"Did you forget to say `load-frames` first?");
+	// When there are multiple spaces, a directory listing of all of
+	// them is required, so that individual Atom loads end up in the
+	// correct AtomSpaces. Load this now, if its not already available.
+	if (0 == _fid_map.size())
+		loadFrameDAG();
 
 	// For multi-spaces, determine the path-DAG from the top space
 	// to the bottom, and load from the bottom-up.
@@ -781,6 +782,12 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 {
 	AtomSpace* has = h->getAtomSpace();
 	if (has and has != frame and not _multi_space)
+
+		// It might be safe to auto-store, here, i.e. by calling
+		// convertForFrames(HandleCast(getAtomSpace()));
+		// and then silently proceeding. But for now, we throw,
+		// until general usage patterns and desirable beahvior
+		// becomes a bit more clear.
 		throw IOException(TRACE_INFO,
 			"Attempting to delete %s from %s, "
 			"Did you forget to say `store-frames` first?",
@@ -1206,10 +1213,11 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 		return;
 	}
 
+	// When there are multiple spaces, a directory listing of all of
+	// them is required, so that individual Atom loads end up in the
+	// correct AtomSpaces. Load this now, if its not already available.
 	if (0 == _fid_map.size())
-		throw IOException(TRACE_INFO,
-			"Attempting to load multiple AtomSpaces without known DAG. "
-			"Did you forget to say `load-frames` first?");
+		loadFrameDAG();
 
 	loadAtomsAllFrames(table);
 }
@@ -1262,9 +1270,19 @@ void RocksStorage::loadType(AtomSpace* as, Type t)
 	loadTypeAllFrames(as, t);
 }
 
+// Store entire contents of the AtomSpace.
 void RocksStorage::storeAtomSpace(const AtomSpace* table)
 {
 	CHECK_OPEN;
+
+	// Is this a request to store more than one AtomSpace? If so,
+	// autoconvert to multi-space. Assume the base space is the one
+	// containing the StorageNode. (Under strange situations, e.g.
+	// the BasicSaveUTest, this may be nullptr.)
+	if (not _multi_space and table != getAtomSpace()
+	                        and nullptr != getAtomSpace())
+		convertForFrames(HandleCast(getAtomSpace()));
+
 	HandleSeq all_atoms;
 	table->get_handles_by_type(all_atoms, ATOM, true);
 	for (const Handle& h : all_atoms)

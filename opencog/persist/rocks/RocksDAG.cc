@@ -177,6 +177,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 // DAG API
 
 /// Load the entire collection of AtomSpace frames.
+/// The load is done unconditionally, each time this is called.
 HandleSeq RocksStorage::loadFrameDAG(void)
 {
 	CHECK_OPEN;
@@ -243,6 +244,11 @@ void RocksStorage::makeOrder(Handle hasp,
 	{
 		const auto& pr = _frame_map.find(hasp);
 		if (_frame_map.end() == pr)
+
+			// Maybe it's safe to auto-load here, i.e. to call
+			// loadFrameDAG() and merge the results. Maybe. But
+			// for now, we're going to throw, instead, until the
+			// general use-patterns clear up a bit more.
 			throw IOException(TRACE_INFO,
 				"Cannot use an AtomSpace DAG inconsistent with stored DAG!\n"
 				"Did you forget to call `(load-frames)`?");
