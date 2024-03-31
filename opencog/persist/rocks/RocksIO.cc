@@ -1206,10 +1206,11 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 		return;
 	}
 
+	// When there are multiple spaces, a directory listing of all of
+	// them is rquired, so that individual Atom loads end up in the
+	// correct AtomSpaces. Load this now, if its not already available.
 	if (0 == _fid_map.size())
-		throw IOException(TRACE_INFO,
-			"Attempting to load multiple AtomSpaces without known DAG. "
-			"Did you forget to say `load-frames` first?");
+		loadFrameDAG();
 
 	loadAtomsAllFrames(table);
 }

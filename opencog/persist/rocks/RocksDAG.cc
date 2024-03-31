@@ -177,6 +177,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 // DAG API
 
 /// Load the entire collection of AtomSpace frames.
+/// The load is done unconditionally, each time this is called.
 HandleSeq RocksStorage::loadFrameDAG(void)
 {
 	CHECK_OPEN;
