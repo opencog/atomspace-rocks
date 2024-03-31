@@ -675,10 +675,11 @@ void RocksStorage::getAtom(const Handle& h)
 		return;
 	}
 
-	if (0 == _frame_map.size())
-		throw IOException(TRACE_INFO,
-			"Attempting a multi-space fetch without known DAG. "
-			"Did you forget to say `load-frames` first?");
+	// When there are multiple spaces, a directory listing of all of
+	// them is required, so that individual Atom loads end up in the
+	// correct AtomSpaces. Load this now, if its not already available.
+	if (0 == _fid_map.size())
+		loadFrameDAG();
 
 	// For multi-spaces, determine the path-DAG from the top space
 	// to the bottom, and load from the bottom-up.
@@ -781,6 +782,12 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 {
 	AtomSpace* has = h->getAtomSpace();
 	if (has and has != frame and not _multi_space)
+
+		// It might be safe to auto-store, here, i.e. by calling
+		// convertForFrames(HandleCast(getAtomSpace()));
+		// and then silently proceeding. But for now, we throw,
+		// until general usage patterns and desirable beahvior
+		// becomes a bit more clear.
 		throw IOException(TRACE_INFO,
 			"Attempting to delete %s from %s, "
 			"Did you forget to say `store-frames` first?",
@@ -1207,7 +1214,7 @@ void RocksStorage::loadAtomSpace(AtomSpace* table)
 	}
 
 	// When there are multiple spaces, a directory listing of all of
-	// them is rquired, so that individual Atom loads end up in the
+	// them is required, so that individual Atom loads end up in the
 	// correct AtomSpaces. Load this now, if its not already available.
 	if (0 == _fid_map.size())
 		loadFrameDAG();
