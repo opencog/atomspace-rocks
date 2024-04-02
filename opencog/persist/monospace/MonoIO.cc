@@ -941,6 +941,17 @@ void MonoStorage::loadType(AtomSpace* as, Type t)
 
 void MonoStorage::storeAtomSpace(const AtomSpace* table)
 {
+	// XXX FIXME. We would like to call
+	// Options::PrepareForBulkLoad() here, but its too late, this
+	// can only be set when opening the DB. Should we maybe close
+	// and reopen the DB? This would be ... conducive of weird bugs.
+	// What this does is to write all data to level zero, which
+	// avoids having rocks run pointless compactions in the background.
+	// Thus the store goes faster. However, having everything in level
+	// zero is terrible for read performance. Thus, at the end, run
+	// compaction manually, by calling CompactRange(NULL, NULL);
+	// which will then set up the levels correctly.
+
 	CHECK_OPEN;
 	HandleSeq all_atoms;
 	table->get_handles_by_type(all_atoms, ATOM, true);
@@ -949,6 +960,12 @@ void MonoStorage::storeAtomSpace(const AtomSpace* table)
 
 	// Make sure that the latest atomid has been stored!
 	write_aid();
+
+	// During DB Open we'd called OptimizeLevelStyleCompaction()
+	// which suppresses compaction. After a full DB dump, though
+	// we really want to do it, for real. So start it manually.
+	rocksdb::CompactRangeOptions cops;
+	_rfile->CompactRange(cops, nullptr, nullptr);
 }
 
 /// Kill everything in the database ... everything.
