@@ -262,6 +262,11 @@ std::string MonoStorage::monitor(void)
 
 void MonoStorage::print_stats(void)
 {
+	std::string rstats;
+	_rfile->GetProperty("rocksdb.stats", &rstats);
+	printf("%s\n\n", rstats.c_str());
+	printf("Please wait, computing AtomSpace stats now ...\n");
+	fflush(stdout);
 	printf("%s\n", monitor().c_str());
 }
 

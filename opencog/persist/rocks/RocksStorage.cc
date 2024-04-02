@@ -356,6 +356,11 @@ std::string RocksStorage::monitor(void)
 
 void RocksStorage::print_stats(void)
 {
+	std::string rstats;
+	_rfile->GetProperty("rocksdb.stats", &rstats);
+	printf("%s\n\n", rstats.c_str());
+	printf("Please wait, computing AtomSpace stats now ...\n");
+	fflush(stdout);
 	printf("%s\n", monitor().c_str());
 }
 
