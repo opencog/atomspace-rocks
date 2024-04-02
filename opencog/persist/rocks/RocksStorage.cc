@@ -58,7 +58,16 @@ void RocksStorage::init(const char * uri)
 
 	rocksdb::Options options;
 	options.IncreaseParallelism();
+
+	// Setting this is supposed to reduce how often compactions run,
+	// and how much CPU they take. Seems to help when we're doing
+	// intensive I/O.
 	options.OptimizeLevelStyleCompaction();
+
+	// This might improve performance, maybe. It will use a hash table
+	// instead of a binary tree for lookup. Iterators over a hash table
+	// are then managed by using bloom filters.
+	// options.OptimizeForPointLookup();
 
 	// Prefix for bloom filter -- first 2 chars.
 	// options.prefix_extractor.reset(rocksdb::NewFixedPrefixTransform(2));
