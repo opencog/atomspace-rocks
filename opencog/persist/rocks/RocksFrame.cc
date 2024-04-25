@@ -287,7 +287,7 @@ void RocksStorage::scrubFrames(void)
 		cnt++;
 	}
 
-	printf("Deleted %lu orphaned Atoms.\n", cnt);
+	printf("Deleted %zu orphaned Atoms.\n", cnt);
 }
 
 // ======================== THE END ======================

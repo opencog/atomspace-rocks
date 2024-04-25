@@ -165,7 +165,7 @@ void RocksStorage::init(const char * uri)
 
 // Informational prints.
 printf("Rocks: opened=%s\n", file.c_str());
-printf("Rocks: DB-version=%s multi-space=%d initial aid=%lu\n",
+printf("Rocks: DB-version=%s multi-space=%d initial aid=%zu\n",
 get_version().c_str(), _multi_space, _next_aid.load());
 
 	// Set up a SID for the TV predicate key.

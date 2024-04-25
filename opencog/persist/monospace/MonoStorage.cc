@@ -148,7 +148,7 @@ void MonoStorage::init(const char * uri)
 			"Cannot use MonoStorageNode to open multi-space storage '%s'\n", uri);
 
 printf("Mono: opened=%s\n", file.c_str());
-printf("Mono: initial aid=%lu\n", _next_aid.load());
+printf("Mono: initial aid=%zu\n", _next_aid.load());
 
 	// Set up a SID for the TV predicate key.
 	// This must match what the AtomSpace is using.
