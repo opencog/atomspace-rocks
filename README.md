@@ -62,6 +62,22 @@ at least one major project, to process tens of millions of Atoms.
 This code is 2x or 3x faster than Postgres on synthetic benchmarks,
 and has been observed to run 12x faster in a real-world application.
 
+Building and Installing
+-----------------------
+The build and install of `atomspace-rocks` follows the same pattern as
+other AtomSpace projects.
+
+RocksDB is a prerequisite. On Debian/Ubuntu, `apt install librocks-dev`
+Then build, install and test:
+```
+    cd to project dir atomspace-rocks
+    mkdir build
+    cd build
+    cmake ..
+    make -j4
+    sudo make install
+    make check
+```
 
 Example Usage
 -------------
