@@ -97,7 +97,7 @@ class RocksStorage : public StorageNode
 		void remFromSidList(const std::string&, const std::string&);
 		void storeValue(const std::string& skid,
 		                const ValuePtr& vp);
-		void storeMissingAtom(AtomSpace*, const Handle&);
+		void storeMissingAtom(AtomSpace*, const Handle&, bool tmpMarker = false);
 		void doRemoveAtom(const Handle&, bool recursive);
 
 		ValuePtr getValue(const std::string&);
@@ -147,6 +147,10 @@ class RocksStorage : public StorageNode
 		void fetchIncomingByType(AtomSpace*, const Handle&, Type t);
 		void storeAtom(const Handle&, bool synchronous = false);
 		void removeAtom(AtomSpace*, const Handle&, bool recursive);
+		void preRemoveAtom(AtomSpace* as, const Handle& h, bool recursive) {
+			return removeAtom(as, h, recursive);
+		}
+		void postRemoveAtom(AtomSpace* as, const Handle& h, bool recursive, bool extracted);
 		void storeValue(const Handle& atom, const Handle& key);
 		void updateValue(const Handle&, const Handle&, const ValuePtr&);
 		void loadValue(const Handle& atom, const Handle& key);
