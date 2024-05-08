@@ -453,7 +453,7 @@ void RocksStorage::updateValue(const Handle& h, const Handle& key,
 	// seem like a weird assumption, but is correct. Here's why:
 	// The RocksStorageNode runs in the local AtomSpace, and if
 	// there were two open storage nodes, and we applied the delta
-	// do each, we'd be double-counting. That would be unwanted.
+	// to each, we'd be double-counting. That would be unwanted.
 	// So the correct assumption is that the delta has been applied
 	// already, and all we need to do is to save-to-disk.
 	storeValue(h, key);
