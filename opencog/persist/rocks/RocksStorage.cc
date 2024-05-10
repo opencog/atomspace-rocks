@@ -289,6 +289,13 @@ std::string RocksStorage::monitor(void)
 {
 	std::string rs;
 	rs += "Connected to `" + _uri + "`\n";
+
+	if (nullptr == _rfile)
+	{
+		rs += "RocksStorageNode is closed; no stats available\n";
+		return rs;
+	}
+
 	rs += "Database contents:\n";
 	rs += "  Version: " + get_version();
 	rs += "  Multispace: " + std::to_string(_multi_space);
@@ -356,6 +363,8 @@ std::string RocksStorage::monitor(void)
 
 void RocksStorage::print_stats(void)
 {
+	if (nullptr == _rfile) return;
+
 	std::string rstats;
 	_rfile->GetProperty("rocksdb.stats", &rstats);
 	printf("%s\n\n", rstats.c_str());

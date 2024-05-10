@@ -240,6 +240,12 @@ std::string MonoStorage::monitor(void)
 {
 	std::string rs;
 	rs += "Connected to `" + _uri + "`\n";
+	if (nullptr == _rfile)
+	{
+		rs += "MonoStorageNode is closed; no stats available\n";
+		return rs;
+	}
+
 	rs += "Database contents:\n";
 	rs += "  Next aid: " + std::to_string(_next_aid.load());
 	rs += "\n";
@@ -262,6 +268,8 @@ std::string MonoStorage::monitor(void)
 
 void MonoStorage::print_stats(void)
 {
+	if (nullptr == _rfile) return;
+
 	std::string rstats;
 	_rfile->GetProperty("rocksdb.stats", &rstats);
 	printf("%s\n\n", rstats.c_str());
