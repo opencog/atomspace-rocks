@@ -108,7 +108,7 @@ ENDIF (NOT CXXTEST_FOUND)
 # Guile Python and Cython
 
 include(OpenCogFindGuile)
-# include(OpenCogFindPython)
+include(OpenCogFindPython)
 
 # ----------------------------------------------------------
 # Optional, currently needed only to hush up DRD in util/Logger.cc
@@ -139,7 +139,7 @@ ENDIF (NOT DEFINED ATOMSPACE_DATA_DIR)
 
 INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogMacros.cmake")
 INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogGuile.cmake")
-# INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogCython.cmake")
+INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogCython.cmake")
 
 # ==========================================================
 # Decide what to build, based on the packages found.
@@ -255,7 +255,8 @@ FIND_PACKAGE(Doxygen)
 # Show a summary of what we found, what we will do.
 
 SUMMARY_ADD("AtomSpace-Rocks" "AtomSpace RocksDB Backend" HAVE_ATOMSPACE AND HAVE_ROCKSDB)
-SUMMARY_ADD("Doxygen" "Code documentation" DOXYGEN_FOUND)
+SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
+SUMMARY_ADD("Doxygen"    "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
 
 SUMMARY_SHOW()
