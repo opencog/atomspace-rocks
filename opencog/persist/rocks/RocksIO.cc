@@ -1119,32 +1119,35 @@ struct timeval sum_itr = {0,0};
 void RocksStorage::loadAtoms(AtomSpace* as)
 {
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
-struct timeval diff;
+struct timeval itrdiff;
+struct timeval decdiff;
+struct timeval adddiff;
+struct timeval keydiff;
 struct timeval then, now;
 gettimeofday(&then, 0);
 	for (it->Seek("a@"); it->Valid() and it->key().starts_with("a@"); it->Next())
 	{
 gettimeofday(&now, 0);
-timersub(&now, &then, &diff);
-timeradd (&diff, &sum_itr, &sum_itr);
+timersub(&now, &then, &itrdiff);
+timeradd (&itrdiff, &sum_itr, &sum_itr);
 then = now;
 		Handle h = Sexpr::decode_atom(it->value().ToString());
 gettimeofday(&now, 0);
-timersub(&now, &then, &diff);
-timeradd (&diff, &sum_dec, &sum_dec);
+timersub(&now, &then, &decdiff);
+timeradd (&decdiff, &sum_dec, &sum_dec);
 then = now;
 		h = add_nocheck(as, h);
 gettimeofday(&now, 0);
-timersub(&now, &then, &diff);
-timeradd (&diff, &sum_add, &sum_add);
+timersub(&now, &then, &adddiff);
+timeradd (&adddiff, &sum_add, &sum_add);
 then = now;
 		// There's a trailing colon. Drop it.
 		const std::string& sidcolon = it->key().ToString().substr(2);
 		size_t len = sidcolon.size();
 		getKeysMonospace(as, sidcolon.substr(0, len-1), h);
 gettimeofday(&now, 0);
-timersub(&now, &then, &diff);
-timeradd (&diff, &sum_key, &sum_key);
+timersub(&now, &then, &keydiff);
+timeradd (&keydiff, &sum_key, &sum_key);
 then = now;
 cnt ++;
 double avitr = (sum_itr.tv_sec + 1.0e-6*sum_itr.tv_usec) / cnt;
@@ -1153,6 +1156,15 @@ double avadd = (sum_add.tv_sec + 1.0e-6*sum_add.tv_usec) / cnt;
 double avkey = (sum_key.tv_sec + 1.0e-6*sum_key.tv_usec) / cnt;
 if (0 == cnt%1000) {
 printf("% av it=%f dec=%f add=%f key=%f\n", avitr, avdec, avadd, avkey);
+}
+#define EX (1.0/6.0)
+if (avitr < EX*itrdiff.tv_sec or
+    avdec < EX*decdiff.tv_sec or
+    avadd < EX*adddiff.tv_sec or
+    avkey < EX*keydiff.tv_sec)
+{
+printf("% excurse it=%ld dec=%ld add=%ld key=%ld\n", itrdiff.tv_sec,
+decdiff.tv_sec, adddiff.tv_sec, keydiff.tv_sec);
 }
 gettimeofday(&then, 0);
 	}
