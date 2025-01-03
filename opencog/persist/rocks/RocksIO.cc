@@ -1153,18 +1153,18 @@ timersub(&now, &then, &keydiff);
 timeradd (&keydiff, &sum_key, &sum_key);
 then = now;
 cnt ++;
-double avitr = (sum_itr.tv_sec + 1.0e-6*sum_itr.tv_usec) / cnt;
-double avdec = (sum_dec.tv_sec + 1.0e-6*sum_dec.tv_usec) / cnt;
-double avadd = (sum_add.tv_sec + 1.0e-6*sum_add.tv_usec) / cnt;
-double avkey = (sum_key.tv_sec + 1.0e-6*sum_key.tv_usec) / cnt;
+double avitr = (1.0e6*sum_itr.tv_sec + sum_itr.tv_usec) / cnt;
+double avdec = (1.0e6*sum_dec.tv_sec + sum_dec.tv_usec) / cnt;
+double avadd = (1.0e6*sum_add.tv_sec + sum_add.tv_usec) / cnt;
+double avkey = (1.0e6*sum_key.tv_sec + sum_key.tv_usec) / cnt;
 if (0 == cnt%1000) {
 printf("%d av it=%f dec=%f add=%f key=%f\n", cnt, avitr, avdec, avadd, avkey);
 }
-double opitr = (itrdiff.tv_sec + 1.0e-6*itrdiff.tv_usec) ;
-double opdec = (decdiff.tv_sec + 1.0e-6*decdiff.tv_usec) ;
-double opadd = (adddiff.tv_sec + 1.0e-6*adddiff.tv_usec) ;
-double opkey = (keydiff.tv_sec + 1.0e-6*keydiff.tv_usec) ;
-#define EX (1.0/6.0)
+double opitr = (1.0e6*itrdiff.tv_sec + itrdiff.tv_usec) ;
+double opdec = (1.0e6*decdiff.tv_sec + decdiff.tv_usec) ;
+double opadd = (1.0e6*adddiff.tv_sec + adddiff.tv_usec) ;
+double opkey = (1.0e6*keydiff.tv_sec + keydiff.tv_usec) ;
+#define EX (1.0/10.0)
 if (avitr < EX*opitr or
     avdec < EX*opdec or
     avadd < EX*opadd or
