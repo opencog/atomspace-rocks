@@ -537,16 +537,32 @@ void RocksStorage::loadValue(const Handle& h, const Handle& key)
 /// This version is optimized for a single AtomSpace, that is, for
 /// the case where multi-atomspace frames are not being used.
 /// See getKeysMulti() for the multi-space version. It's different.
+
+int nkey=0;
+int ncall=0;
+int nbonk=0;
+struct timeval itsum = {0,0};
+struct timeval sksum = {0,0};
+struct timeval dlsum = {0,0};
 void RocksStorage::getKeysMonospace(AtomSpace* as,
                            const std::string& sid, const Handle& h)
 {
 	std::string cid = "k@" + sid + ":";
 
+ncall++;
 	// Iterate over all the keys on the Atom.
 	size_t kidoff = cid.size();
+struct timeval then, now;
+struct timeval itdiff;
+gettimeofday(&then, 0);
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+gettimeofday(&now, 0);
+timersub(&now, &then, &itdiff);
+timeradd(&itdiff, &itsum, &itsum);
+then = now;
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
+nkey++;
 		const std::string& rks = it->key().ToString();
 
 		Handle key;
@@ -556,6 +572,7 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 		}
 		catch (const IOException& ex)
 		{
+nbonk++;
 			// If the user deleted the key-Atom from storage, then
 			// the above getAtom() will fail. Ignore the failure,
 			// and instead just cleanup the key storage.
@@ -593,7 +610,26 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 		else
 			h->setValue(key, vp);
 	}
+gettimeofday(&now, 0);
+timersub(&now, &then, &skdiff);
+timeradd(&skdiff, &sksum, &sksum);
+then = now;
 	delete it;
+gettimeofday(&now, 0);
+timersub(&now, &then, &dldiff);
+timeradd(&dldiff, &dlsum, &dlsum);
+
+if (0 == ncall%1000) {
+double avnkey = ((double) nkey) / ((double) ncall);
+double avnbonk = ((double) nbonk) / ((double) ncall);
+
+double avit = (1.0e6*itsum.tv_sec + itsum.tv_usec) / ncall;;
+double avsk = (1.0e6*sksum.tv_sec + sksum.tv_usec) / ncall;;
+double avdl = (1.0e6*dlsum.tv_sec + dlsum.tv_usec) / ncall;;
+printf("duude %d nkey=%f bonk=%f it=%f sk=%f dl=%f\n", ncall, avnkey,
+avnbonk, avit, avsk, avdl);
+}
+
 }
 
 /// Get all of the key-value pairs for the Atom at `sid`, and place
@@ -1160,6 +1196,8 @@ double avkey = (1.0e6*sum_key.tv_sec + sum_key.tv_usec) / cnt;
 if (0 == cnt%1000) {
 printf("%d av it=%f dec=%f add=%f key=%f\n", cnt, avitr, avdec, avadd, avkey);
 }
+
+#if EXCURSIONS
 double opitr = (1.0e6*itrdiff.tv_sec + itrdiff.tv_usec) ;
 double opdec = (1.0e6*decdiff.tv_sec + decdiff.tv_usec) ;
 double opadd = (1.0e6*adddiff.tv_sec + adddiff.tv_usec) ;
@@ -1172,6 +1210,7 @@ if (avitr < 0.06*opitr or
 {
 printf("%d excurse it=%f dec=%f add=%f key=%f\n", cnt, opitr, opdec, opadd, opkey);
 }
+#endif
 gettimeofday(&then, 0);
 	}
 	delete it;
