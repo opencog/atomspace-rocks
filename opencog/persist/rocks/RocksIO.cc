@@ -543,6 +543,7 @@ int ncall=0;
 int nbonk=0;
 struct timeval itsum = {0,0};
 struct timeval sksum = {0,0};
+struct timeval vasum = {0,0};
 struct timeval dlsum = {0,0};
 void RocksStorage::getKeysMonospace(AtomSpace* as,
                            const std::string& sid, const Handle& h)
@@ -553,13 +554,24 @@ ncall++;
 	// Iterate over all the keys on the Atom.
 	size_t kidoff = cid.size();
 struct timeval then, now;
-struct timeval itdiff, skdiff, dldiff;
+struct timeval itdiff, skdiff, vadiff, dldiff;
 gettimeofday(&then, 0);
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 gettimeofday(&now, 0);
 timersub(&now, &then, &itdiff);
 timeradd(&itdiff, &itsum, &itsum);
 then = now;
+it->Seek(cid);
+gettimeofday(&now, 0);
+timersub(&now, &then, &skdiff);
+timeradd(&skdiff, &sksum, &sksum);
+then = now;
+it->Valid() and it->key().starts_with(cid);
+gettimeofday(&now, 0);
+timersub(&now, &then, &vadiff);
+timeradd(&vadiff, &vasum, &vasum);
+then = now;
+#if 0
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 nkey++;
@@ -614,6 +626,7 @@ gettimeofday(&now, 0);
 timersub(&now, &then, &skdiff);
 timeradd(&skdiff, &sksum, &sksum);
 then = now;
+#endif
 	delete it;
 gettimeofday(&now, 0);
 timersub(&now, &then, &dldiff);
@@ -625,9 +638,10 @@ double avnbonk = ((double) nbonk) / ((double) ncall);
 
 double avit = (1.0e6*itsum.tv_sec + itsum.tv_usec) / ncall;;
 double avsk = (1.0e6*sksum.tv_sec + sksum.tv_usec) / ncall;;
+double avva = (1.0e6*vasum.tv_sec + vasum.tv_usec) / ncall;;
 double avdl = (1.0e6*dlsum.tv_sec + dlsum.tv_usec) / ncall;;
-printf("duude %d nkey=%f bonk=%f it=%f sk=%f dl=%f\n", ncall, avnkey,
-avnbonk, avit, avsk, avdl);
+printf("duude %d nkey=%f bonk=%f it=%f sk=%f va=%f dl=%f\n", ncall, avnkey,
+avnbonk, avit, avsk, avva, avdl);
 }
 
 }
