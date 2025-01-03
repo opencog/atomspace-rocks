@@ -553,7 +553,7 @@ ncall++;
 	// Iterate over all the keys on the Atom.
 	size_t kidoff = cid.size();
 struct timeval then, now;
-struct timeval itdiff;
+struct timeval itdiff, skdiff, dldiff;
 gettimeofday(&then, 0);
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 gettimeofday(&now, 0);
