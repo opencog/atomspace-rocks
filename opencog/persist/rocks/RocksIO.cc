@@ -561,7 +561,10 @@ gettimeofday(&now, 0);
 timersub(&now, &then, &itdiff);
 timeradd(&itdiff, &itsum, &itsum);
 then = now;
+#if WHAT
 it->Seek(cid);
+// it->Seek("k@");
+// it->Seek("a@");
 gettimeofday(&now, 0);
 timersub(&now, &then, &skdiff);
 timeradd(&skdiff, &sksum, &sksum);
@@ -571,7 +574,8 @@ gettimeofday(&now, 0);
 timersub(&now, &then, &vadiff);
 timeradd(&vadiff, &vasum, &vasum);
 then = now;
-#if 0
+#endif
+#if 1
 	for (it->Seek(cid); it->Valid() and it->key().starts_with(cid); it->Next())
 	{
 nkey++;
