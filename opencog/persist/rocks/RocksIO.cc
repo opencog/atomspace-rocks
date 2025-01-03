@@ -1108,19 +1108,53 @@ void RocksStorage::fetchIncomingByType(AtomSpace* as, const Handle& h, Type t)
 // =========================================================
 // Load and store Atoms in bulk.
 
+int cnt = 0;
+struct timeval sum_dec = {0,0};
+struct timeval sum_add = {0,0};
+struct timeval sum_key = {0,0};
+struct timeval sum_itr = {0,0};
+
 /// Load all the Atoms in the AtomSpace. Simple version, for handling
 /// a single AtomSpace.
 void RocksStorage::loadAtoms(AtomSpace* as)
 {
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+struct timeval diff;
+struct timeval then, now;
+gettimeofday(&then, 0);
 	for (it->Seek("a@"); it->Valid() and it->key().starts_with("a@"); it->Next())
 	{
+gettimeofday(&now, 0);
+timersub(&now, &then, &diff);
+timeradd (&diff, &sum_itr, &sum_itr);
+then = now;
 		Handle h = Sexpr::decode_atom(it->value().ToString());
+gettimeofday(&now, 0);
+timersub(&now, &then, &diff);
+timeradd (&diff, &sum_dec, &sum_dec);
+then = now;
 		h = add_nocheck(as, h);
+gettimeofday(&now, 0);
+timersub(&now, &then, &diff);
+timeradd (&diff, &sum_add, &sum_add);
+then = now;
 		// There's a trailing colon. Drop it.
 		const std::string& sidcolon = it->key().ToString().substr(2);
 		size_t len = sidcolon.size();
 		getKeysMonospace(as, sidcolon.substr(0, len-1), h);
+gettimeofday(&now, 0);
+timersub(&now, &then, &diff);
+timeradd (&diff, &sum_key, &sum_key);
+then = now;
+cnt ++;
+double avitr = (sum_itr.tv_sec + 1.0e-6*sum_itr.tv_usec) / cnt;
+double avdec = (sum_dec.tv_sec + 1.0e-6*sum_dec.tv_usec) / cnt;
+double avadd = (sum_add.tv_sec + 1.0e-6*sum_add.tv_usec) / cnt;
+double avkey = (sum_key.tv_sec + 1.0e-6*sum_key.tv_usec) / cnt;
+if (0 == cnt%1000) {
+printf("% av it=%f dec=%f add=%f key=%f\n", avitr, avdec, avadd, avkey);
+}
+gettimeofday(&then, 0);
 	}
 	delete it;
 }
