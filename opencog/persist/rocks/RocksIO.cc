@@ -1164,8 +1164,8 @@ double opitr = (1.0e6*itrdiff.tv_sec + itrdiff.tv_usec) ;
 double opdec = (1.0e6*decdiff.tv_sec + decdiff.tv_usec) ;
 double opadd = (1.0e6*adddiff.tv_sec + adddiff.tv_usec) ;
 double opkey = (1.0e6*keydiff.tv_sec + keydiff.tv_usec) ;
-#define EX (1.0/10.0)
-if (avitr < EX*opitr or
+#define EX 0.2
+if (avitr < 0.06*opitr or
     avdec < EX*opdec or
     avadd < EX*opadd or
     avkey < EX*opkey)
