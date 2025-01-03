@@ -32,6 +32,9 @@
 #include "RocksStorage.h"
 #include "RocksUtils.h"
 
+#include <sys/time.h>
+
+
 using namespace opencog;
 
 /// int to base-62 We use base62 not base64 because we
@@ -1157,14 +1160,17 @@ double avkey = (sum_key.tv_sec + 1.0e-6*sum_key.tv_usec) / cnt;
 if (0 == cnt%1000) {
 printf("% av it=%f dec=%f add=%f key=%f\n", avitr, avdec, avadd, avkey);
 }
+double opitr = (itrdiff.tv_sec + 1.0e-6*itrdiff.tv_usec) ;
+double opdec = (decdiff.tv_sec + 1.0e-6*decdiff.tv_usec) ;
+double opadd = (adddiff.tv_sec + 1.0e-6*adddiff.tv_usec) ;
+double opkey = (keydiff.tv_sec + 1.0e-6*keydiff.tv_usec) ;
 #define EX (1.0/6.0)
-if (avitr < EX*itrdiff.tv_sec or
-    avdec < EX*decdiff.tv_sec or
-    avadd < EX*adddiff.tv_sec or
-    avkey < EX*keydiff.tv_sec)
+if (avitr < EX*opitr or
+    avdec < EX*opdec or
+    avadd < EX*opadd or
+    avkey < EX*opkey)
 {
-printf("% excurse it=%ld dec=%ld add=%ld key=%ld\n", itrdiff.tv_sec,
-decdiff.tv_sec, adddiff.tv_sec, keydiff.tv_sec);
+printf("%d excurse it=%f dec=%f add=%f key=%f\n", cnt, opitr, opdec, opadd, opkey);
 }
 gettimeofday(&then, 0);
 	}
