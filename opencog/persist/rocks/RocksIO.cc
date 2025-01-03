@@ -1170,6 +1170,10 @@ gettimeofday(&now, 0);
 timersub(&now, &then, &itrdiff);
 timeradd (&itrdiff, &sum_itr, &sum_itr);
 then = now;
+if (0 == cnt) {
+printf("firt times %ld %ld\n", itrdiff.tv_sec, itrdiff.tv_usec);
+gettimeofday(&then, 0);
+}
 		Handle h = Sexpr::decode_atom(it->value().ToString());
 gettimeofday(&now, 0);
 timersub(&now, &then, &decdiff);
