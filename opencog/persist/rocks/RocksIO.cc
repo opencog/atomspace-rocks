@@ -1158,7 +1158,7 @@ double avdec = (sum_dec.tv_sec + 1.0e-6*sum_dec.tv_usec) / cnt;
 double avadd = (sum_add.tv_sec + 1.0e-6*sum_add.tv_usec) / cnt;
 double avkey = (sum_key.tv_sec + 1.0e-6*sum_key.tv_usec) / cnt;
 if (0 == cnt%1000) {
-printf("% av it=%f dec=%f add=%f key=%f\n", avitr, avdec, avadd, avkey);
+printf("%d av it=%f dec=%f add=%f key=%f\n", cnt, avitr, avdec, avadd, avkey);
 }
 double opitr = (itrdiff.tv_sec + 1.0e-6*itrdiff.tv_usec) ;
 double opdec = (decdiff.tv_sec + 1.0e-6*decdiff.tv_usec) ;
