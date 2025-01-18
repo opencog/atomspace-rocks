@@ -1,5 +1,7 @@
 
-# CMake boilerplate mumbo-jumbo that does something.
+# CMake boilerplate that allows users to do
+#    find_package(AtomspaceRocks REQUIRED 1.3.0)
+# and have it work.
 
 include(CMakePackageConfigHelpers)
 
@@ -29,3 +31,5 @@ INSTALL(FILES
 	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfig.cmake
 	DESTINATION ${ConfigPackageLocation}
 )
+
+# -----------------------------------------------------------
