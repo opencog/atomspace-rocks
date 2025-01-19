@@ -1,4 +1,5 @@
 
+# This declaration must happen before subdirectory traversal.
 DECLARE_GUILE_CONFIG_TARGET(SCM_CONFIG "opencog rocks-config" "OPENCOG_TEST")
 
 ADD_SUBDIRECTORY (cython)
