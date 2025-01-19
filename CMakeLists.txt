@@ -132,14 +132,9 @@ ENDIF (VALGRIND_FOUND)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}
 	${COGUTIL_INCLUDE_DIR} ${ATOMSPACE_INCLUDE_DIR})
 
-# Macros that define how atom types get declared.
-IF (NOT DEFINED ATOMSPACE_DATA_DIR)
-	SET (ATOMSPACE_DATA_DIR "${COGUTIL_DATA_DIR}")
-ENDIF (NOT DEFINED ATOMSPACE_DATA_DIR)
-
-INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogMacros.cmake")
-INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogGuile.cmake")
-INCLUDE("${ATOMSPACE_DATA_DIR}/cmake/OpenCogCython.cmake")
+INCLUDE(OpenCogMacros)
+INCLUDE(OpenCogGuile)
+INCLUDE(OpenCogCython)
 
 # ==========================================================
 # Decide what to build, based on the packages found.
