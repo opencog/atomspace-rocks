@@ -1,10 +1,17 @@
-AtomSpace RocksDB Backend
-=========================
+AtomSpace RocksDB StorageNode
+=============================
 [![CircleCI](https://circleci.com/gh/opencog/atomspace-rocks.svg?style=svg)](https://circleci.com/gh/opencog/atomspace-rocks)
 
-Save and restore AtomSpace contents to a RocksDB database. The RocksDB
-database is a single-user, local-host-only file-backed database. That
-means that only one AtomSpace can connect to it at any given moment.
+Save and restore [AtomSpace](https://github.com/opencog/atomspace)
+contents as well as individual Atoms to a
+[RocksDB](https://rocksdb.org) database. The RocksDB database is a
+high-performance, zero-configuration, single-user, local-host-only
+file-backed database. It provides top-notch read and write performance,
+which is the #1 reason you should e interested in using it. But please
+note: only one running AtomSpace executable can connect to it at any
+given moment. Multi-user, networked AtomSpaces are provided by the
+[AtomSpace-Cog](https://github.com/opencog/atomspace-cog) `StorageNode`
+driver.
 
 In ASCII-art:
 
@@ -59,8 +66,13 @@ Status
 This is **Version 1.5.1**.  All unit tests pass.  It has been used in
 at least one major project, to process tens of millions of Atoms.
 
-This code is 2x or 3x faster than Postgres on synthetic benchmarks,
-and has been observed to run 12x faster in a real-world application.
+This code is 2x or 3x faster than the
+[PostgresStorageNode](https://github.com/opencog/atomspace-pgres)
+on synthetic benchmarks, and has been observed to run 12x faster
+in a real-world application. At least half of thise performance
+difference can be explained by the fact that the PostgresStorageNode
+is old and has a sub-optimal design. Someone should port the Rocks
+code here to create a new, better Postgres StorageNode.
 
 Building and Installing
 -----------------------
