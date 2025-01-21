@@ -93,7 +93,7 @@ IF (ROCKSDB_FOUND)
 	MESSAGE(STATUS "RocksDB found.")
 	SET(HAVE_ROCKSDB 1)
 ELSE (ROCKSDB_FOUND)
-	MESSAGE(STATUS "RocksDB was not found.")
+	MESSAGE(FATAL_ERROR "RocksDB was not found.")
 ENDIF (ROCKSDB_FOUND)
 
 # ----------------------------------------------------------
