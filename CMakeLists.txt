@@ -87,8 +87,17 @@ ELSE (ATOMSPACE_FOUND)
 	MESSAGE(FATAL_ERROR "AtomSpace missing: it is needed!")
 ENDIF (ATOMSPACE_FOUND)
 
+FIND_PACKAGE(AtomSpaceStorage CONFIG REQUIRED)
+IF (ATOMSPACE_STORAGE_FOUND)
+	MESSAGE(STATUS "AtomSpace Storage found.")
+	ADD_DEFINITIONS(-DHAVE_ATOMSPACE_STORAGE)
+	SET(HAVE_ATOMSPACE_STORAGE 1)
+ELSE (ATOMSPACE_STORAGE_FOUND)
+	MESSAGE(FATAL_ERROR "AtomSpace Storage missing: it is needed!")
+ENDIF (ATOMSPACE_STORAGE_FOUND)
+
 # RocksDB
-FIND_PACKAGE(RocksDB)
+FIND_PACKAGE(RocksDB REQUIRED)
 IF (ROCKSDB_FOUND)
 	MESSAGE(STATUS "RocksDB found.")
 	SET(HAVE_ROCKSDB 1)
@@ -249,7 +258,8 @@ FIND_PACKAGE(Doxygen)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("AtomSpace-Rocks" "AtomSpace RocksDB Backend" HAVE_ATOMSPACE AND HAVE_ROCKSDB)
+SUMMARY_ADD("AtomSpace-Rocks" "AtomSpace RocksDB Backend"
+	HAVE_ATOMSPACE AND HAVE_ATOMSPACE_STORAGE AND HAVE_ROCKSDB)
 SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Doxygen"    "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
