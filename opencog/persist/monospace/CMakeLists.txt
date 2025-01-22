@@ -9,6 +9,7 @@ ADD_LIBRARY (persist-monospace SHARED
 )
 
 TARGET_LINK_LIBRARIES(persist-monospace
+	${ATOMSPACE_STORAGE_LIBRARIES}
 	${ATOMSPACE_LIBRARIES}
 	rocksdb
 )
