@@ -9,8 +9,8 @@
 # -- print pretty summary
 #
 
-# cogutils already requires 3.0.2, so may as well ask for that.
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0.2)
+# cogutils already requires 3.12, so may as well ask for that.
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 IF (COMMAND CMAKE_POLICY)
 	# These must be explicitly set, as otherwise warnings are printed.
 	CMAKE_POLICY(SET CMP0003 NEW)
