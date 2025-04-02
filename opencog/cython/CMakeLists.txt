@@ -1,6 +1,6 @@
 
 INCLUDE_DIRECTORIES(
-	${PYTHON_INCLUDE_DIRS}
+	${Python3_INCLUDE_DIRS}
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -25,7 +25,7 @@ TARGET_LINK_LIBRARIES(storage_rocks_cython
 	persist
 	storage-types
 	atomspace
-	${PYTHON_LIBRARIES}
+	${Python3_LIBRARIES}
 )
 
 SET_TARGET_PROPERTIES(storage_rocks_cython PROPERTIES
