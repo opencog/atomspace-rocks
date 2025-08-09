@@ -94,7 +94,9 @@
 	(count-all (cog-value (ConceptNode "foo") (Predicate "repressed mem"))))
 
 ; 11 loaded plus one RocksStorageNode plus (Predicate "*-TruthValueKey-*")
-(test-assert "base-count" (equal? 13 (count-all)))
+; Plus two more: (Predicate "*-store-atomspace-*")
+; and (Predicate "*-load-atomspace-*")
+(test-assert "base-count" (equal? 15 (count-all)))
 (test-assert "space1-count" (equal? 0
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 0
@@ -105,7 +107,7 @@
 (load-atomspace (AtomSpace "crushing defeat"))
 (cog-close gsn)
 
-(test-assert "base-count" (equal? 13 (count-all)))
+(test-assert "base-count" (equal? 15 (count-all)))
 (test-assert "space1-count" (equal? 8
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 6
