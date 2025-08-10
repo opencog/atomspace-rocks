@@ -45,20 +45,20 @@
 ; the use count at one, and so the DB connection remains open, and this
 ; second open segfaults, because the DB lock is still held. So we have
 ; to also force (1) to happen. There are two ways to do this:
-; (a) Make opencog/guile print the smob. Since opencig/guile does not
+; (a) Make opencog/guile print the smob. Since opencog/guile does not
 ;     allow Atoms not in any AtomSpace, the AtomPtr gets clobbered.
 ; (b) (set! rsn #f) and run (gc) to force the AtomPtr to be gc'ed.
 ;
 ; Either (a) or (b) will work. We chose (a) for this test.
 ;
-; So, some ttests.
+; So, some tests.
 ; First: Is rsn an atom? Yes, it still is.
 (test-equal #t (cog-atom? rsn))
 
-; Next, is it in this AtomSpce? No it isn't.
+; Next, is it in this AtomSpace? No it isn't.
 (test-equal #f (cog-atom rsn))
 
-; Acessing it from guile will clobber the guile smob pointer.
+; Accessing it from guile will clobber the guile smob pointer.
 ; If we don't do this, rsn will remain live. The define, further
 ; below, will not clobber it, but only release it. A round of gc's
 ; would be needed for the actual release. Blech. Either will work.
