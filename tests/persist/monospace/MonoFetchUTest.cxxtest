@@ -73,7 +73,7 @@ FetchUTest::FetchUTest(void)
 	logger().set_print_to_stdout_flag(true);
 
 	uri = "monospace:///tmp/cog-mono-unit-test";
-	srv_open = "(cog-mono-open \"" + uri + "\")\n";
+	srv_open = "(cog-open (MonoStorageNode \"" + uri + "\"))\n";
 
 	// Other unit tests leave junk laying around...
 	MonoStorage *store = new MonoStorage(uri);
@@ -159,7 +159,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.1 0.11)))");
 	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
 	eval->eval("(store-atomspace)");
-	eval->eval("(cog-mono-close)");
+	eval->eval("(cog-close)");
 
 	_as = createAtomSpace();
 	eval = SchemeEval::get_evaluator(_as);
@@ -190,7 +190,7 @@ void FetchUTest::test_stuff(void)
 	// Saving everything should not crash.  It should, however,
 	// change the TV on (Concept "BBB") back to DEFAULT_TV.
 	eval->eval("(store-atomspace)");
-	eval->eval("(cog-mono-close)");
+	eval->eval("(cog-close)");
 
 	_as = createAtomSpace();
 	eval = SchemeEval::get_evaluator(_as);
@@ -214,7 +214,7 @@ void FetchUTest::test_stuff(void)
 	printf("Expecting %s\n", dtv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
 
-	eval->eval("(cog-mono-close)");
+	eval->eval("(cog-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
@@ -244,7 +244,7 @@ void FetchUTest::xxxtest_readonly(void)
 	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
 	eval->eval(R"((List (Concept "AAA") (Concept "BBB")))");
 	eval->eval("(store-atomspace)");
-	eval->eval("(cog-mono-close)");
+	eval->eval("(cog-close)");
 
 	_as = createAtomSpace();
 	eval = SchemeEval::get_evaluator(_as);
@@ -304,7 +304,7 @@ void FetchUTest::xxxtest_readonly(void)
 	TS_ASSERT(d == nullptr);
 	TS_ASSERT_EQUALS(3, _as->get_size());
 
-	eval->eval("(cog-mono-close)");
+	eval->eval("(cog-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 
