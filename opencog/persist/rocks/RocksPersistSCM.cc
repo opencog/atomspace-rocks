@@ -112,8 +112,6 @@ void RocksPersistSCM::do_open(const std::string& uri)
         throw RuntimeException(TRACE_INFO,
             "cog-rocks-open: Error: Unable to connect to the database");
     }
-
-    PersistSCM::set_connection(_storage);
 }
 
 void RocksPersistSCM::do_close(void)
@@ -129,7 +127,6 @@ void RocksPersistSCM::do_close(void)
     // Only then actually call the dtor.
     _storage->close();
     _as->extract_atom(HandleCast(_storage));
-    PersistSCM::set_connection(nullptr);
     _storage = nullptr;
 }
 
