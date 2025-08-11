@@ -87,7 +87,16 @@
 	; (cog-rocks-close)
 
 	; Start with a blank slate.
-	(cog-set-atomspace! (cog-new-atomspace))
+	; FYI, `keep-me-around` is some subtle non-obvious hackery,
+	; We put the StorageNode into this AtomSpace, but if we're
+	; not careful, the various cog-set-atomspace! will leave it
+	; with a reference count of zero. If it gets garbage collected,
+	; well, the StorageNode disappears too, Oh No! So create a
+	; reference, and (this is important) **make sure** the ref
+	; is actually referenced at the very end, i.e. so that it does
+	; not accidentally go out of scope!
+	(define keep-me-around (cog-new-atomspace))
+	(cog-set-atomspace! keep-me-around)
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
@@ -137,6 +146,9 @@
 	; Verify appropriate values
 	(test-equal "base-tv" 3 (get-cnt (cog-node 'Concept "foo")))
 	(test-equal "mid1-tv" 4 (get-cnt (cog-node 'Concept "bar")))
+
+	; Make sure the first atomspace remains in scope!
+	(format #t "The keeper is ~A\n" keep-me-around)
 )
 
 (define delete-frame "test deletion of frames")
