@@ -26,7 +26,6 @@
 #include <libguile.h>
 
 #include <opencog/atomspace/AtomSpace.h>
-#include <opencog/persist/api/PersistSCM.h>
 #include <opencog/persist/api/StorageNode.h>
 #include <opencog/guile/SchemePrimitive.h>
 
