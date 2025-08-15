@@ -34,6 +34,7 @@
 #include <opencog/guile/SchemeEval.h>
 
 #include <opencog/persist/api/StorageNode.h>
+#include <opencog/persist/rocks-types/atom_types.h>
 
 #include <opencog/util/Logger.h>
 
