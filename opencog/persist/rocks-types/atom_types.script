@@ -1,0 +1,10 @@
+//
+// Script for generating the RocksStorageNode atom types.
+//
+// Mono is a single-atomspace version of Rocks.
+// It does not support frames or multiple AtomSpaces. But its faster.
+// And its compatible.
+MONO_STORAGE_NODE <- STORAGE_NODE
+ROCKS_STORAGE_NODE <- STORAGE_NODE
+
+// That's all folks!  Nothing more is needed here!
