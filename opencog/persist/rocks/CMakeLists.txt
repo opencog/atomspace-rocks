@@ -14,10 +14,10 @@ ADD_LIBRARY (persist-rocks SHARED
 TARGET_INCLUDE_DIRECTORIES(persist-rocks PRIVATE ${CMAKE_BINARY_DIR})
 
 TARGET_LINK_LIBRARIES(persist-rocks
+	persist-rocks-types
 	${ATOMSPACE_STORAGE_LIBRARIES}
 	${ATOMSPACE_LIBRARIES}
 	rocksdb
-	persist-rocks-types
 )
 
 ADD_DEPENDENCIES(persist-rocks persist_rocks_atom_types)
