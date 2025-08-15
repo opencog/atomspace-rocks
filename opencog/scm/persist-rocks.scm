@@ -6,6 +6,15 @@
 
 (use-modules (opencog))
 (use-modules (opencog rocks-config))
+
+; Load the C library that calls the classserver to load the types.
+(load-extension
+	(string-append opencog-ext-path-persist-rocks-types "libpersist-rocks-types")
+	"persist_rocks_types_init")
+
+; Load the persist-rocks types scheme bindings
+(load-from-path "opencog/persist/rocks-types/persist_rocks_types.scm")
+
 (load-extension
 	(string-append opencog-ext-path-persist-rocks "libpersist-rocks")
 	"opencog_persist_rocks_init")

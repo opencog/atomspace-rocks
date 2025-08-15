@@ -38,6 +38,7 @@
 
 #include <opencog/util/Logger.h>
 #include <opencog/atoms/base/Node.h>
+#include <opencog/persist/rocks-types/atom_types.h>
 
 #include "MonoStorage.h"
 

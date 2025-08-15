@@ -10,11 +10,17 @@ ADD_LIBRARY (persist-rocks SHARED
 	RocksPersistSCM.cc
 )
 
+# The atom_types.h file is written to the build directory
+TARGET_INCLUDE_DIRECTORIES(persist-rocks PRIVATE ${CMAKE_BINARY_DIR})
+
 TARGET_LINK_LIBRARIES(persist-rocks
+	persist-rocks-types
 	${ATOMSPACE_STORAGE_LIBRARIES}
 	${ATOMSPACE_LIBRARIES}
 	rocksdb
 )
+
+ADD_DEPENDENCIES(persist-rocks persist_rocks_atom_types)
 
 ADD_GUILE_EXTENSION(SCM_CONFIG persist-rocks
 	"opencog-ext-path-persist-rocks")
