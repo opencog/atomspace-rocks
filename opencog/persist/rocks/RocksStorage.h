@@ -36,6 +36,7 @@
 #include "rocksdb/db.h"
 
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/persist/api/StorageNode.h>
 
 namespace opencog

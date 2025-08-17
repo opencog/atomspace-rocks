@@ -1,6 +1,6 @@
 /*
  * FILE:
- * opencog/persist/rocks/MonoStorage.h
+ * opencog/persist/monospace/MonoStorage.h
  *
  * FUNCTION:
  * Simple RocksDB-backed persistent storage.
@@ -35,6 +35,7 @@
 #include "rocksdb/db.h"
 
 #include <opencog/persist/api/StorageNode.h>
+#include <opencog/persist/rocks-types/atom_types.h>
 
 namespace opencog
 {
