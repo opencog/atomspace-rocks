@@ -292,7 +292,7 @@ void ValueSaveUTest::test_load_by_type()
 		                     3.2109876543210987e-250}));
 	af->setValue(key, pvf);
 
-	TruthValuePtr tf(SimpleTruthValue::createTV(0.11, 100));
+	TruthValuePtr tf(createSimpleTruthValue(0.11, 100));
 	af->setTruthValue(tf);
 
 	// --------------------
@@ -300,7 +300,7 @@ void ValueSaveUTest::test_load_by_type()
 		std::vector<std::string>({"aaa", "bb bb bb", "ccc ccc ccc"}));
 	at->setValue(key, pvt);
 
-	TruthValuePtr tt(SimpleTruthValue::createTV(0.22, 200));
+	TruthValuePtr tt(createSimpleTruthValue(0.22, 200));
 	at->setTruthValue(tt);
 
 	// --------------------
@@ -308,7 +308,7 @@ void ValueSaveUTest::test_load_by_type()
 		std::vector<ValuePtr>({pvf, pvt}));
 	al->setValue(key, pvl);
 
-	TruthValuePtr tl(SimpleTruthValue::createTV(0.33, 300));
+	TruthValuePtr tl(createSimpleTruthValue(0.33, 300));
 	al->setTruthValue(tl);
 
 	// --------------------
@@ -316,7 +316,7 @@ void ValueSaveUTest::test_load_by_type()
 		std::vector<ValuePtr>({pvl, pvl, pvf, pvt}));
 	av->setValue(key, pvv);
 
-	TruthValuePtr tv(SimpleTruthValue::createTV(0.44, 400));
+	TruthValuePtr tv(createSimpleTruthValue(0.44, 400));
 	av->setTruthValue(tv);
 
 	// --------------------
@@ -429,7 +429,7 @@ void ValueSaveUTest::test_link_by_type()
 	bf->setValue(key, pvf);
 	cf->setValue(key, pvf);
 
-	TruthValuePtr tf(SimpleTruthValue::createTV(0.11, 100));
+	TruthValuePtr tf(createSimpleTruthValue(0.11, 100));
 	af->setTruthValue(tf);
 	bf->setTruthValue(tf);
 	cf->setTruthValue(tf);
@@ -441,7 +441,7 @@ void ValueSaveUTest::test_link_by_type()
 	bt->setValue(key, pvt);
 	ct->setValue(key, pvt);
 
-	TruthValuePtr tt(SimpleTruthValue::createTV(0.22, 200));
+	TruthValuePtr tt(createSimpleTruthValue(0.22, 200));
 	at->setTruthValue(tt);
 	bt->setTruthValue(tt);
 	ct->setTruthValue(tt);
@@ -453,7 +453,7 @@ void ValueSaveUTest::test_link_by_type()
 	bl->setValue(key, pvl);
 	cl->setValue(key, pvl);
 
-	TruthValuePtr tl(SimpleTruthValue::createTV(0.33, 300));
+	TruthValuePtr tl(createSimpleTruthValue(0.33, 300));
 	al->setTruthValue(tl);
 	bl->setTruthValue(tl);
 	cl->setTruthValue(tl);
@@ -465,7 +465,7 @@ void ValueSaveUTest::test_link_by_type()
 	bv->setValue(key, pvv);
 	cv->setValue(key, pvv);
 
-	TruthValuePtr tv(SimpleTruthValue::createTV(0.44, 400));
+	TruthValuePtr tv(createSimpleTruthValue(0.44, 400));
 	av->setTruthValue(tv);
 	bv->setTruthValue(tv);
 	cv->setTruthValue(tv);
@@ -638,7 +638,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	bf->setValue(key, pvf);
 	cf->setValue(key, pvf);
 
-	TruthValuePtr tf(SimpleTruthValue::createTV(0.11, 100));
+	TruthValuePtr tf(createSimpleTruthValue(0.11, 100));
 	af->setTruthValue(tf);
 	bf->setTruthValue(tf);
 	cf->setTruthValue(tf);
@@ -650,7 +650,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	bt->setValue(key, pvt);
 	ct->setValue(key, pvt);
 
-	TruthValuePtr tt(SimpleTruthValue::createTV(0.22, 200));
+	TruthValuePtr tt(createSimpleTruthValue(0.22, 200));
 	at->setTruthValue(tt);
 	bt->setTruthValue(tt);
 	ct->setTruthValue(tt);
@@ -662,7 +662,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	bl->setValue(key, pvl);
 	cl->setValue(key, pvl);
 
-	TruthValuePtr tl(SimpleTruthValue::createTV(0.33, 300));
+	TruthValuePtr tl(createSimpleTruthValue(0.33, 300));
 	al->setTruthValue(tl);
 	bl->setTruthValue(tl);
 	cl->setTruthValue(tl);
@@ -674,7 +674,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	bv->setValue(key, pvv);
 	cv->setValue(key, pvv);
 
-	TruthValuePtr tv(SimpleTruthValue::createTV(0.44, 400));
+	TruthValuePtr tv(createSimpleTruthValue(0.44, 400));
 	av->setTruthValue(tv);
 	bv->setTruthValue(tv);
 	cv->setTruthValue(tv);
@@ -850,7 +850,7 @@ void ValueSaveUTest::test_incoming()
 	bf->setValue(key, pvf);
 	cf->setValue(key, pvf);
 
-	TruthValuePtr tf(SimpleTruthValue::createTV(0.11, 100));
+	TruthValuePtr tf(createSimpleTruthValue(0.11, 100));
 	af->setTruthValue(tf);
 	bf->setTruthValue(tf);
 	cf->setTruthValue(tf);
@@ -862,7 +862,7 @@ void ValueSaveUTest::test_incoming()
 	bt->setValue(key, pvt);
 	ct->setValue(key, pvt);
 
-	TruthValuePtr tt(SimpleTruthValue::createTV(0.22, 200));
+	TruthValuePtr tt(createSimpleTruthValue(0.22, 200));
 	at->setTruthValue(tt);
 	bt->setTruthValue(tt);
 	ct->setTruthValue(tt);
@@ -874,7 +874,7 @@ void ValueSaveUTest::test_incoming()
 	bl->setValue(key, pvl);
 	cl->setValue(key, pvl);
 
-	TruthValuePtr tl(SimpleTruthValue::createTV(0.33, 300));
+	TruthValuePtr tl(createSimpleTruthValue(0.33, 300));
 	al->setTruthValue(tl);
 	bl->setTruthValue(tl);
 	cl->setTruthValue(tl);
@@ -886,7 +886,7 @@ void ValueSaveUTest::test_incoming()
 	bv->setValue(key, pvv);
 	cv->setValue(key, pvv);
 
-	TruthValuePtr tv(SimpleTruthValue::createTV(0.44, 400));
+	TruthValuePtr tv(createSimpleTruthValue(0.44, 400));
 	av->setTruthValue(tv);
 	bv->setTruthValue(tv);
 	cv->setTruthValue(tv);

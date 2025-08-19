@@ -223,7 +223,7 @@ int LargeZipfUTest::filler_up(AtomSpace *space)
 	for (int w=0; w<NWORDS; w++)
 	{
 		hword[w] = space->add_node(CONCEPT_NODE, wrd + std::to_string(w));
-		TruthValuePtr tv(CountTruthValue::createTV(1, 0, ((int) NWORDS/(w+1))));
+		TruthValuePtr tv(createCountTruthValue(1, 0, ((int) NWORDS/(w+1))));
 		hword[w]->setTruthValue(tv);
 	}
 
@@ -241,7 +241,7 @@ int LargeZipfUTest::filler_up(AtomSpace *space)
 	while (p<NPAIRS)
 	{
 		hpair[p] = space->add_link(LIST_LINK, hword[w1], hword[w2]);
-		TruthValuePtr tv(CountTruthValue::createTV(1, 0, wmax));
+		TruthValuePtr tv(createCountTruthValue(1, 0, wmax));
 		hpair[p]->setTruthValue(tv);
 
 		w2++;

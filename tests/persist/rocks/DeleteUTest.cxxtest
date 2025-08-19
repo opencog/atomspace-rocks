@@ -188,17 +188,17 @@ void DeleteUTest::tvMiscompare(AtomPtr a, AtomPtr b, std::string where)
 void DeleteUTest::add_to_space(int idx, AtomSpace *as, std::string id)
 {
     // Create an atom ...
-    TruthValuePtr stv(SimpleTruthValue::createTV(0.11, 100+idx));
+    TruthValuePtr stv(createSimpleTruthValue(0.11, 100+idx));
     h1[idx] = as->add_node(SCHEMA_NODE, id + "fromNode");
     h1[idx]->setTruthValue(stv);
     n1[idx] = NodeCast(h1[idx]);
 
-    TruthValuePtr stv2(SimpleTruthValue::createTV(0.22, 200+idx));
+    TruthValuePtr stv2(createSimpleTruthValue(0.22, 200+idx));
     h2[idx] = as->add_node(SCHEMA_NODE, id + "toNode");
     h2[idx]->setTruthValue(stv2);
     n2[idx] = NodeCast(h2[idx]);
 
-    TruthValuePtr stv3(SimpleTruthValue::createTV(0.33, 300+idx));
+    TruthValuePtr stv3(createSimpleTruthValue(0.33, 300+idx));
     h3[idx] = as->add_node(SCHEMA_NODE, id + "third wheel");
     h3[idx]->setTruthValue(stv3);
     n3[idx] = NodeCast(h3[idx]);
@@ -207,7 +207,7 @@ void DeleteUTest::add_to_space(int idx, AtomSpace *as, std::string id)
     // and should thus elicit any errors in clone uuid handling.
     char buf[40]; sprintf(buf, "%f", idx+0.14159265358979);
     h4[idx] = as->add_node(NUMBER_NODE, buf);
-    TruthValuePtr stv4(SimpleTruthValue::createTV(0.44, 400+idx));
+    TruthValuePtr stv4(createSimpleTruthValue(0.44, 400+idx));
     h4[idx]->setTruthValue(stv4);
     n4[idx] = NodeCast(h4[idx]);
 
@@ -218,17 +218,17 @@ void DeleteUTest::add_to_space(int idx, AtomSpace *as, std::string id)
     hvec.push_back(h4[idx]);
 
     // Note that SetLink is an unordered link.
-    TruthValuePtr stv5(SimpleTruthValue::createTV(0.55, 500+idx));
+    TruthValuePtr stv5(createSimpleTruthValue(0.55, 500+idx));
     hl[idx] = as->add_link(SET_LINK, std::move(hvec));
     hl[idx]->setTruthValue(stv5);
     l[idx] = LinkCast(hl[idx]);
 
-    TruthValuePtr stv6(SimpleTruthValue::createTV(0.66, 600+idx));
+    TruthValuePtr stv6(createSimpleTruthValue(0.66, 600+idx));
     hl2[idx] = as->add_link(LIST_LINK, hl[idx], h2[idx]);
     hl2[idx]->setTruthValue(stv6);
     l2[idx] = LinkCast(hl2[idx]);
 
-    TruthValuePtr stv7(SimpleTruthValue::createTV(0.77, 700+idx));
+    TruthValuePtr stv7(createSimpleTruthValue(0.77, 700+idx));
     hl3[idx] = as->add_link(EVALUATION_LINK, h1[idx], hl2[idx], h3[idx]);
     hl3[idx]->setTruthValue(stv7);
     l3[idx] = LinkCast(hl3[idx]);
