@@ -63,6 +63,7 @@ class BasicSaveUTest :  public CxxTest::TestSuite
             logger().set_level(Logger::INFO);
             logger().set_level(Logger::DEBUG);
             logger().set_print_to_stdout_flag(true);
+            logger().set_sync_flag(true);
 
             uri = "rocks:///tmp/cog-rocks-unit-test";
         }
@@ -159,8 +160,10 @@ static void atomCompare(AtomPtr a, AtomPtr b, const char* where)
  */
 void BasicSaveUTest::single_atom_save_restore(std::string id)
 {
-    RocksStorage *store = new RocksStorage(uri);
+    RocksStorageNodePtr store = createRocksStorageNode(std::string(uri));
+    logger().debug("single_atom_save_restore: create %p", store.get());
     store->open();
+    logger().debug("single_atom_save_restore: opened");
     if (!store->connected())
     {
         logger().debug("single_atom_save_restore: cannot connect to storage");
@@ -181,6 +184,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     store->storeAtom(h, true);
     store->barrier();
     printf("Done storing single node\n");
+    fflush(stdout);
 
     // Fetch it back ...
     std::string nam = id + "someNode";
@@ -211,7 +215,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     printf("Done fetching single link\n");
 
     store->kill_data();
-    delete store;
+    store->close();
 }
 
 // ============================================================
@@ -346,6 +350,7 @@ void BasicSaveUTest::test_fresh_atom(void)
     atomCompare(le, he, "Empty Fresh");
 
     store->kill_data();
+    store->close();
     delete store;
 
     logger().debug("END TEST: %s", __FUNCTION__);
@@ -383,6 +388,7 @@ void BasicSaveUTest::test_table()
         printf("Store table has %s\n", h->to_string().c_str());
     }
 #endif
+    store->close();
     delete store;
     delete as1;
     printf("Done storing table; size=%lu\n", num_stored);
@@ -412,6 +418,7 @@ void BasicSaveUTest::test_table()
     check_table(idx++, table2, "eee ");
 
     store->kill_data();
+    store->close();
     delete store;
     delete as2;
 
