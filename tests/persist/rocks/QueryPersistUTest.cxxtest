@@ -145,13 +145,13 @@ void QueryPersistUTest::setup_data(void)
 
 	// Sprinkle in some TruthValues
 	an(CONCEPT, "airplane") ->
-		setTruthValue(SimpleTruthValue::createTV(0.11, 100));
+		setTruthValue(createSimpleTruthValue(0.11, 100));
 
 	an(CONCEPT, "bicycle") ->
-		setTruthValue(SimpleTruthValue::createTV(0.22, 100));
+		setTruthValue(createSimpleTruthValue(0.22, 100));
 
 	an(CONCEPT, "car") ->
-		setTruthValue(SimpleTruthValue::createTV(0.33, 300));
+		setTruthValue(createSimpleTruthValue(0.33, 300));
 
 	/* Push all atoms out to the database */
 	store->store_atomspace();
