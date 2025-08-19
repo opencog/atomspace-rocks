@@ -432,7 +432,7 @@ void MonoStorage::getKeys(AtomSpace* as,
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-		if (vp) vp = as->add_atoms(vp);
+		if (as and vp) vp = as->add_atoms(vp);
 		h->setValue(key, vp);
 	}
 	delete it;

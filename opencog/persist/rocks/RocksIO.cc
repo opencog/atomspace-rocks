@@ -583,10 +583,11 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-		if (vp) vp = as->add_atoms(vp);
-
 		if (as)
+		{
+			if (vp) vp = as->add_atoms(vp);
 			as->set_value(h, key, vp);
+		}
 		else
 			h->setValue(key, vp);
 	}
