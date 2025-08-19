@@ -65,7 +65,6 @@ class BasicSaveUTest :  public CxxTest::TestSuite
             logger().set_print_to_stdout_flag(true);
 
             uri = "rocks:///tmp/cog-rocks-unit-test";
-            unlink("/tmp/cog-rocks-unit-test");
         }
 
         ~BasicSaveUTest()
