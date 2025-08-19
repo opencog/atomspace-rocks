@@ -170,6 +170,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
         TSM_ASSERT("cannot connect to storage", false);
         return;
     }
+    logger().debug("single_atom_save_restore: connected");
 
     // Create an atom ...
     AtomPtr a(createNode(SCHEMA_NODE, id + "someNode"));
@@ -189,8 +190,15 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     // Fetch it back ...
     std::string nam = id + "someNode";
     Handle b = createNode(SCHEMA_NODE, nam);
+    logger().debug("single_atom_save_restore: try to get");
+    logger().debug("single_atom_save_restore: try to get schema=%s",
+        b->to_string().c_str());
     store->getAtom(b);
+    logger().debug("single_atom_save_restore: Got the Atom");
+    logger().debug("single_atom_save_restore: Got the schema=%s",
+        b->to_string().c_str());
     printf("Done fetching single node\n");
+    fflush(stdout);
 
     // Are they equal ??
     atomCompare(a, b, "Single node save-restore");
@@ -208,11 +216,13 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     store->storeAtom(l->get_handle(), true);
     store->barrier();
     printf("Done storing single link\n");
+    fflush(stdout);
 
     Handle hl(createLink(LIST_LINK, a->get_handle(), a2->get_handle()));
     store->getAtom(hl);
     atomCompare(l, hl, "Single link save-restore");
     printf("Done fetching single link\n");
+    fflush(stdout);
 
     store->kill_data();
     store->close();
