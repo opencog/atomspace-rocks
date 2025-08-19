@@ -139,7 +139,7 @@ void ThreadCountUTest::check(size_t expected)
 	as->get_root_set_by_type(edges, EDGE_LINK);
 	for (const Handle& e : edges)
 	{
-		TruthValuePtr tvp = e->getTruthValue();
+		ValuePtr tvp = ValueCast(e->getTruthValue());
 		CountTruthValuePtr ctv = CountTruthValueCast(tvp);
 		if (ctv) totcnt += ctv->get_count();
 		// printf("Got %s\n", e->to_string().c_str());
