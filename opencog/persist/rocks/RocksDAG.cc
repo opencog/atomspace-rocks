@@ -23,13 +23,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <iomanip> // for std::quote
-
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/sexpr/Sexpr.h>
 
 #include "RocksStorage.h"
 #include "RocksUtils.h"
+
+#include <algorithm> // for std::difference
+#include <iomanip> // for std::quote
 
 using namespace opencog;
 
