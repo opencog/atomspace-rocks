@@ -158,6 +158,7 @@
 (test-begin progressive-work)
 (test-progressive)
 (test-end progressive-work)
+(force-output (current-output-port))
 
 ; ===================================================================
 (whack "/tmp/cog-rocks-unit-test")
