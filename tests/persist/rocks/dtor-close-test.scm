@@ -34,9 +34,9 @@
 ; In addition to 'rsn' pointing at the Atom, the persist module retains
 ; a global pointer to the current (still open!) StorageNode. To close,
 ; two things must happen:
-; (1) decrement the Atom use count by one, by clobbering the AtomPtr
+; (1) decrement the Atom use count by one, by clobbering the Handle
 ;     in the scheme smob rsn
-; (2) decrement the Atom use count by one, by clobbering the AtomPtr
+; (2) decrement the Atom use count by one, by clobbering the Handle
 ;     in the persist module.
 ; Only after both happen (so that the use count goes to zero), will the
 ; StorageNode dtor run, closing the connection.
@@ -46,8 +46,8 @@
 ; second open segfaults, because the DB lock is still held. So we have
 ; to also force (1) to happen. There are two ways to do this:
 ; (a) Make opencog/guile print the smob. Since opencog/guile does not
-;     allow Atoms not in any AtomSpace, the AtomPtr gets clobbered.
-; (b) (set! rsn #f) and run (gc) to force the AtomPtr to be gc'ed.
+;     allow Atoms not in any AtomSpace, the Handle gets clobbered.
+; (b) (set! rsn #f) and run (gc) to force the Handle to be gc'ed.
 ;
 ; Either (a) or (b) will work. We chose (a) for this test.
 ;

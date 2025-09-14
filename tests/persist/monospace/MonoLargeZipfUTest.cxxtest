@@ -63,7 +63,7 @@ class LargeZipfUTest :  public CxxTest::TestSuite
 		void fetch_space(AtomSpace *, StorageNodePtr);
 		void check_space(AtomSpace *, std::string dbgmsg);
 		void check_empty(AtomSpace *);
-		void atomCompare(AtomPtr, AtomPtr, std::string);
+		void atomCompare(Handle, Handle, std::string);
 
 		void test_atomspace(void);
 };
@@ -117,7 +117,7 @@ void LargeZipfUTest::kill_data(void)
 
 // ============================================================
 
-void LargeZipfUTest::atomCompare(AtomPtr a, AtomPtr b, std::string where)
+void LargeZipfUTest::atomCompare(Handle a, Handle b, std::string where)
 {
 	// printf("Check %s expect %s\n", where.c_str(), a->to_string().c_str());
 	TSM_ASSERT("No atom found", b != nullptr);

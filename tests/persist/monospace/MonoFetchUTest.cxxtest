@@ -61,7 +61,7 @@ class FetchUTest :  public CxxTest::TestSuite
 		void setUp(void);
 		void tearDown(void);
 
-		void atomCompare(AtomPtr, AtomPtr, std::string);
+		void atomCompare(Handle, Handle, std::string);
 		void test_stuff(void);
 		void xxxtest_readonly(void); // Don't run this; its broken.
 };
@@ -98,7 +98,7 @@ void FetchUTest::tearDown(void)
 
 // ============================================================
 
-void FetchUTest::atomCompare(AtomPtr a, AtomPtr b, std::string where)
+void FetchUTest::atomCompare(Handle a, Handle b, std::string where)
 {
 	printf("Check %s expect %s\n", where.c_str(), a->to_string().c_str());
 	TSM_ASSERT("No atom found", b != nullptr);

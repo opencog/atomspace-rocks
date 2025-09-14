@@ -83,8 +83,8 @@ class DeleteUTest :  public CxxTest::TestSuite
         void delete_links(int, StorageNodePtr);
         void extract_nodes(int, AtomSpace *);
         void delete_nodes(int, StorageNodePtr);
-        void atomCompare(AtomPtr, AtomPtr, std::string);
-        void tvMiscompare(AtomPtr, AtomPtr, std::string);
+        void atomCompare(Handle, Handle, std::string);
+        void tvMiscompare(Handle, Handle, std::string);
 
         void test_remove(void);
 
@@ -116,7 +116,7 @@ void DeleteUTest::tearDown(void)
 
 // ============================================================
 
-void DeleteUTest::atomCompare(AtomPtr a, AtomPtr b, std::string where)
+void DeleteUTest::atomCompare(Handle a, Handle b, std::string where)
 {
     printf("Check %s expect %s\n", where.c_str(), a->to_string().c_str());
     TSM_ASSERT("No atom found", b != nullptr);
@@ -167,7 +167,7 @@ void DeleteUTest::atomCompare(AtomPtr a, AtomPtr b, std::string where)
 }
 
 // Passes only if the TV's are different!
-void DeleteUTest::tvMiscompare(AtomPtr a, AtomPtr b, std::string where)
+void DeleteUTest::tvMiscompare(Handle a, Handle b, std::string where)
 {
     if (nullptr == a or nullptr == b) return;
 
@@ -236,19 +236,19 @@ void DeleteUTest::add_to_space(int idx, AtomSpace *as, std::string id)
 
 void DeleteUTest::fetch_space(int idx, StorageNodePtr space)
 {
-    AtomPtr ab1 = createNode(n1[idx]->get_type(), n1[idx]->get_name());
+    Handle ab1 = createNode(n1[idx]->get_type(), n1[idx]->get_name());
     Handle hb1(ab1->get_handle());
     space->fetch_atom(hb1);
 
-    AtomPtr ab2 = createNode(n2[idx]->get_type(), n2[idx]->get_name());
+    Handle ab2 = createNode(n2[idx]->get_type(), n2[idx]->get_name());
     Handle hb2(ab2->get_handle());
     space->fetch_atom(hb2);
 
-    AtomPtr ab3 = createNode(n3[idx]->get_type(), n3[idx]->get_name());
+    Handle ab3 = createNode(n3[idx]->get_type(), n3[idx]->get_name());
     Handle hb3(ab3->get_handle());
     space->fetch_atom(hb3);
 
-    AtomPtr ab4 = createNode(n4[idx]->get_type(), n4[idx]->get_name());
+    Handle ab4 = createNode(n4[idx]->get_type(), n4[idx]->get_name());
     Handle hb4(ab4->get_handle());
     space->fetch_atom(hb4);
 
@@ -258,18 +258,18 @@ void DeleteUTest::fetch_space(int idx, StorageNodePtr space)
     hvec.push_back(hb3);
     hvec.push_back(hb4);
 
-    AtomPtr alb = createLink(hvec, hl[idx]->get_type());
+    Handle alb = createLink(hvec, hl[idx]->get_type());
     Handle hlb(alb->get_handle());
 
     Handle flb = space->fetch_atom(hlb);
 
     HandleSeq hv2({hlb, hb2});
-    AtomPtr alb2 = createLink(hv2, hl2[idx]->get_type());
+    Handle alb2 = createLink(hv2, hl2[idx]->get_type());
     Handle hlb2(alb2->get_handle());
     space->fetch_atom(hlb2);
 
     HandleSeq hv3({hb1, hlb2, hb3});
-    AtomPtr alb3 = createLink(hv3, hl3[idx]->get_type());
+    Handle alb3 = createLink(hv3, hl3[idx]->get_type());
     Handle hlb3(alb3->get_handle());
     space->fetch_atom(hlb3);
     space->barrier();

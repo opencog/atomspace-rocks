@@ -49,11 +49,11 @@ class BasicSaveUTest :  public CxxTest::TestSuite
         Handle n3[10];
         Handle n4[10];
         Handle   l[10];
-        AtomPtr a1[10];
-        AtomPtr a2[10];
-        AtomPtr a3[10];
-        AtomPtr a4[10];
-        AtomPtr al[10];
+        Handle a1[10];
+        Handle a2[10];
+        Handle a3[10];
+        Handle a4[10];
+        Handle al[10];
 
     public:
 
@@ -98,7 +98,7 @@ void BasicSaveUTest::tearDown(void)
 
 // ============================================================
 
-static void atomCompare(AtomPtr a, AtomPtr b, const char* where)
+static void atomCompare(Handle a, Handle b, const char* where)
 {
     printf("Testing at %s\n", where);
     TSM_ASSERT("No atom found", b != nullptr);
@@ -168,7 +168,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     }
 
     // Create an atom ...
-    AtomPtr a(createNode(SCHEMA_NODE, id + "someNode"));
+    Handle a(createNode(SCHEMA_NODE, id + "someNode"));
     TruthValuePtr stv(createSimpleTruthValue(0.55, 0.6));
     a->setTruthValue(stv);
 
@@ -192,7 +192,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
 
     // Create a second atom, connect it to the first
     // with a link. Save it, fetch it ... are they equal?
-    AtomPtr a2(createNode(SCHEMA_NODE, id + "otherNode"));
+    Handle a2(createNode(SCHEMA_NODE, id + "otherNode"));
     store->storeAtom(a2->get_handle(), true);
 
     HandleSeq hvec;
