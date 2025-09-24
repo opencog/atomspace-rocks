@@ -99,8 +99,8 @@
 
 	; Verify appropriate values
 	(test-equal "link-top-tv" 7 (get-cnt lilly))
-	(test-equal "foo-top-tv" 0 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "foo-top-tv" #f (cog-tv (cog-node 'Concept "foo")))
+	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
 
 	; ----------------------------------
 	(cog-set-atomspace! mid2-space)
@@ -111,8 +111,8 @@
 	(test-equal "foo2-space" base-space (cog-atomspace (cog-node 'Concept "foo")))
 	(test-equal "bar2-space" base-space (cog-atomspace (cog-node 'Concept "bar")))
 
-	(test-equal "foo2-tv" 0 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "foo2-tv" #f (cog-tv (cog-node 'Concept "foo")))
+	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
 
 	; ----------------------------------
 	(cog-set-atomspace! mid1-space)
@@ -121,8 +121,8 @@
 	(test-equal "link1-space" mid1-space
 		(cog-atomspace (cog-link 'List (Concept "foo") (Concept "bar"))))
 
-	(test-equal "foo1-tv" 0 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
+	(test-equal "foo1-tv" #f (cog-tv (cog-node 'Concept "foo")))
+	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
 	(test-equal "link-1-tv" 5
 		(get-cnt (cog-link 'List (Concept "foo") (Concept "bar"))))
 

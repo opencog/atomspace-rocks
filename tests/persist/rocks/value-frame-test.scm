@@ -91,9 +91,9 @@
 	(test-equal "bar-space" mid1-space (cog-atomspace (gadr lilly)))
 
 	; Verify appropriate values
-	(test-equal "base-tv" 0 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "mid1-tv" 0 (get-cnt (cog-node 'Concept "bar")))
-	(test-equal "mid2-tv" 0 (get-cnt (cog-link 'List (Concept "bar"))))
+	(test-equal "base-tv" #f (cog-tv (cog-node 'Concept "foo")))
+	(test-equal "mid1-tv" #f (cog-tv (cog-node 'Concept "bar")))
+	(test-equal "mid2-tv" #f (cog-tv (cog-link 'List (Concept "bar"))))
 	(test-equal "mid3-tv" 6 (get-cnt lilly))
 )
 
