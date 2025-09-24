@@ -209,7 +209,6 @@ void FetchUTest::test_stuff(void)
 	eval->eval("(barrier)");
 	tv = eval->eval_tv(R"((cog-tv (Concept "BBB")))");
 	TS_ASSERT(tv == nullptr);
-	printf("Got %s\n", tv->to_string().c_str());
 
 	eval->eval("(cog-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
