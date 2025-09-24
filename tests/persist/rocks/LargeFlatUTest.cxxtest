@@ -158,8 +158,8 @@ void LargeFlatUTest::atomCompare(Handle a, Handle b, std::string where)
 		}
 	}
 
-	TruthValuePtr ta = a->getTruthValue();
-	TruthValuePtr tb = b->getTruthValue();
+	TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
+	TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
 	if (ta or tb)
 	{
 		TSM_ASSERT("Missing truth value", ta);
@@ -186,17 +186,17 @@ void LargeFlatUTest::add_to_space(int idx, AtomSpace *as, std::string id)
 	// Create an atom ...
 	TruthValuePtr stv(createSimpleTruthValue(0.11, 100+idx));
 	h1[idx] = as->add_node(SCHEMA_NODE, id + "fromNode");
-	h1[idx]->setTruthValue(stv);
+	h1[idx]->setValue(truth_key(), stv);
 	n1[idx] = NodeCast(h1[idx]);
 
 	TruthValuePtr stv2(createSimpleTruthValue(0.22, 200+idx));
 	h2[idx] = as->add_node(SCHEMA_NODE, id + "toNode");
-	h2[idx]->setTruthValue(stv2);
+	h2[idx]->setValue(truth_key(), stv2);
 	n2[idx] = NodeCast(h2[idx]);
 
 	TruthValuePtr stv3(createSimpleTruthValue(0.33, 300+idx));
 	h3[idx] = as->add_node(SCHEMA_NODE, id + "third wheel");
-	h3[idx]->setTruthValue(stv3);
+	h3[idx]->setValue(truth_key(), stv3);
 	n3[idx] = NodeCast(h3[idx]);
 
 	// The NumberNode will go through the AtomTable clone factory
@@ -204,7 +204,7 @@ void LargeFlatUTest::add_to_space(int idx, AtomSpace *as, std::string id)
 	char buf[40]; sprintf(buf, "%f", idx+0.14159265358979);
 	h4[idx] = as->add_node(NUMBER_NODE, buf);
 	TruthValuePtr stv4(createSimpleTruthValue(0.44, 400+idx));
-	h4[idx]->setTruthValue(stv4);
+	h4[idx]->setValue(truth_key(), stv4);
 	n4[idx] = NodeCast(h4[idx]);
 
 	HandleSeq hvec;

@@ -142,8 +142,8 @@ void LargeZipfUTest::atomCompare(Handle a, Handle b, std::string where)
 		}
 	}
 
-	TruthValuePtr ta = a->getTruthValue();
-	TruthValuePtr tb = b->getTruthValue();
+	TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
+	TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
 	if (ta or tb)
 	{
 		TSM_ASSERT("Missing truth value", ta);
@@ -224,7 +224,7 @@ int LargeZipfUTest::filler_up(AtomSpace *space)
 	{
 		hword[w] = space->add_node(CONCEPT_NODE, wrd + std::to_string(w));
 		TruthValuePtr tv(createCountTruthValue(1, 0, ((int) NWORDS/(w+1))));
-		hword[w]->setTruthValue(tv);
+		hword[w]->setValue(truth_key(), tv);
 	}
 
 	// Emulate a zipfian distribution.
@@ -242,7 +242,7 @@ int LargeZipfUTest::filler_up(AtomSpace *space)
 	{
 		hpair[p] = space->add_link(LIST_LINK, hword[w1], hword[w2]);
 		TruthValuePtr tv(createCountTruthValue(1, 0, wmax));
-		hpair[p]->setTruthValue(tv);
+		hpair[p]->setValue(truth_key(), tv);
 
 		w2++;
 		p++;

@@ -131,8 +131,8 @@ void FetchUTest::atomCompare(Handle a, Handle b, std::string where)
 		}
 	}
 
-	TruthValuePtr ta = a->getTruthValue();
-	TruthValuePtr tb = b->getTruthValue();
+	TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
+	TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
 	if (ta or tb)
 	{
 		TSM_ASSERT("Missing truth value", ta);
@@ -175,7 +175,7 @@ void FetchUTest::test_stuff(void)
 	// The above should NOT update the TV of (Concept "AAA")
 	TruthValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
 	printf("Expecting default, got %s\n", tv->to_string().c_str());
-	TruthValuePtr dtv = TruthValue::DEFAULT_TV();
+	TruthValuePtr dtv = nullptr;
 	TS_ASSERT((*tv) == (*dtv));
 
 	// If we fetch the TV explicitly, then we should get the

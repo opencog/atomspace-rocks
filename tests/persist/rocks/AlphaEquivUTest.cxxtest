@@ -126,7 +126,7 @@ void AlphaEquivUTest::setup_data(void)
 
 	/* Populate the Storage with stuff that we will later query. */
 	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
-	lx->setTruthValue(createSimpleTruthValue(0.11, 100));
+	lx->setValue(truth_key(), createSimpleTruthValue(0.11, 100));
 	lx->setValue(an(PREDICATE, "foo"),
 		createFloatValue(std::vector<double>{1, 2, 3}));
 
@@ -159,7 +159,7 @@ void AlphaEquivUTest::test_fetch(void)
 	store->barrier();
 
 	// Verify that the correct TV was fetched.
-	TruthValuePtr tvp = ly->getTruthValue();
+	TruthValuePtr tvp = TruthValueCast(ly->getValue(truth_key()));
 	printf("Got TV: %s\n", tvp->to_string().c_str());
 
 	TSM_ASSERT("Expecting (stv 0.11 100)",
@@ -207,10 +207,10 @@ void AlphaEquivUTest::test_remove(void)
 	lx = store->fetch_atom(lx);
 	store->barrier();
 
-	TruthValuePtr tvp = lx->getTruthValue();
+	TruthValuePtr tvp = TruthValueCast(lx->getValue(truth_key()));
 	printf("Got TV: %s\n", tvp->to_string().c_str());
 
-	TSM_ASSERT("Expecting default TV", tvp == TruthValue::DEFAULT_TV());
+	TSM_ASSERT("Expecting default TV", tvp == nullptr);
 
 	// Verify that other values are absent
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
@@ -246,10 +246,10 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	lx = store->fetch_atom(lx);
 	store->barrier();
 
-	TruthValuePtr tvp = lx->getTruthValue();
+	TruthValuePtr tvp = TruthValueCast(lx->getValue(truth_key()));
 	printf("Got TV: %s\n", tvp->to_string().c_str());
 
-	TSM_ASSERT("Expecting default TV", tvp == TruthValue::DEFAULT_TV());
+	TSM_ASSERT("Expecting default TV", tvp == nullptr);
 
 	// Verify that other values are absent
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
