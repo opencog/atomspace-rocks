@@ -56,9 +56,9 @@
 
 	; Verify appropriate values
 	(test-equal "link-tv" 6 (get-cnt lilly))
-	(test-equal "foo-tv" 0 (get-cnt (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" 0 (get-cnt (cog-node 'Concept "bar")))
-	(test-equal "link-bar-tv" 0 (get-cnt (cog-link 'List (Concept "bar"))))
+	(test-equal "foo-tv" #f (cog-tv (cog-node 'Concept "foo")))
+	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
+	(test-equal "link-bar-tv" #f (cog-tv (cog-link 'List (Concept "bar"))))
 )
 
 (define store-link "test store link")
