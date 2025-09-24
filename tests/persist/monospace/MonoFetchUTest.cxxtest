@@ -170,8 +170,7 @@ void FetchUTest::test_stuff(void)
 
 	// The above should NOT update the TV of (Concept "AAA")
 	TruthValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
-	TS_ASSERT(tv->get_mean() == 1.0);
-	TS_ASSERT(tv->get_confidence() == 0.0);
+	TS_ASSERT(tv == nullptr);
 
 	// If we fetch the TV explicitly, then we should get the
 	// value from the database.
@@ -209,8 +208,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval(R"((fetch-atom (Concept "BBB")))");
 	eval->eval("(barrier)");
 	tv = eval->eval_tv(R"((cog-tv (Concept "BBB")))");
-	TS_ASSERT(tv->get_mean() == 1.0);
-	TS_ASSERT(tv->get_confidence() == 0.0);
+	TS_ASSERT(tv == nullptr);
 	printf("Got %s\n", tv->to_string().c_str());
 
 	eval->eval("(cog-close)");
