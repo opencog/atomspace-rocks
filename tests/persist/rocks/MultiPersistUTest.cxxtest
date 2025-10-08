@@ -36,7 +36,7 @@
 #include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/persist/rocks/RocksStorage.h>
 
-#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/FloatValue.h>
 
 #include <opencog/util/Logger.h>
 
@@ -171,8 +171,8 @@ void MultiPersistUTest::atomCompare(Handle a, Handle b, std::string where)
         }
     }
 
-    TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
-    TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
+    ValuePtr ta = a->getValue(truth_key());
+    ValuePtr tb = b->getValue(truth_key());
     if (ta or tb)
     {
         TSM_ASSERT("Missing truth value", ta);
@@ -184,7 +184,9 @@ void MultiPersistUTest::atomCompare(Handle a, Handle b, std::string where)
             // might show up there. We don't know what order
             // the stores hit the server, or whether data is
             // changing in-flight.
-            bool okay = fabs(ta->get_mean() - tb->get_mean()) < 1e-6;
+            FloatValuePtr fva = FloatValueCast(ta);
+            FloatValuePtr fvb = FloatValueCast(tb);
+            bool okay = fabs(fva->value()[0] - fvb->value()[0]) < 1e-6;
             TSM_ASSERT("Truth value miscompare", okay);
 
             if (not okay)
@@ -192,8 +194,8 @@ void MultiPersistUTest::atomCompare(Handle a, Handle b, std::string where)
                 printf("Error, truth value miscompare at %s, "
                     "ma=%f mb=%f ca=%f cb=%f\n",
                     where.c_str(),
-                    ta->get_mean(), tb->get_mean(),
-                    ta->get_confidence(), tb->get_confidence());
+                    fva->value()[0], fvb->value()[0],
+                    fva->value()[1], fvb->value()[1]);
                printf("Expect %s\n", a->to_string().c_str());
             }
         }
@@ -206,17 +208,17 @@ void MultiPersistUTest::add_to_space(int idx, AtomSpace *as,
                                      StorageNodePtr store, std::string id)
 {
     // Create an atom ...
-    TruthValuePtr stv(createSimpleTruthValue(0.11, 100+idx));
+    ValuePtr stv(createFloatValue(std::vector<double>({0.11, 100.0+idx})));
     h1[idx] = as->add_node(CONCEPT_NODE, id + "fromNode");
     h1[idx]->setValue(truth_key(), stv);
     n1[idx] = NodeCast(h1[idx]);
 
-    TruthValuePtr stv2(createSimpleTruthValue(0.22, 200+idx));
+    ValuePtr stv2(createFloatValue(std::vector<double>({0.22, 200.0+idx})));
     h2[idx] = as->add_node(CONCEPT_NODE, id + "toNode");
     h2[idx]->setValue(truth_key(), stv2);
     n2[idx] = NodeCast(h2[idx]);
 
-    TruthValuePtr stv3(createSimpleTruthValue(0.33, 300+idx));
+    ValuePtr stv3(createFloatValue(std::vector<double>({0.33, 300.0+idx})));
     h3[idx] = as->add_node(CONCEPT_NODE, id + "third wheel");
     h3[idx]->setValue(truth_key(), stv3);
     n3[idx] = NodeCast(h3[idx]);
@@ -225,7 +227,7 @@ void MultiPersistUTest::add_to_space(int idx, AtomSpace *as,
     // and should thus elicit any errors in clone uuid handling.
     char buf[40]; sprintf(buf, "%f", idx+0.14159265358979);
     h4[idx] = as->add_node(NUMBER_NODE, buf);
-    TruthValuePtr stv4(createSimpleTruthValue(0.44, 400+idx));
+    ValuePtr stv4(createFloatValue(std::vector<double>({0.44, 400.0+idx})));
     h4[idx]->setValue(truth_key(), stv4);
     n4[idx] = NodeCast(h4[idx]);
 

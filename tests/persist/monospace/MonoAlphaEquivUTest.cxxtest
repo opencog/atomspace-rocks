@@ -29,7 +29,7 @@
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks-types/atom_types.h>
@@ -126,7 +126,7 @@ void AlphaEquivUTest::setup_data(void)
 
 	/* Populate the Storage with stuff that we will later query. */
 	Handle lx = al(LAMBDA_LINK, an(VARIABLE, "X"), an(CONCEPT, "A"));
-	lx->setValue(truth_key(), createSimpleTruthValue(0.11, 100));
+	lx->setValue(truth_key(), createFloatValue(std::vector<double>({0.11, 100})));
 	lx->setValue(an(PREDICATE, "foo"),
 		createFloatValue(std::vector<double>{1, 2, 3}));
 
@@ -159,12 +159,13 @@ void AlphaEquivUTest::test_fetch(void)
 	store->barrier();
 
 	// Verify that the correct TV was fetched.
-	TruthValuePtr tvp = TruthValueCast(ly->getValue(truth_key()));
+	ValuePtr tvp = ly->getValue(truth_key());
 	printf("Got TV: %s\n", tvp->to_string().c_str());
 
+	FloatValuePtr fv = FloatValueCast(tvp);
 	TSM_ASSERT("Expecting (stv 0.11 100)",
-		0.1 < tvp->get_mean() and tvp->get_mean() < 0.12 and
-		99 < tvp->get_confidence() and tvp->get_confidence() < 101);
+		0.1 < fv->value()[0] and fv->value()[0] < 0.12 and
+		99 < fv->value()[1] and fv->value()[1] < 101);
 
 	// Verify that other values are there too.
 	ValuePtr fu = ly->getValue(an(PREDICATE, "foo"));
@@ -207,7 +208,7 @@ void AlphaEquivUTest::test_remove(void)
 	lx = store->fetch_atom(lx);
 	store->barrier();
 
-	TruthValuePtr tvp = TruthValueCast(lx->getValue(truth_key()));
+	ValuePtr tvp = lx->getValue(truth_key());
 	TSM_ASSERT("Expecting default TV", tvp == nullptr);
 
 	// Verify that other values are absent
@@ -244,7 +245,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	lx = store->fetch_atom(lx);
 	store->barrier();
 
-	TruthValuePtr tvp = TruthValueCast(lx->getValue(truth_key()));
+	ValuePtr tvp = lx->getValue(truth_key());
 	TSM_ASSERT("Expecting default TV", tvp == nullptr);
 
 	// Verify that other values are absent

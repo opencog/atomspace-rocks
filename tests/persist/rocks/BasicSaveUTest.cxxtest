@@ -32,7 +32,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/atom_types/atom_types.h>
-#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks/RocksStorage.h>
 
@@ -128,8 +128,8 @@ static void atomCompare(Handle a, Handle b, const char* where)
         }
     }
 
-    TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
-    TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
+    ValuePtr ta = a->getValue(truth_key());
+    ValuePtr tb = b->getValue(truth_key());
     if (ta or tb)
     {
         TSM_ASSERT("Missing truth value", ta);
@@ -140,13 +140,15 @@ static void atomCompare(Handle a, Handle b, const char* where)
 
             if (not ((*ta) == (*tb)))
             {
+                FloatValuePtr fva = FloatValueCast(ta);
+                FloatValuePtr fvb = FloatValueCast(tb);
                 fprintf(stderr,
                     "Error, truth value miscompare, ma=%18.16g\n"
                     "                               mb=%18.16g\n"
                     "   mdiff=%g ca=%g cb=%g\n",
-                    ta->get_mean(), tb->get_mean(),
-                    ta->get_mean() - tb->get_mean(),
-                    ta->get_confidence(), tb->get_confidence());
+                    fva->value()[0], fvb->value()[0],
+                    fva->value()[0] - fvb->value()[0],
+                    fva->value()[1], fvb->value()[1]);
                 fprintf(stderr, "Above is for %s\n\n", a->to_string().c_str());
             }
         }
@@ -174,7 +176,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
 
     // Create an atom ...
     Handle a(createNode(SCHEMA_NODE, id + "someNode"));
-    TruthValuePtr stv(createSimpleTruthValue(0.55, 0.6));
+    ValuePtr stv(createFloatValue(std::vector<double>({0.55, 0.6})));
     a->setValue(truth_key(), stv);
 
     Handle h = a->get_handle();
@@ -234,13 +236,13 @@ void BasicSaveUTest::add_to_table(int idx, AtomSpace *table, std::string id)
 {
     // Create an atom ...
     n1[idx] = createNode(SCHEMA_NODE, id + "fromNode");
-    TruthValuePtr stv(createSimpleTruthValue(0.11, 1.0/(100.0+idx)));
+    ValuePtr stv(createFloatValue(std::vector<double>({0.11, 1.0/(100.0+idx)})));
     n1[idx]->setValue(truth_key(), stv);
     n1[idx] = table->add_atom(n1[idx]);
     a1[idx] = n1[idx];
 
     n2[idx] = createNode(SCHEMA_NODE, id + "toNode");
-    TruthValuePtr stv2(createSimpleTruthValue(0.22, 1.0/(200.0+idx)));
+    ValuePtr stv2(createFloatValue(std::vector<double>({0.22, 1.0/(200.0+idx)})));
     n2[idx]->setValue(truth_key(), stv2);
     n2[idx] = table->add_atom(n2[idx]);
     a2[idx] = n2[idx];
@@ -251,7 +253,7 @@ void BasicSaveUTest::add_to_table(int idx, AtomSpace *table, std::string id)
     n3[idx] = createNode(SCHEMA_NODE, qmark + id + "third ? wheel");
 
     // We need to test crazy-large and crazy-small float point values.
-    TruthValuePtr stv3(createSimpleTruthValue(1.0e33/3.0, (1.0e-30)/(300.0+idx)));
+    ValuePtr stv3(createFloatValue(std::vector<double>({1.0e33/3.0, (1.0e-30)/(300.0+idx)})));
     n3[idx]->setValue(truth_key(), stv3);
     n3[idx] = table->add_atom(n3[idx]);
     a3[idx] = n3[idx];
@@ -262,7 +264,7 @@ void BasicSaveUTest::add_to_table(int idx, AtomSpace *table, std::string id)
     n4[idx] = createNode(NUMBER_NODE, buf);
 
     // We need to test crazy-large and crazy-small float point values.
-    TruthValuePtr stv4(createSimpleTruthValue((4.0e-200)/9.0, 1.0e40/(400.0+idx)));
+    ValuePtr stv4(createFloatValue(std::vector<double>({(4.0e-200)/9.0, 1.0e40/(400.0+idx)})));
     n4[idx]->setValue(truth_key(), stv4);
     n4[idx] = table->add_atom(n4[idx]);
     a4[idx] = n4[idx];
@@ -337,12 +339,12 @@ void BasicSaveUTest::test_fresh_atom(void)
 
     // Store a ListLink with stuff in it.
     Handle lf(createLink(LIST_LINK, ha, hb));
-    lf->setValue(truth_key(), createSimpleTruthValue(0.55, 0.6));
+    lf->setValue(truth_key(), createFloatValue(std::vector<double>({0.55, 0.6})));
     store->storeAtom(lf, true);
 
     // Store an empty ListLink.
     Handle le(createLink(HandleSeq(), LIST_LINK));
-    le->setValue(truth_key(), createSimpleTruthValue(0.1, 0.9));
+    le->setValue(truth_key(), createFloatValue(std::vector<double>({0.1, 0.9})));
     store->storeAtom(le, true);
     store->barrier();
 

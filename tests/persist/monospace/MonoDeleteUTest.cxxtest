@@ -31,7 +31,7 @@
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
-#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/persist/monospace/MonoStorage.h>
@@ -145,8 +145,8 @@ void DeleteUTest::atomCompare(Handle a, Handle b, std::string where)
         }
     }
 
-    TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
-    TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
+    ValuePtr ta = a->getValue(truth_key());
+    ValuePtr tb = b->getValue(truth_key());
     if (ta or tb)
     {
         TSM_ASSERT("Missing truth value", ta);
@@ -155,11 +155,13 @@ void DeleteUTest::atomCompare(Handle a, Handle b, std::string where)
         {
             if (not ((*ta) == (*tb)))
             {
+                FloatValuePtr fva = FloatValueCast(ta);
+                FloatValuePtr fvb = FloatValueCast(tb);
                 printf("Error, truth value miscompare on %s\n"
                     "\tma=%f mb=%f ca=%f cb=%f\n",
                     where.c_str(),
-                    ta->get_mean(), tb->get_mean(),
-                    ta->get_confidence(), tb->get_confidence());
+                    fva->value()[0], fvb->value()[0],
+                    fva->value()[1], fvb->value()[1]);
             }
             TSM_ASSERT("Truth value miscompare", (*ta)==(*tb));
         }
@@ -171,8 +173,8 @@ void DeleteUTest::tvMiscompare(Handle a, Handle b, std::string where)
 {
     if (nullptr == a or nullptr == b) return;
 
-    TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
-    TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
+    ValuePtr ta = a->getValue(truth_key());
+    ValuePtr tb = b->getValue(truth_key());
     if (ta and tb)
     {
         TSM_ASSERT("Truth value should not match! " + where, (*ta)!=(*tb));
@@ -188,17 +190,17 @@ void DeleteUTest::tvMiscompare(Handle a, Handle b, std::string where)
 void DeleteUTest::add_to_space(int idx, AtomSpace *as, std::string id)
 {
     // Create an atom ...
-    TruthValuePtr stv(createSimpleTruthValue(0.11, 100+idx));
+    ValuePtr stv(createFloatValue(std::vector<double>({0.11, 100.0+idx})));
     h1[idx] = as->add_node(SCHEMA_NODE, id + "fromNode");
     h1[idx]->setValue(truth_key(), stv);
     n1[idx] = NodeCast(h1[idx]);
 
-    TruthValuePtr stv2(createSimpleTruthValue(0.22, 200+idx));
+    ValuePtr stv2(createFloatValue(std::vector<double>({0.22, 200.0+idx})));
     h2[idx] = as->add_node(SCHEMA_NODE, id + "toNode");
     h2[idx]->setValue(truth_key(), stv2);
     n2[idx] = NodeCast(h2[idx]);
 
-    TruthValuePtr stv3(createSimpleTruthValue(0.33, 300+idx));
+    ValuePtr stv3(createFloatValue(std::vector<double>({0.33, 300.0+idx})));
     h3[idx] = as->add_node(SCHEMA_NODE, id + "third wheel");
     h3[idx]->setValue(truth_key(), stv3);
     n3[idx] = NodeCast(h3[idx]);
@@ -207,7 +209,7 @@ void DeleteUTest::add_to_space(int idx, AtomSpace *as, std::string id)
     // and should thus elicit any errors in clone uuid handling.
     char buf[40]; sprintf(buf, "%f", idx+0.14159265358979);
     h4[idx] = as->add_node(NUMBER_NODE, buf);
-    TruthValuePtr stv4(createSimpleTruthValue(0.44, 400+idx));
+    ValuePtr stv4(createFloatValue(std::vector<double>({0.44, 400.0+idx})));
     h4[idx]->setValue(truth_key(), stv4);
     n4[idx] = NodeCast(h4[idx]);
 
@@ -218,17 +220,17 @@ void DeleteUTest::add_to_space(int idx, AtomSpace *as, std::string id)
     hvec.push_back(h4[idx]);
 
     // Note that SetLink is an unordered link.
-    TruthValuePtr stv5(createSimpleTruthValue(0.55, 500+idx));
+    ValuePtr stv5(createFloatValue(std::vector<double>({0.55, 500.0+idx})));
     hl[idx] = as->add_link(SET_LINK, std::move(hvec));
     hl[idx]->setValue(truth_key(), stv5);
     l[idx] = LinkCast(hl[idx]);
 
-    TruthValuePtr stv6(createSimpleTruthValue(0.66, 600+idx));
+    ValuePtr stv6(createFloatValue(std::vector<double>({0.66, 600.0+idx})));
     hl2[idx] = as->add_link(LIST_LINK, hl[idx], h2[idx]);
     hl2[idx]->setValue(truth_key(), stv6);
     l2[idx] = LinkCast(hl2[idx]);
 
-    TruthValuePtr stv7(createSimpleTruthValue(0.77, 700+idx));
+    ValuePtr stv7(createFloatValue(std::vector<double>({0.77, 700.0+idx})));
     hl3[idx] = as->add_link(EVALUATION_LINK, h1[idx], hl2[idx], h3[idx]);
     hl3[idx]->setValue(truth_key(), stv7);
     l3[idx] = LinkCast(hl3[idx]);

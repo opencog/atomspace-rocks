@@ -32,7 +32,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/guile/SchemeEval.h>
-#include <opencog/atoms/truthvalue/SimpleTruthValue.h>
+#include <opencog/atoms/value/FloatValue.h>
 #include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
@@ -127,8 +127,8 @@ void FetchUTest::atomCompare(Handle a, Handle b, std::string where)
 		}
 	}
 
-	TruthValuePtr ta = TruthValueCast(a->getValue(truth_key()));
-	TruthValuePtr tb = TruthValueCast(b->getValue(truth_key()));
+	ValuePtr ta = a->getValue(truth_key());
+	ValuePtr tb = b->getValue(truth_key());
 	if (ta or tb)
 	{
 		TSM_ASSERT("Missing truth value", ta);
@@ -139,9 +139,11 @@ void FetchUTest::atomCompare(Handle a, Handle b, std::string where)
 
 			if (not ((*ta) == (*tb)))
 			{
+				FloatValuePtr fva = FloatValueCast(ta);
+				FloatValuePtr fvb = FloatValueCast(tb);
 				fprintf(stderr, "Error, truth value miscompare, "
 					"ma=%f mb=%f ca=%f cb=%f\n",
-					ta->get_mean(), tb->get_mean(), ta->get_count(), tb->get_count());
+					fva->value()[0], fvb->value()[0], fva->value()[2], fvb->value()[2]);
 			}
 		}
 	}
@@ -169,7 +171,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval("(barrier)");
 
 	// The above should NOT update the TV of (Concept "AAA")
-	TruthValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
+	ValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
 	TS_ASSERT(tv == nullptr);
 
 	// If we fetch the TV explicitly, then we should get the
@@ -177,7 +179,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval(R"((fetch-atom (Concept "AAA")))");
 	eval->eval("(barrier)");
 	tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
-	TruthValuePtr etv = createSimpleTruthValue(0.1, 0.11);
+	ValuePtr etv = createFloatValue(std::vector<double>({0.1, 0.11}));
 	TS_ASSERT((*tv) == (*etv));
 	printf("Expecting %s\n", etv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
@@ -199,7 +201,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval(R"((fetch-atom (Concept "AAA")))");
 	eval->eval("(barrier)");
 	tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
-	etv = createSimpleTruthValue(0.3, 0.33);
+	etv = createFloatValue(std::vector<double>({0.3, 0.33}));
 	TS_ASSERT((*tv) == (*etv));
 	printf("Expecting %s\n", etv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
@@ -262,8 +264,8 @@ void FetchUTest::xxxtest_readonly(void)
 	Handle a = eval->eval_h(R"((Concept "AAA"))");
 	TS_ASSERT(nullptr != a);
 
-	TruthValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
-	TruthValuePtr etv = createSimpleTruthValue(0.1, 0.11);
+	ValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
+	ValuePtr etv = createFloatValue(std::vector<double>({0.1, 0.11}));
 	TS_ASSERT((*tv) == (*etv));
 	printf("Expecting %s\n", etv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
