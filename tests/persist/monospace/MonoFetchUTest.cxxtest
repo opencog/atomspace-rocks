@@ -158,8 +158,9 @@ void FetchUTest::test_stuff(void)
 	// First, initialize the database
 	eval->eval("(use-modules (opencog persist) (opencog persist-mono))");
 	eval->eval(srv_open);
-	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.1 0.11)))");
-	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
+	eval->eval(R"((define tvkey (Predicate "*-TruthValueKey-*")))");
+	eval->eval(R"((cog-set-value! (Concept "AAA") tvkey (FloatValue 0.1 0.11)))");
+	eval->eval(R"((cog-set-value! (Concept "BBB") tvkey (FloatValue 0.2 0.22)))");
 	eval->eval("(store-atomspace)");
 	eval->eval("(cog-close)");
 
@@ -171,21 +172,21 @@ void FetchUTest::test_stuff(void)
 	eval->eval("(barrier)");
 
 	// The above should NOT update the TV of (Concept "AAA")
-	ValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
+	ValuePtr tv = eval->eval_v(R"((cog-value (Concept "AAA") tvkey))");
 	TS_ASSERT(tv == nullptr);
 
 	// If we fetch the TV explicitly, then we should get the
 	// value from the database.
 	eval->eval(R"((fetch-atom (Concept "AAA")))");
 	eval->eval("(barrier)");
-	tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
+	tv = eval->eval_v(R"((cog-value (Concept "AAA") tvkey))");
 	ValuePtr etv = createFloatValue(std::vector<double>({0.1, 0.11}));
 	TS_ASSERT((*tv) == (*etv));
 	printf("Expecting %s\n", etv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
 
 	// Update A.
-	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.3 0.33)))");
+	eval->eval(R"((cog-set-value! (Concept "AAA") tvkey (FloatValue 0.3 0.33)))");
 
 	// Saving everything should not crash.  It should, however,
 	// change the TV on (Concept "BBB") back to DEFAULT_TV.
@@ -200,7 +201,7 @@ void FetchUTest::test_stuff(void)
 	// AAA should have been updated, as above.
 	eval->eval(R"((fetch-atom (Concept "AAA")))");
 	eval->eval("(barrier)");
-	tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
+	tv = eval->eval_v(R"((cog-value (Concept "AAA") tvkey))");
 	etv = createFloatValue(std::vector<double>({0.3, 0.33}));
 	TS_ASSERT((*tv) == (*etv));
 	printf("Expecting %s\n", etv->to_string().c_str());
@@ -209,7 +210,7 @@ void FetchUTest::test_stuff(void)
 	// BBB should have been clobbered.
 	eval->eval(R"((fetch-atom (Concept "BBB")))");
 	eval->eval("(barrier)");
-	tv = eval->eval_tv(R"((cog-tv (Concept "BBB")))");
+	tv = eval->eval_v(R"((cog-value (Concept "BBB") tvkey))");
 	TS_ASSERT(tv == nullptr);
 
 	eval->eval("(cog-close)");
@@ -238,8 +239,9 @@ void FetchUTest::xxxtest_readonly(void)
 	// First, initialize the database
 	eval->eval("(use-modules (opencog persist) (opencog persist-mono))");
 	eval->eval(srv_open);
-	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.1 0.11)))");
-	eval->eval(R"((cog-set-tv! (Concept "BBB") (stv 0.2 0.22)))");
+	eval->eval(R"((define tvkey (Predicate "*-TruthValueKey-*")))");
+	eval->eval(R"((cog-set-value! (Concept "AAA") tvkey (FloatValue 0.1 0.11)))");
+	eval->eval(R"((cog-set-value! (Concept "BBB") tvkey (FloatValue 0.2 0.22)))");
 	eval->eval(R"((List (Concept "AAA") (Concept "BBB")))");
 	eval->eval("(store-atomspace)");
 	eval->eval("(cog-close)");
@@ -264,7 +266,7 @@ void FetchUTest::xxxtest_readonly(void)
 	Handle a = eval->eval_h(R"((Concept "AAA"))");
 	TS_ASSERT(nullptr != a);
 
-	ValuePtr tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
+	ValuePtr tv = eval->eval_v(R"((cog-value (Concept "AAA") tvkey))");
 	ValuePtr etv = createFloatValue(std::vector<double>({0.1, 0.11}));
 	TS_ASSERT((*tv) == (*etv));
 	printf("Expecting %s\n", etv->to_string().c_str());
@@ -280,10 +282,10 @@ void FetchUTest::xxxtest_readonly(void)
 	// The assert is turned into an evaluator error.
 	TS_ASSERT(false == eval->eval_error());
 	eval->clear_pending();
-	eval->eval(R"((cog-set-tv! (Concept "AAA") (stv 0.3 0.33)))");
+	eval->eval(R"((cog-set-value! (Concept "AAA") tvkey (FloatValue 0.3 0.33)))");
 	TS_ASSERT(eval->eval_error());
 	eval->clear_pending();
-	tv = eval->eval_tv(R"((cog-tv (Concept "AAA")))");
+	tv = eval->eval_v(R"((cog-value (Concept "AAA") tvkey))");
 	TS_ASSERT((*tv) == (*etv));
 
 	// Should be possible to extract, even though its read-only
