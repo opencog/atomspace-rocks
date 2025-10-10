@@ -22,14 +22,14 @@
 	(store-frames (cog-atomspace))
 
 	; Splatter some atoms into the various spaces.
-	(Concept "foo" (ctv 1 0 3))
-	(Concept "bar" (ctv 1 0 4))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
+	(set-cnt! (Concept "bar") (FloatValue 1 0 4))
 
 	(define base-space (cog-atomspace))
 	(define mid1-space (cog-new-atomspace base-space))
 
 	(cog-set-atomspace! mid1-space)
-	(List (Concept "foo") (Concept "bar") (ctv 1 0 5))
+	(set-cnt! (List (Concept "foo") (Concept "bar")) (FloatValue 1 0 5))
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 
 	(define mid2-space (cog-new-atomspace mid1-space))
@@ -38,12 +38,12 @@
 	; Delete it (which writes to DB),
 	; but then restore it (which writes again).
 	(cog-delete-recursive! (Concept "foo"))
-	(Concept "foo" (ctv 1 0 6))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 6))
 	(store-atom (ListLink (Concept "foo") (Concept "faa")))
 
 	(define mid3-space (cog-new-atomspace mid2-space))
 	(cog-set-atomspace! mid3-space)
-	(List (Concept "foo") (Concept "bar") (ctv 1 0 7))
+	(set-cnt! (List (Concept "foo") (Concept "bar")) (FloatValue 1 0 7))
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 
 	(define surface-space (cog-new-atomspace mid3-space))
@@ -59,8 +59,6 @@
 	(cog-atomspace-clear mid1-space)
 	(cog-atomspace-clear base-space)
 )
-
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
 ; Test that deep links are found correctly.
@@ -99,8 +97,8 @@
 
 	; Verify appropriate values
 	(test-equal "link-top-tv" 7 (get-cnt lilly))
-	(test-equal "foo-top-tv" #f (cog-tv (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
+	(test-equal "foo-top-tv" #f (cog-value (cog-node 'Concept "foo") pk))
+	(test-equal "bar-tv" #f (cog-value (cog-node 'Concept "bar") pk ))
 
 	; ----------------------------------
 	(cog-set-atomspace! mid2-space)
@@ -111,8 +109,8 @@
 	(test-equal "foo2-space" base-space (cog-atomspace (cog-node 'Concept "foo")))
 	(test-equal "bar2-space" base-space (cog-atomspace (cog-node 'Concept "bar")))
 
-	(test-equal "foo2-tv" #f (cog-tv (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
+	(test-equal "foo2-tv" #f (cog-value (cog-node 'Concept "foo") pk))
+	(test-equal "bar-tv" #f (cog-value (cog-node 'Concept "bar") pk))
 
 	; ----------------------------------
 	(cog-set-atomspace! mid1-space)
@@ -121,8 +119,8 @@
 	(test-equal "link1-space" mid1-space
 		(cog-atomspace (cog-link 'List (Concept "foo") (Concept "bar"))))
 
-	(test-equal "foo1-tv" #f (cog-tv (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
+	(test-equal "foo1-tv" #f (cog-value (cog-node 'Concept "foo") pk))
+	(test-equal "bar-tv" #f (cog-value (cog-node 'Concept "bar") pk))
 	(test-equal "link-1-tv" 5
 		(get-cnt (cog-link 'List (Concept "foo") (Concept "bar"))))
 

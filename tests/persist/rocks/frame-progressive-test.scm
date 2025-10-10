@@ -11,7 +11,6 @@
 (include "test-utils.scm")
 (whack "/tmp/cog-rocks-unit-test")
 
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 (define (get-val ATOM NAME) (inexact->exact
 	(cog-value-ref (cog-value ATOM (Predicate NAME)) 2)))
 
@@ -26,19 +25,19 @@
 ;; value setter.  This is unintuitive to the casual user!
 (define (store-stuff N)
 	(define x (Concept "foo"))
-	(define x1 (cog-set-value! x (Predicate "gee") (ctv 1 0 N)))
+	(define x1 (cog-set-value! x (Predicate "gee") (FloatValue 1 0 N)))
 	(store-atom x1)
 
 	(define y (Concept "bar"))
-	(define y1 (cog-set-value! y (Predicate "gosh") (ctv 1 0 (+ 1 N))))
+	(define y1 (cog-set-value! y (Predicate "gosh") (FloatValue 1 0 (+ 1 N))))
 	(store-atom y1)
 
 	(define z (List x y))
-	(define z1 (cog-set-value! z (Predicate "bang") (ctv 1 0 (+ 2 N))))
+	(define z1 (cog-set-value! z (Predicate "bang") (FloatValue 1 0 (+ 2 N))))
 	(store-atom z1)
 
 	(define w (List z x))
-	(define w1 (cog-set-value! w (Predicate "bash") (ctv 1 0 (+ 3 N))))
+	(define w1 (cog-set-value! w (Predicate "bash") (FloatValue 1 0 (+ 3 N))))
 	(store-atom w1)
 )
 

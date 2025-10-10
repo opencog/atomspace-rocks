@@ -26,19 +26,19 @@
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
 	(cog-set-value! (Concept "foo") (Predicate "key-0")
-		(ctv 1 0 0))
+		(FloatValue 1 0 0))
 
 	(cog-set-atomspace! mid1-space)
 	(cog-set-value! (Concept "foo") (Predicate "key-1")
-		(ctv 1 0 1))
+		(FloatValue 1 0 1))
 
 	(cog-set-atomspace! mid2-space)
 	(cog-set-value! (Concept "foo") (Predicate "key-2")
-		(ctv 1 0 2))
+		(FloatValue 1 0 2))
 
 	(cog-set-atomspace! mid3-space)
 	(cog-set-value! (Concept "foo") (Predicate "key-3")
-		(ctv 1 0 3))
+		(FloatValue 1 0 3))
 
 	(cog-set-atomspace! mid4-space)
 	(cog-set-value! (Concept "foo") (Predicate "key-0") #f)

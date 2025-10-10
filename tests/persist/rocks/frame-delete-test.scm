@@ -13,8 +13,6 @@
 (include "test-utils.scm")
 (whack "/tmp/cog-rocks-unit-test")
 
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
-
 (opencog-test-runner)
 
 ; -------------------------------------------------------------------
@@ -42,19 +40,19 @@
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
-	(Concept "foo" (ctv 1 0 3))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
 
 	(cog-set-atomspace! mid1-space)
 	(DELETE (Concept "foo"))
 
 	(cog-set-atomspace! mid2-space)
-	(Concept "foo" (ctv 1 0 5))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 5))
 
 	(cog-set-atomspace! mid3-space)
 	(DELETE (Concept "foo"))
 
 	(cog-set-atomspace! surface-space)
-	(Concept "foo" (ctv 1 0 7))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 7))
 
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
@@ -162,13 +160,13 @@
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
-	(cog-set-tv! (Concept "foo") (ctv 1 0 2))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 2))
 
 	(cog-set-atomspace! mid2-space)
-	(cog-set-tv! (Concept "foo") (ctv 1 0 4))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 4))
 
 	(cog-set-atomspace! surface-space)
-	(cog-set-tv! (Concept "foo") (ctv 1 0 6))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 6))
 
 	; Store the changed content. Toggle through all the atomspaces,
 	; as otherwise, the TV's on the Concepts aren't stored.
@@ -270,19 +268,19 @@
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
 	(Concept "bar")
-	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 10))
+	(set-cnt! (ListLink (Concept "foo") (Concept "bar")) (FloatValue 1 0 10))
 
 	(cog-set-atomspace! mid1-space)
 	(DELETE-REC (Concept "foo"))
 
 	(cog-set-atomspace! mid2-space)
-	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 20))
+	(set-cnt! (ListLink (Concept "foo") (Concept "bar")) (FloatValue 1 0 20))
 
 	(cog-set-atomspace! mid3-space)
 	(DELETE-REC (Concept "foo"))
 
 	(cog-set-atomspace! surface-space)
-	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 30))
+	(set-cnt! (ListLink (Concept "foo") (Concept "bar")) (FloatValue 1 0 30))
 
 	; Store the changed content. Toggle through all the atomspaces,
 	; as otherwise, the TV's on the Atoms aren't stored.

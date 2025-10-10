@@ -4,6 +4,10 @@
 ;
 (use-modules (srfi srfi-1))
 
+(define pk (Predicate "kayfabe"))
+(define (set-cnt! ATOM FV) (cog-set-value! ATOM (Predicate "kayfabe") FV))
+(define (get-cnt ATOM) (inexact->exact (cog-value-ref (cog-value ATOM (Predicate "kayfabe")) 2)))
+
 ; Delete the directory `dirname` and everything in it.
 ; I don't understand why scheme doesn't provide this, built-in.
 (define (whack dirname)

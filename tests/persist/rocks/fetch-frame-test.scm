@@ -22,15 +22,15 @@
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
-	(Concept "foo" (ctv 1 0 3))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
 
 	(cog-set-atomspace! mid1-space)
-	(Concept "foo" (ctv 1 0 33))
-	(Concept "bar" (ctv 1 0 4))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 33))
+	(set-cnt! (Concept "bar") (FloatValue 1 0 4))
 
 	(cog-set-atomspace! mid2-space)
-	(Concept "foo" (ctv 1 0 333))
-	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 5))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 333))
+	(set-cnt! (ListLink (Concept "foo") (Concept "bar")) (FloatValue 1 0 5))
 
 	(cog-set-atomspace! surface-space)
 
@@ -55,8 +55,6 @@
 	(cog-atomspace-clear mid1-space)
 	(cog-atomspace-clear base-space)
 )
-
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
 ; Test that load of a single atom is done correctly.

@@ -24,16 +24,16 @@
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
-	(Concept "foo" (ctv 1 0 3))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
 
 	(cog-set-atomspace! mid1-space)
-	(Concept "bar" (ctv 1 0 4))
+	(set-cnt! (Concept "bar") (FloatValue 1 0 4))
 
 	(cog-set-atomspace! mid2-space)
-	(List (Concept "bar") (ctv 1 0 5))
+	(set-cnt! (List (Concept "bar")) (FloatValue 1 0 5))
 
 	(cog-set-atomspace! mid3-space)
-	(List (Concept "foo") (List (Concept "bar")) (ctv 1 0 6))
+	(set-cnt! (List (Concept "foo") (List (Concept "bar"))) (FloatValue 1 0 6))
 
 	(cog-set-atomspace! surface-space)
 
@@ -51,8 +51,6 @@
 	(cog-atomspace-clear mid1-space)
 	(cog-atomspace-clear base-space)
 )
-
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
 ; Test that deep links are found correctly.
@@ -91,9 +89,9 @@
 	(test-equal "bar-space" mid1-space (cog-atomspace (gadr lilly)))
 
 	; Verify appropriate values
-	(test-equal "base-tv" #f (cog-tv (cog-node 'Concept "foo")))
-	(test-equal "mid1-tv" #f (cog-tv (cog-node 'Concept "bar")))
-	(test-equal "mid2-tv" #f (cog-tv (cog-link 'List (Concept "bar"))))
+	(test-equal "base-tv" #f (cog-value (cog-node 'Concept "foo") pk))
+	(test-equal "mid1-tv" #f (cog-value (cog-node 'Concept "bar") pk))
+	(test-equal "mid2-tv" #f (cog-value (cog-link 'List (Concept "bar")) pk))
 	(test-equal "mid3-tv" 6 (get-cnt lilly))
 )
 

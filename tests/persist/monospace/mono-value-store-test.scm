@@ -17,10 +17,10 @@
 (define (setup-and-store)
 
 	; Splatter some atoms into the atomspace.
-	(Concept "foo" (ctv 1 0 3))
-	(Concept "bar" (ctv 1 0 4))
-	(ListLink (Concept "bar") (ctv 1 0 5))
-	(ListLink (Concept "foo") (List (Concept "bar")) (ctv 1 0 6))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
+	(set-cnt! (Concept "bar") (FloatValue 1 0 4))
+	(set-cnt! (ListLink (Concept "bar")) (FloatValue 1 0 5))
+	(set-cnt! (ListLink (Concept "foo") (List (Concept "bar"))) (FloatValue 1 0 6))
 
 	; Store the content. Store only the top-most link.
 	(define storage (MonoStorageNode "monospace:///tmp/cog-mono-unit-test"))
@@ -31,8 +31,6 @@
 	; Clear out the space, start with a clean slate.
 	(cog-atomspace-clear (cog-atomspace))
 )
-
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
 ; Test that only the top link was stored.
@@ -56,9 +54,9 @@
 
 	; Verify appropriate values
 	(test-equal "link-tv" 6 (get-cnt lilly))
-	(test-equal "foo-tv" #f (cog-tv (cog-node 'Concept "foo")))
-	(test-equal "bar-tv" #f (cog-tv (cog-node 'Concept "bar")))
-	(test-equal "link-bar-tv" #f (cog-tv (cog-link 'List (Concept "bar"))))
+	(test-equal "foo-tv" #f (cog-value (cog-node 'Concept "foo") pk))
+	(test-equal "bar-tv" #f (cog-value (cog-node 'Concept "bar") pk))
+	(test-equal "link-bar-tv" #f (cog-value (cog-link 'List (Concept "bar")) pk))
 )
 
 (define store-link "test store link")

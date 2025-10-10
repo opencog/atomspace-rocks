@@ -22,17 +22,17 @@
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
-	(Concept "foo" (ctv 1 0 3))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
 
 	; Put different variants of the same atom in two parallel spaces
 	(cog-set-atomspace! left-space)
-	(Concept "bar" (ctv 1 0 4))
+	(set-cnt! (Concept "bar") (FloatValue 1 0 4))
 
 	(cog-set-atomspace! right-space)
-	(Concept "bar" (ctv 1 0 6))
+	(set-cnt! (Concept "bar") (FloatValue 1 0 6))
 
 	(cog-set-atomspace! top-space)
-	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 8))
+	(set-cnt! (ListLink (Concept "foo") (Concept "bar")) (FloatValue 1 0 8))
 
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
@@ -50,8 +50,6 @@
 	(store-atom (Concept "bar"))
 	(cog-close storage)
 )
-
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; -------------------------------------------------------------------
 ; Test ability to restor the above.

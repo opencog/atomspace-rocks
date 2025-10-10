@@ -22,13 +22,13 @@
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
-	(Concept "foo" (ctv 1 0 3))
+	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
 
 	(cog-set-atomspace! mid1-space)
-	(Concept "bar" (ctv 1 0 4))
+	(set-cnt! (Concept "bar") (FloatValue 1 0 4))
 
 	(cog-set-atomspace! mid2-space)
-	(ListLink (Concept "foo") (Concept "bar") (ctv 1 0 5))
+	(set-cnt! (ListLink (Concept "foo") (Concept "bar")) (FloatValue 1 0 5))
 
 	(cog-set-atomspace! surface-space)
 
@@ -69,8 +69,6 @@
 
 ; -------------------------------------------------------------------
 ; Test that frames can be deleted.
-
-(define (get-cnt ATOM) (inexact->exact (cog-count ATOM)))
 
 ; Return depth of the atomspace.
 (define (count-depth space cnt)
