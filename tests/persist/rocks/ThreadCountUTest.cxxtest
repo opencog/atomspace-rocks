@@ -74,7 +74,7 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 		void check(size_t, const char*);
 
 		void test_tv_incr(void);
-		void xtest_push_pop(void);
+		void test_push_pop(void);
 		void test_fetch(void);
 };
 
@@ -224,8 +224,7 @@ void ThreadCountUTest::test_tv_incr(void)
 
 // ============================================================
 
-// XXX FIXME This is failing right now, and it really shouldn't.
-void ThreadCountUTest::xtest_push_pop(void)
+void ThreadCountUTest::test_push_pop(void)
 {
 	logger().info("BEGIN TEST: %s", __FUNCTION__);
 

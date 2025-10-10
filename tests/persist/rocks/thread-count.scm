@@ -28,9 +28,6 @@
 	(store-atom edge)
 )
 
-; Same as above, but with AtomSpace push-pop weirdness.
-; XXX FIXME This is failing and it really shouldn't and
-; I can't be bothered to fix it right now.
 (define (pushy TXTA TXTB)
 	(define base-as (cog-push-atomspace))
 	(define ca (Concept TXTA))
@@ -38,9 +35,9 @@
 	(define edge (Edge (Predicate "foo") (List ca cb)))
 
 	(cog-set-atomspace! base-as)
-	(do-inc-cnt! ca 1)
-	(do-inc-cnt! cb 1)
-	(do-inc-cnt! edge 1)
+	(set! ca (do-inc-cnt! ca 1))
+	(set! cb (do-inc-cnt! cb 1))
+	(set! edge (do-inc-cnt! edge 1))
 	(store-atom ca)
 	(store-atom cb)
 	(store-atom edge)
