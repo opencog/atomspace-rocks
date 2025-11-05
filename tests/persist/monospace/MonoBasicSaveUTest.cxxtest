@@ -1,8 +1,8 @@
 /*
- * tests/persist/mono/BasicSaveUTest.cxxtest
+ * tests/persist/mono/MonoBasicSaveUTest.cxxtest
  *
  * Most basic, simplest sniff test, saves and restores a few atoms.
- * Copied from tests/persist/sql/BasicSaveUTest.cxxtest and
+ * Copied from tests/persist/sql/MonoBasicSaveUTest.cxxtest and
  * lightly modified.
  *
  * Copyright (C) 2008, 2009, 2019 Linas Vepstas <linasvepstas@gmail.com>
@@ -39,7 +39,7 @@
 
 using namespace opencog;
 
-class BasicSaveUTest :  public CxxTest::TestSuite
+class MonoBasicSaveUTest :  public CxxTest::TestSuite
 {
     private:
         std::string uri;
@@ -57,7 +57,7 @@ class BasicSaveUTest :  public CxxTest::TestSuite
 
     public:
 
-        BasicSaveUTest(void)
+        MonoBasicSaveUTest(void)
         {
             logger().set_level(Logger::INFO);
             // logger().set_level(Logger::DEBUG);
@@ -66,7 +66,7 @@ class BasicSaveUTest :  public CxxTest::TestSuite
             uri = "monospace:///tmp/cog-mono-unit-test";
         }
 
-        ~BasicSaveUTest()
+        ~MonoBasicSaveUTest()
         {
             // erase the log file if no assertions failed
             if (!CxxTest::TestTracker::tracker().suiteFailed())
@@ -88,11 +88,11 @@ class BasicSaveUTest :  public CxxTest::TestSuite
 /*
  * This is called once before each test, for each test (!!)
  */
-void BasicSaveUTest::setUp(void)
+void MonoBasicSaveUTest::setUp(void)
 {
 }
 
-void BasicSaveUTest::tearDown(void)
+void MonoBasicSaveUTest::tearDown(void)
 {
 }
 
@@ -158,7 +158,7 @@ static void atomCompare(Handle a, Handle b, const char* where)
  * A simple test case that tests the save and restore of
  * a couple of nodes and a link. Does not test atomtable/atomspace at all.
  */
-void BasicSaveUTest::single_atom_save_restore(std::string id)
+void MonoBasicSaveUTest::single_atom_save_restore(std::string id)
 {
     MonoStorage *store = new MonoStorage(uri);
     store->open();
@@ -217,7 +217,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
 
 // ============================================================
 
-void BasicSaveUTest::add_to_table(int idx, AtomSpace *table, std::string id)
+void MonoBasicSaveUTest::add_to_table(int idx, AtomSpace *table, std::string id)
 {
     // Create an atom ...
     n1[idx] = createNode(SCHEMA_NODE, id + "fromNode");
@@ -265,7 +265,7 @@ void BasicSaveUTest::add_to_table(int idx, AtomSpace *table, std::string id)
     al[idx] = l[idx];
 }
 
-void BasicSaveUTest::check_table(int idx, AtomSpace *table, std::string id)
+void MonoBasicSaveUTest::check_table(int idx, AtomSpace *table, std::string id)
 {
     Handle hb1 = table->get_atom(Handle(n1[idx]));
     atomCompare(a1[idx], hb1, "check_table hb1");
@@ -292,7 +292,7 @@ void BasicSaveUTest::check_table(int idx, AtomSpace *table, std::string id)
 
 // ============================================================
 
-void BasicSaveUTest::test_single_atom(void)
+void MonoBasicSaveUTest::test_single_atom(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
@@ -307,7 +307,7 @@ void BasicSaveUTest::test_single_atom(void)
     logger().debug("END TEST: %s", __FUNCTION__);
 }
 
-void BasicSaveUTest::test_fresh_atom(void)
+void MonoBasicSaveUTest::test_fresh_atom(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
@@ -352,7 +352,7 @@ void BasicSaveUTest::test_fresh_atom(void)
     logger().debug("END TEST: %s", __FUNCTION__);
 }
 
-void BasicSaveUTest::test_table()
+void MonoBasicSaveUTest::test_table()
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
