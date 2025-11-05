@@ -45,28 +45,42 @@
 ; the use count at one, and so the DB connection remains open, and this
 ; second open segfaults, because the DB lock is still held. So we have
 ; to also force (1) to happen. There are two ways to do this:
-; (a) Make opencog/guile print the smob. Since opencog/guile does not
-;     allow Atoms not in any AtomSpace, the Handle gets clobbered.
+; (a) Dereference the handle to the Atom held in opencog/guile somehow.
+;     Most such dereferences will clobber the three-word *(SMOB) pointer,
+;     which is an instance of ValuePtr, thus decrementing the use count.
+;     For example, attempting to print the Atom will clobber it.
 ; (b) (set! rsn #f) and run (gc) to force the Handle to be gc'ed.
 ;
 ; Either (a) or (b) will work. We chose (a) for this test.
 ;
-; So, some tests.
-; First: Is rsn an atom? Yes, it still is.
-(test-equal #t (cog-atom? rsn))
-
-; Next, is it in this AtomSpace? No it isn't.
+; Touch the Atom. Is it in this AtomSpace? No it isn't.
+; This is the one guile operation that can be performed on a guile
+; handle that will NOT decrement the use count. It stays alive, because
+; it can still be used to insert the Atom is some other AtomSpace.
 (test-equal #f (cog-atom rsn))
 
-; Accessing it from guile will clobber the guile smob pointer.
-; If we don't do this, rsn will remain live. The define, further
-; below, will not clobber it, but only release it. A round of gc's
-; would be needed for the actual release. Blech. Either will work.
-(format #t "The rsn right now is: ~A\n" rsn)
+; Asking if the rsn guile SMOB is an Atom will reference the SMOB,
+; which will clobber the Handle, because it is not in any AtomSpace.
+; The clobber will decrement the use count.
+;
+; Why should `cog-atom?` clobber the reference? Because a common use
+; case is to cog-extract/delete some Atom, and then use cog-atom?
+; to determine if the Atom is actually deleted.
+(test-equal #f (cog-atom? rsn))
+
+; Accessing it by printing it will clobber the guile smob pointer.
+; Well, we already clobbered it with the `cog-atom?` above, so we
+; don't need this. Anyway, we need ither abovem or the print below,
+; or some other access.
+;
+; Note that the define, further below, will not clobber it, but only
+; release it. A round of gc's would be needed for the actual release.
+; Blech. Either will work.
+; (format #t "The rsn right now is: ~A\n" rsn)
 
 ; The above clobber means the guile rsn smob no longer points
 ; to an Atom.  There is still a global pointer to it, in the
-; persist module, and so the destrcuctor has not yet run. The
+; persist module, and so the destructor has not yet run. The
 ; use-count on the thing is now one. It will drop to zero, when
 ; the cog-open below clobbers the old global pointer.
 (test-equal #f (cog-atom? rsn))
