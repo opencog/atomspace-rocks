@@ -71,6 +71,8 @@ class MonoStorage : public StorageNode
 		// Guarantee atomic update of atom plus it's incoming set.
 		std::recursive_mutex _mtx_list;
 #endif
+		// Exception due to unknown atom type.
+		bool _unknown_type;
 
 		// Assorted helper functions
 		std::string findAtom(const Handle&);

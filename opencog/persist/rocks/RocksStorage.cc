@@ -187,6 +187,7 @@ RocksStorage::RocksStorage(std::string uri) :
 	StorageNode(ROCKS_STORAGE_NODE, std::move(uri)),
 	_rfile(nullptr),
 	_multi_space(false),
+	_unknown_type(false),
 	_next_aid(0)
 {
 	const char *yuri = _name.c_str();
