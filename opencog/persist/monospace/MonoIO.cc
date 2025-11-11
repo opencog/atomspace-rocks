@@ -351,7 +351,15 @@ Handle MonoStorage::getAtom(const std::string& sid)
 		throw IOException(TRACE_INFO, "Internal Error!");
 
 	size_t pos = satom.find('('); // skip over hash, if present
-	return Sexpr::decode_atom(satom, pos);
+	try {
+		return Sexpr::decode_atom(satom, pos);
+	} catch (const SyntaxException& ex) {
+		// This will happen if an Atom is unknown. Either the user forgot
+		// to load the module that defines the type, or this is an old
+		// dataset that contains an obsolete type. Either way, a loud warning.
+		logger().warn("MonoStorage: %s\n", ex.get_message());
+	}
+	return Handle::UNDEFINED;
 }
 
 /// Return the Value located at skid.
@@ -905,9 +913,17 @@ void MonoStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
-		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		getKeys(as, it->value().ToString(), h);
-		as->storage_add_nocheck(h);
+		try {
+			Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+			getKeys(as, it->value().ToString(), h);
+			as->storage_add_nocheck(h);
+		} catch (const SyntaxException& ex) {
+			// Syntax exception will be thrown, if the DB stores a type we don't
+			// know of.  This needs to be fairly loud. Either the user forgot
+			// to specify the module that defines this atom type, or this type
+			// no longer exists.
+			logger().warn("MonoStorage: %s\n", ex.get_message());
+		}
 	}
 	delete it;
 }
