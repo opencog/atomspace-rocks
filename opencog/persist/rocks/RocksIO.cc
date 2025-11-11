@@ -486,7 +486,12 @@ Handle RocksStorage::getAtom(const std::string& sid)
 		throw IOException(TRACE_INFO, "Internal Error!");
 
 	size_t pos = satom.find('('); // skip over hash, if present
-	return Sexpr::decode_atom(satom, pos);
+	try {
+		return Sexpr::decode_atom(satom, pos);
+	} catch (const SyntaxException& ex) {
+		logger().warn("RocksStorage: %s\n", ex.get_message());
+	}
+	return Handle::UNDEFINED;
 }
 
 /// Return the Value located at skid.
@@ -1116,12 +1121,19 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek("a@"); it->Valid() and it->key().starts_with("a@"); it->Next())
 	{
-		Handle h = Sexpr::decode_atom(it->value().ToString());
-		h = add_nocheck(as, h);
-		// There's a trailing colon. Drop it.
-		const std::string& sidcolon = it->key().ToString().substr(2);
-		size_t len = sidcolon.size();
-		getKeysMonospace(as, sidcolon.substr(0, len-1), h);
+		try {
+			Handle h = Sexpr::decode_atom(it->value().ToString());
+			h = add_nocheck(as, h);
+			// There's a trailing colon. Drop it.
+			const std::string& sidcolon = it->key().ToString().substr(2);
+			size_t len = sidcolon.size();
+			getKeysMonospace(as, sidcolon.substr(0, len-1), h);
+		} catch (const SyntaxException& ex) {
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
+			logger().warn("RocksStorage: %s\n", ex.get_message());
+		}
 	}
 	delete it;
 }
@@ -1138,12 +1150,19 @@ size_t RocksStorage::loadAtomsPfx(
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 	{
 		cnt ++;
-		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		const std::string& sid = it->value().ToString();
-		for (const auto& frit: frame_order)
-		{
-			AtomSpace* as = (AtomSpace*) frit.second.get();
-			getKeysMulti(as, sid, h);
+		try {
+			Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+			const std::string& sid = it->value().ToString();
+			for (const auto& frit: frame_order)
+			{
+				AtomSpace* as = (AtomSpace*) frit.second.get();
+				getKeysMulti(as, sid, h);
+			}
+		} catch (const SyntaxException& ex) {
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
+			logger().warn("RocksStorage: %s\n", ex.get_message());
 		}
 	}
 	delete it;
@@ -1167,16 +1186,23 @@ size_t RocksStorage::loadAtomsHeight(
 		cnt ++;
 		const std::string& sid = it->key().ToString().substr(zsid);
 
-		// Get the matching satom string.
-		std::string satom;
-		_rfile->Get(rocksdb::ReadOptions(), "a@" + sid + ":", &satom);
-		Handle h = Sexpr::decode_atom(satom);
+		try {
+			// Get the matching satom string.
+			std::string satom;
+			_rfile->Get(rocksdb::ReadOptions(), "a@" + sid + ":", &satom);
+			Handle h = Sexpr::decode_atom(satom);
 
-		// Load the values, in frame-DAG order.
-		for (const auto& frit: frame_order)
-		{
-			AtomSpace* as = (AtomSpace*) frit.second.get();
-			getKeysMulti(as, sid, h);
+			// Load the values, in frame-DAG order.
+			for (const auto& frit: frame_order)
+			{
+				AtomSpace* as = (AtomSpace*) frit.second.get();
+				getKeysMulti(as, sid, h);
+			}
+		} catch (const SyntaxException& ex) {
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
+			logger().warn("RocksStorage: %s\n", ex.get_message());
 		}
 	}
 	delete it;
@@ -1235,9 +1261,16 @@ void RocksStorage::loadTypeMonospace(AtomSpace* as, Type t)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
-		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		h = add_nocheck(as, h);
-		getKeysMonospace(as, it->value().ToString(), h);
+		try {
+			Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+			h = add_nocheck(as, h);
+			getKeysMonospace(as, it->value().ToString(), h);
+		} catch (const SyntaxException& ex) {
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
+			logger().warn("RocksStorage: %s\n", ex.get_message());
+		}
 	}
 	delete it;
 }

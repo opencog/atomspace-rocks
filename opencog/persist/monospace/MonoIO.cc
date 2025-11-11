@@ -354,8 +354,8 @@ Handle MonoStorage::getAtom(const std::string& sid)
 	try {
 		return Sexpr::decode_atom(satom, pos);
 	} catch (const SyntaxException& ex) {
-		// This will happen if an Atom is unknown. Either the user forgot
-		// to load the module that defines the type, or this is an old
+		// This will happen if a Type is unknown. Either the user forgot
+		// to load the module that defines that type, or this is an old
 		// dataset that contains an obsolete type. Either way, a loud warning.
 		logger().warn("MonoStorage: %s\n", ex.get_message());
 	}
@@ -918,10 +918,9 @@ void MonoStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 			getKeys(as, it->value().ToString(), h);
 			as->storage_add_nocheck(h);
 		} catch (const SyntaxException& ex) {
-			// Syntax exception will be thrown, if the DB stores a type we don't
-			// know of.  This needs to be fairly loud. Either the user forgot
-			// to specify the module that defines this atom type, or this type
-			// no longer exists.
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
 			logger().warn("MonoStorage: %s\n", ex.get_message());
 		}
 	}
@@ -948,9 +947,16 @@ void MonoStorage::loadType(AtomSpace* as, Type t)
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(typ); it->Valid() and it->key().starts_with(typ); it->Next())
 	{
-		Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
-		getKeys(as, it->value().ToString(), h);
-		as->storage_add_nocheck(h);
+		try {
+			Handle h = Sexpr::decode_atom(it->key().ToString().substr(2));
+			getKeys(as, it->value().ToString(), h);
+			as->storage_add_nocheck(h);
+		} catch (const SyntaxException& ex) {
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
+			logger().warn("MonoStorage: %s\n", ex.get_message());
+		}
 	}
 	delete it;
 }

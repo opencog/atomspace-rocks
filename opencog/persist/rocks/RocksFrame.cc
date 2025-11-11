@@ -180,11 +180,18 @@ void RocksStorage::convertForFrames(const Handle& top)
 		_rfile->Put(rocksdb::WriteOptions(), "o@" + fid + sid, "");
 
 		// Compute the height, and store that.
-		Handle h = Sexpr::decode_atom(it->value().ToString());
-		size_t height = getHeight(h);
-		if (0 < height)
-			_rfile->Put(rocksdb::WriteOptions(),
-				"z" + aidtostr(height) + "@" + sid, "");
+		try {
+			Handle h = Sexpr::decode_atom(it->value().ToString());
+			size_t height = getHeight(h);
+			if (0 < height)
+				_rfile->Put(rocksdb::WriteOptions(),
+					"z" + aidtostr(height) + "@" + sid, "");
+		} catch (const SyntaxException& ex) {
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
+			logger().warn("RocksStorage: %s\n", ex.get_message());
+		}
 	}
 	delete it;
 }
@@ -270,18 +277,25 @@ void RocksStorage::scrubFrames(void)
 		}
 
 		// We won't know if it is a Node or Link till we decode it.
-		Handle orph =  Sexpr::decode_atom(satom);
-		if (orph->is_node())
-			_rfile->Delete(rocksdb::WriteOptions(), "n@" + satom);
-		else
-		{
-			_rfile->Delete(rocksdb::WriteOptions(), "l@" + satom);
+		try {
+			Handle orph =  Sexpr::decode_atom(satom);
+			if (orph->is_node())
+				_rfile->Delete(rocksdb::WriteOptions(), "n@" + satom);
+			else
+			{
+				_rfile->Delete(rocksdb::WriteOptions(), "l@" + satom);
 
-			// Also delete the zN@sid entries.
-			size_t height = getHeight(orph);
-			const std::string& sid = akey.substr(2);
-			_rfile->Delete(rocksdb::WriteOptions(),
-				"z" + aidtostr(height) + "@" + sid);
+				// Also delete the zN@sid entries.
+				size_t height = getHeight(orph);
+				const std::string& sid = akey.substr(2);
+				_rfile->Delete(rocksdb::WriteOptions(),
+					"z" + aidtostr(height) + "@" + sid);
+			}
+		} catch (const SyntaxException& ex) {
+			// This will happen if a Type is unknown. Either the user forgot
+			// to load the module that defines that type, or this is an old
+			// dataset that contains an obsolete type. Either way, a loud warning.
+			logger().warn("RocksStorage: %s\n", ex.get_message());
 		}
 
 		cnt++;
