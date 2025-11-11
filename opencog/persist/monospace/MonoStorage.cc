@@ -168,7 +168,8 @@ void MonoStorage::open()
 MonoStorage::MonoStorage(std::string uri) :
 	StorageNode(MONO_STORAGE_NODE, std::move(uri)),
 	_rfile(nullptr),
-	_next_aid(0)
+	_next_aid(0),
+	_unknown_type(false)
 {
 	const char *yuri = _name.c_str();
 

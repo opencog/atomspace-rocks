@@ -922,6 +922,7 @@ void MonoStorage::loadAtoms(AtomSpace* as, const std::string& pfx)
 			// to load the module that defines that type, or this is an old
 			// dataset that contains an obsolete type. Either way, a loud warning.
 			logger().warn("MonoStorage: %s\n", ex.get_message());
+			_unknown_type = true;
 		}
 	}
 	delete it;
@@ -935,6 +936,11 @@ void MonoStorage::loadAtomSpace(AtomSpace* table)
 	// XXX TODO - maybe load links depth-order...
 	loadAtoms(table, "n@");
 	loadAtoms(table, "l@");
+	if (_unknown_type)
+	{
+		fprintf(stderr, "Unknown Atom type encountered during load; check logfile!\n");
+		_unknown_type = false;
+	}
 }
 
 void MonoStorage::loadType(AtomSpace* as, Type t)

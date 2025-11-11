@@ -1133,9 +1133,16 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 			// to load the module that defines that type, or this is an old
 			// dataset that contains an obsolete type. Either way, a loud warning.
 			logger().warn("RocksStorage: %s\n", ex.get_message());
+			_unknown_type = true;
 		}
 	}
 	delete it;
+
+	if (_unknown_type)
+	{
+		fprintf(stderr, "Unknown Atom type encountered during load; check logfile!\n");
+		_unknown_type = false;
+	}
 }
 
 size_t RocksStorage::loadAtomsPfx(
@@ -1163,6 +1170,7 @@ size_t RocksStorage::loadAtomsPfx(
 			// to load the module that defines that type, or this is an old
 			// dataset that contains an obsolete type. Either way, a loud warning.
 			logger().warn("RocksStorage: %s\n", ex.get_message());
+			_unknown_type = true;
 		}
 	}
 	delete it;
@@ -1203,6 +1211,7 @@ size_t RocksStorage::loadAtomsHeight(
 			// to load the module that defines that type, or this is an old
 			// dataset that contains an obsolete type. Either way, a loud warning.
 			logger().warn("RocksStorage: %s\n", ex.get_message());
+			_unknown_type = true;
 		}
 	}
 	delete it;
@@ -1227,6 +1236,12 @@ void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 		size_t found = loadAtomsHeight(frame_order, height);
 		if (0 == found) break;
 		height ++;
+	}
+
+	if (_unknown_type)
+	{
+		fprintf(stderr, "Unknown Atom type encountered during load; check logfile!\n");
+		_unknown_type = false;
 	}
 }
 
@@ -1270,6 +1285,7 @@ void RocksStorage::loadTypeMonospace(AtomSpace* as, Type t)
 			// to load the module that defines that type, or this is an old
 			// dataset that contains an obsolete type. Either way, a loud warning.
 			logger().warn("RocksStorage: %s\n", ex.get_message());
+			_unknown_type = true;
 		}
 	}
 	delete it;

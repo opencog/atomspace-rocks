@@ -191,6 +191,7 @@ void RocksStorage::convertForFrames(const Handle& top)
 			// to load the module that defines that type, or this is an old
 			// dataset that contains an obsolete type. Either way, a loud warning.
 			logger().warn("RocksStorage: %s\n", ex.get_message());
+			_unknown_type = true;
 		}
 	}
 	delete it;
