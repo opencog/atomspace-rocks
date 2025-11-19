@@ -1,9 +1,9 @@
 /*
- * tests/persist/mono/FetchUTest.cxxtest
+ * tests/persist/mono/MonoFetchUTest.cxxtest
  *
  * Test atom fetch semantics.  Assumes PersistUTest is passing.
  * Ported over from original unit test at
- * tests/persist/sql/multi-driver/FetchUTest.cxxtest
+ * tests/persist/sql/multi-driver/MonoFetchUTest.cxxtest
  *
  * Copyright (C) 2017,2019 Linas Vepstas <linasvepstas@gmail.com>
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -39,7 +39,7 @@
 
 using namespace opencog;
 
-class FetchUTest :  public CxxTest::TestSuite
+class MonoFetchUTest :  public CxxTest::TestSuite
 {
 	private:
 		std::string uri;
@@ -50,8 +50,8 @@ class FetchUTest :  public CxxTest::TestSuite
 
 	public:
 
-		FetchUTest(void);
-		~FetchUTest()
+		MonoFetchUTest(void);
+		~MonoFetchUTest()
 		{
 			// erase the log file if no assertions failed
 			if (!CxxTest::TestTracker::tracker().suiteFailed())
@@ -66,7 +66,7 @@ class FetchUTest :  public CxxTest::TestSuite
 		void xxxtest_readonly(void); // Don't run this; its broken.
 };
 
-FetchUTest::FetchUTest(void)
+MonoFetchUTest::MonoFetchUTest(void)
 {
 	logger().set_level(Logger::INFO);
 	// logger().set_level(Logger::DEBUG);
@@ -85,20 +85,19 @@ FetchUTest::FetchUTest(void)
 /*
  * This is called once before each test, for each test (!!)
  */
-void FetchUTest::setUp(void)
+void MonoFetchUTest::setUp(void)
 {
 	_as = createAtomSpace();
-	eval = SchemeEval::get_evaluator(_as);
-	eval->set_scheme_as(_as);
+	eval = SchemeEval::get_scheme_evaluator(_as);
 }
 
-void FetchUTest::tearDown(void)
+void MonoFetchUTest::tearDown(void)
 {
 }
 
 // ============================================================
 
-void FetchUTest::atomCompare(Handle a, Handle b, std::string where)
+void MonoFetchUTest::atomCompare(Handle a, Handle b, std::string where)
 {
 	printf("Check %s expect %s\n", where.c_str(), a->to_string().c_str());
 	TSM_ASSERT("No atom found", b != nullptr);
@@ -151,7 +150,7 @@ void FetchUTest::atomCompare(Handle a, Handle b, std::string where)
 
 // ============================================================
 
-void FetchUTest::test_stuff(void)
+void MonoFetchUTest::test_stuff(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
@@ -165,8 +164,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval("(cog-close)");
 
 	_as = createAtomSpace();
-	eval = SchemeEval::get_evaluator(_as);
-	eval->set_scheme_as(_as);
+	eval = SchemeEval::get_scheme_evaluator(_as);
 	eval->eval(srv_open);
 	eval->eval(R"((fetch-atom (List (Concept "AAA") (Concept "BBB"))))");
 	eval->eval("(barrier)");
@@ -194,8 +192,7 @@ void FetchUTest::test_stuff(void)
 	eval->eval("(cog-close)");
 
 	_as = createAtomSpace();
-	eval = SchemeEval::get_evaluator(_as);
-	eval->set_scheme_as(_as);
+	eval = SchemeEval::get_scheme_evaluator(_as);
 	eval->eval(srv_open);
 
 	// AAA should have been updated, as above.
@@ -232,7 +229,7 @@ void FetchUTest::test_stuff(void)
 // The concept of read-only needs to be re-examined in the light of
 // message-passing interfaces. The current semantics are unclear and
 // of little utility.
-void FetchUTest::xxxtest_readonly(void)
+void MonoFetchUTest::xxxtest_readonly(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
@@ -247,8 +244,7 @@ void FetchUTest::xxxtest_readonly(void)
 	eval->eval("(cog-close)");
 
 	_as = createAtomSpace();
-	eval = SchemeEval::get_evaluator(_as);
-	eval->set_scheme_as(_as);
+	eval = SchemeEval::get_scheme_evaluator(_as);
 	eval->eval(srv_open);
 	_as->set_read_only();
 

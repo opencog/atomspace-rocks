@@ -1,5 +1,4 @@
 
-ENABLE_TESTING()
 INCLUDE(AddCxxtest)
 
 # All tests should load the atomspace scm from the build dir, unless the scm

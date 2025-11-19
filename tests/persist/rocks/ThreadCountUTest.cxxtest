@@ -88,15 +88,13 @@ void ThreadCountUTest::setUp(void)
 	n_threads = 10;
 
 	as = createAtomSpace();
-	eval = new SchemeEval(as);
+	eval = SchemeEval::get_scheme_evaluator(as);
 	eval->eval("(add-to-load-path \"" PROJECT_SOURCE_DIR "\")");
 	eval->eval("(load-from-path \"tests/persist/rocks/thread-count.scm\")");
 }
 
 void ThreadCountUTest::tearDown(void)
 {
-	delete eval;
-	as = nullptr;
 }
 
 // ============================================================
@@ -104,7 +102,7 @@ void ThreadCountUTest::tearDown(void)
 // Increment counts on a collection of Atoms.
 void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 {
-	SchemeEval* tev = new SchemeEval(as);
+	SchemeEval* tev = SchemeEval::get_scheme_evaluator(as);
 
 	for (int i=0; i<nloops; i++)
 	{
@@ -125,8 +123,6 @@ void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 		obs += "\")";
 		tev->eval(obs);
 	}
-
-	delete tev;
 }
 
 // ============================================================
