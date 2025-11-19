@@ -86,9 +86,9 @@ Then build, install and test:
     mkdir build
     cd build
     cmake ..
-    make -j4
+    make -j
     sudo make install
-    make check
+    make -j check check ARGS=-j
 ```
 
 Example Usage
