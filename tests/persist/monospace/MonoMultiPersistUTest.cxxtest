@@ -124,7 +124,7 @@ void MultiPersistUTest::setUp(void)
 {
     _as = new AtomSpace();
 
-    Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+    Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-multi-persist-utest");
     store = StorageNodeCast(hsn);
     store->open();
     TS_ASSERT(store->connected())
@@ -416,7 +416,7 @@ void MultiPersistUTest::test_atomspace(void)
     printf("===============================================\n");
 
     /* The clear above nuked the storage, so restart */
-    Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+    Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-multi-persist-utest");
     store = StorageNodeCast(hsn);
     store->open();
     TS_ASSERT(store->connected())
@@ -435,7 +435,7 @@ void MultiPersistUTest::test_atomspace(void)
     TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
     /* The clear above nuked the storage, so restart */
-    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-multi-persist-utest");
     store = StorageNodeCast(hsn);
     store->open();
     TS_ASSERT(store->connected())

@@ -12,7 +12,7 @@
 (use-modules (opencog persist) (opencog persist-rocks))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-print-test")
 
 (opencog-test-runner)
 
@@ -48,5 +48,5 @@
 (test-end test-name)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-print-test")
 (opencog-test-end)

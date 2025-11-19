@@ -56,7 +56,7 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 			// logger().set_level(Logger::DEBUG);
 			logger().set_print_to_stdout_flag(true);
 
-			uri = "rocks:///tmp/cog-rocks-thread-count-utest";
+			uri = "rocks:///tmp/cog-rocks-thread-count";
 		}
 
 		~ThreadCountUTest()

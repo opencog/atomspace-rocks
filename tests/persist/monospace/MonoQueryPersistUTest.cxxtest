@@ -70,7 +70,7 @@ QueryPersistUTest:: QueryPersistUTest(void)
 	logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
 
-	uri = "monospace:///tmp/cog-mono-unit-test";
+	uri = "monospace:///tmp/cog-mono-query-persist-utest";
 }
 
 /*

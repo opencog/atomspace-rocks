@@ -9,7 +9,7 @@
 (use-modules (opencog persist) (opencog persist-rocks))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-progressive-test")
 
 (define (get-val ATOM NAME) (inexact->exact
 	(cog-value-ref (cog-value ATOM (Predicate NAME)) 2)))
@@ -160,5 +160,5 @@
 (force-output (current-output-port))
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-progressive-test")
 (opencog-test-end)

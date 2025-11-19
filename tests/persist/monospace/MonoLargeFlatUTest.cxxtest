@@ -112,7 +112,7 @@ void LargeFlatUTest::tearDown(void)
 
 void LargeFlatUTest::kill_data(void)
 {
-	MonoStorage *astore = new MonoStorage("monospace:///tmp/cog-mono-unit-test");
+	MonoStorage *astore = new MonoStorage("monospace:///tmp/cog-mono-large-flat-utest");
 	astore->open();
 	if (!astore->connected())
 	{
@@ -349,7 +349,7 @@ void LargeFlatUTest::test_atomspace(void)
 {
 	logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-	Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+	Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-large-flat-utest");
 	StorageNodePtr store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -374,7 +374,7 @@ void LargeFlatUTest::test_atomspace(void)
 	TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
 	/* The clear above nuked the storage, so restart */
-	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-large-flat-utest");
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())
@@ -391,7 +391,7 @@ void LargeFlatUTest::test_atomspace(void)
 	TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
 	/* The clear above nuked the storage, so restart */
-	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-large-flat-utest");
 	store = StorageNodeCast(hsn);
 	store->open();
 	TS_ASSERT(store->connected())

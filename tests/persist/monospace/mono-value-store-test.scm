@@ -7,7 +7,7 @@
 (use-modules (opencog persist) (opencog persist-mono))
 
 (include "../rocks/test-utils.scm")
-(whack "/tmp/cog-mono-unit-test")
+(whack "/tmp/cog-mono-value-store-test")
 
 (opencog-test-runner)
 
@@ -23,7 +23,7 @@
 	(set-cnt! (ListLink (Concept "foo") (List (Concept "bar"))) (FloatValue 1 0 6))
 
 	; Store the content. Store only the top-most link.
-	(define storage (MonoStorageNode "monospace:///tmp/cog-mono-unit-test"))
+	(define storage (MonoStorageNode "monospace:///tmp/cog-mono-value-store-test"))
 	(cog-open storage)
 	(store-atom (ListLink (Concept "foo") (List (Concept "bar"))))
 	(cog-close storage)
@@ -42,7 +42,7 @@
 	(cog-atomspace-clear (cog-atomspace))
 
 	; Load everything.
-	(define storage (MonoStorageNode "monospace:///tmp/cog-mono-unit-test"))
+	(define storage (MonoStorageNode "monospace:///tmp/cog-mono-value-store-test"))
 	(cog-open storage)
 	; (cog-mono-stats storage)
 	; (cog-mono-print storage "")
@@ -65,5 +65,5 @@
 (test-end store-link)
 
 ; ===================================================================
-(whack "/tmp/cog-mono-unit-test")
+(whack "/tmp/cog-mono-value-store-test")
 (opencog-test-end)

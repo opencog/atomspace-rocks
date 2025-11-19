@@ -8,6 +8,9 @@
 (use-modules (opencog) (opencog persist) (opencog persist-rocks))
 (use-modules (opencog test-runner))
 
+(include "test-utils.scm")
+(whack "/tmp/cog-rocks-space-episodic-test")
+
 ; ---------------------------------------------------------------------
 (opencog-test-runner)
 (define tname "store_episodes")
@@ -55,7 +58,7 @@
 	(count-all (cog-value (ConceptNode "foo") (Predicate "repressed mem"))))
 
 ; Verify contents
-(test-assert "base-count" (equal? 11 (count-all)))
+(test-assert "base-count" (equal? 12 (count-all)))
 (test-assert "space1-count" (equal? 8
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 6
@@ -96,8 +99,9 @@
 ; 11 loaded plus one RocksStorageNode plus (Predicate "*-TruthValueKey-*")
 ; Plus two more: (Predicate "*-store-atomspace-*")
 ; and (Predicate "*-load-atomspace-*") and *-open-* and *-close-*
+; and (Predicate "kayfabe") from test-utils.
 
-(test-assert "base-count" (equal? 16 (count-all)))
+(test-assert "base-count" (equal? 17 (count-all)))
 (test-assert "space1-count" (equal? 0
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 0
@@ -108,7 +112,7 @@
 (load-atomspace (AtomSpace "crushing defeat"))
 (cog-close gsn)
 
-(test-assert "base-count" (equal? 17 (count-all)))
+(test-assert "base-count" (equal? 18 (count-all)))
 (test-assert "space1-count" (equal? 8
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 6
@@ -123,5 +127,6 @@
 ; Clean up.
 
 (test-end tname)
+(whack "/tmp/cog-rocks-space-episodic-test")
 
 (opencog-test-end)

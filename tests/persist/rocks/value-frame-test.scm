@@ -8,7 +8,7 @@
 (use-modules (opencog persist) (opencog persist-rocks))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-value-frame-test")
 
 (opencog-test-runner)
 
@@ -101,5 +101,5 @@
 (test-end save-value)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-value-frame-test")
 (opencog-test-end)

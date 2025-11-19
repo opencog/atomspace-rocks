@@ -9,7 +9,7 @@
 (use-modules (opencog persist-mono))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-promote-test")
 
 (opencog-test-runner)
 
@@ -25,7 +25,7 @@
 	(set-cnt! (ListLink (Concept "foo") (List (Concept "bar"))) (FloatValue 1 0 6))
 
 	; Store the content. Store only the top-most link.
-	(define mstorage (MonoStorageNode "monospace:///tmp/cog-rocks-unit-test"))
+	(define mstorage (MonoStorageNode "monospace:///tmp/cog-rocks-promote-test"))
 	(cog-open mstorage)
 	(store-atom (Concept "foo"))
 	(store-atom (Concept "bar"))
@@ -134,5 +134,5 @@
 (test-end promotion)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-promote-test")
 (opencog-test-end)
