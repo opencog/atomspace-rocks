@@ -11,7 +11,7 @@
 (use-modules (opencog persist) (opencog persist-rocks))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 
 (opencog-test-runner)
 
@@ -132,14 +132,14 @@
 (test-deep cog-extract!)
 (test-end deep-extract)
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 
 (define deep-delete "test deep delete")
 (test-begin deep-delete)
 (test-deep cog-delete!)
 (test-end deep-delete)
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 
 ; ===================================================================
 ; Building on the above, verify that values work
@@ -240,14 +240,14 @@
 (test-deep-change cog-extract!)
 (test-end deep-change-extract)
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 
 (define deep-change-delete "test deep change-delete")
 (test-begin deep-change-delete)
 (test-deep-change cog-delete!)
 (test-end deep-change-delete)
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 ; ===================================================================
 ; Test that deep link deletions work correctly.
 
@@ -353,18 +353,18 @@
 		(ListLink (Concept "foo") (Concept "bar"))))
 )
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 (define deep-link-extract "test deep link-extract")
 (test-begin deep-link-extract)
 (test-deep-link cog-extract-recursive!)
 (test-end deep-link-extract)
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 (define deep-link-delete "test deep link-delete")
 (test-begin deep-link-delete)
 (test-deep-link cog-delete-recursive!)
 (test-end deep-link-delete)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-frame-delete-test")
 (opencog-test-end)

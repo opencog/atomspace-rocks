@@ -7,7 +7,7 @@
 (use-modules (opencog persist) (opencog persist-rocks))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-fetch-frame-test")
 
 (opencog-test-runner)
 
@@ -105,7 +105,7 @@
 (test-load-single)
 (test-end load-single)
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-fetch-frame-test")
 
 ; -------------------------------------------------------------------
 ; Test that load of types is done correctly.
@@ -160,7 +160,7 @@
 (test-load-of-type)
 (test-end load-of-type)
 
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-fetch-frame-test")
 
 ; -------------------------------------------------------------------
 ; Test that incoming-set fetches work correctly.
@@ -208,5 +208,5 @@
 (test-end load-incoming)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-fetch-frame-test")
 (opencog-test-end)

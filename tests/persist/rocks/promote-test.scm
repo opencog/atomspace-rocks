@@ -9,7 +9,7 @@
 (use-modules (opencog persist-mono))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-promote-test")
 
 (opencog-test-runner)
 
@@ -134,5 +134,5 @@
 (test-end promotion)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-promote-test")
 (opencog-test-end)

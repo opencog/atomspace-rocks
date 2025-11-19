@@ -6,7 +6,7 @@
 (use-modules (opencog persist) (opencog persist-rocks))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-dtor-close-test")
 
 (opencog-test-runner)
 
@@ -95,5 +95,5 @@
 (test-end test-close-open)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-dtor-close-test")
 (opencog-test-end)

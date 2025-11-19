@@ -7,7 +7,7 @@
 (use-modules (opencog persist) (opencog persist-rocks))
 
 (include "test-utils.scm")
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-value-store-test")
 
 (opencog-test-runner)
 
@@ -65,5 +65,5 @@
 (test-end store-link)
 
 ; ===================================================================
-(whack "/tmp/cog-rocks-unit-test")
+(whack "/tmp/cog-rocks-value-store-test")
 (opencog-test-end)
