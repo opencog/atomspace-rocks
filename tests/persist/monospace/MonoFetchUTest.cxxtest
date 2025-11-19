@@ -72,7 +72,7 @@ MonoFetchUTest::MonoFetchUTest(void)
 	// logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
 
-	uri = "monospace:///tmp/cog-mono-unit-test";
+	uri = "monospace:///tmp/cog-mono-fetch-utest";
 	srv_open = "(cog-open (MonoStorageNode \"" + uri + "\"))\n";
 
 	// Other unit tests leave junk laying around...

@@ -302,7 +302,7 @@ void PersistUTest::test_atomspace(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+    Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-persist-utest");
     StorageNodePtr store = StorageNodeCast(hsn);
     store->open();
     TS_ASSERT(store->connected())
@@ -336,7 +336,7 @@ void PersistUTest::test_atomspace(void)
     TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
     /* The above clear wiped out the storage node; recreate it. */
-    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-persist-utest");
     store = StorageNodeCast(hsn);
     store->open();
 
@@ -351,7 +351,7 @@ void PersistUTest::test_atomspace(void)
     TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
     /* The above clear wiped out the storage node; recreate it. */
-    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-unit-test");
+    hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-persist-utest");
     store = StorageNodeCast(hsn);
     store->open();
 
