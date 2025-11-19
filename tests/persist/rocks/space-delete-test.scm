@@ -34,7 +34,7 @@
 
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-delete-test"))
 	(cog-open storage)
 	(store-frames surface-space)
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
@@ -58,7 +58,7 @@
 	(cog-set-atomspace! (cog-new-atomspace))
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-delete-test"))
 	(cog-open storage)
 	; (cog-rocks-print storage "")
 
@@ -79,7 +79,7 @@
 (define (test-delete-frame)
 	(setup-and-store)
 
-	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-space-delete-test")
 	; (cog-rocks-stats)
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
@@ -97,7 +97,7 @@
 	(cog-set-atomspace! keep-me-around)
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-delete-test"))
 	(cog-open storage)
 	(define top-space (car (load-frames)))
 	(cog-set-atomspace! top-space)

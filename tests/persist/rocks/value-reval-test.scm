@@ -17,7 +17,7 @@
 
 (define (setup-and-store)
 
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-reval-test"))
 	(cog-open storage)
 	(store-frames (cog-atomspace))
 
@@ -72,7 +72,7 @@
 	(cog-set-atomspace! (cog-new-atomspace))
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-reval-test"))
 	(cog-open storage)
 	(define top-space (car (load-frames)))
 	(cog-set-atomspace! top-space)

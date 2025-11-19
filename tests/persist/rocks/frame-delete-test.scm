@@ -34,7 +34,7 @@
 	; (format #t "setup space base ~A\n" (cog-name base-space))
 
 	(cog-set-atomspace! surface-space)
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
 	(store-frames surface-space)
 
@@ -82,13 +82,13 @@
 
 	(setup-and-store DELETE)
 
-	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-frame-delete-test")
 	; (cog-rocks-stats)
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
 
 	; Load all of the AtomSpace Frames.
@@ -155,7 +155,7 @@
 	(define base-space (cog-outgoing-atom mid1-space 0))
 
 	(cog-set-atomspace! surface-space)
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
 
 	; Repeatedly add and remove the same atom
@@ -194,7 +194,7 @@
 	(setup-deep-change DELETE)
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
 
 	; Load all of the AtomSpace Frames.
@@ -261,7 +261,7 @@
 	(define base-space (cog-outgoing-atom mid1-space 0))
 
 	(cog-set-atomspace! surface-space)
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
 	(store-frames surface-space)
 
@@ -307,7 +307,7 @@
 	(setup-link-check DELETE-REC)
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
 
 	; Load all of the AtomSpace Frames.

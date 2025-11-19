@@ -13,7 +13,7 @@
 (define test-close-open "test dtor-close")
 (test-begin test-close-open)
 
-(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-dtor-close-test"))
 (cog-open rsn)
 
 ; Create and store some data.
@@ -85,7 +85,7 @@
 ; the cog-open below clobbers the old global pointer.
 (test-equal #f (cog-atom? rsn))
 
-(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-dtor-close-test"))
 (cog-open rsn)
 (load-atomspace)
 

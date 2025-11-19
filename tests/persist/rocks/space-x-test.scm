@@ -40,7 +40,7 @@
 
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-x-test"))
 	(cog-open storage)
 	(store-frames top1-space)
 	(store-frames top2-space)
@@ -61,7 +61,7 @@
 (define (test-exe)
 	(setup-and-store)
 
-	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-space-x-test")
 	; (cog-rocks-stats)
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
@@ -70,7 +70,7 @@
 	(cog-set-atomspace! new-base)
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-x-test"))
 	(cog-open storage)
 
 	; Load all of the Frames.
