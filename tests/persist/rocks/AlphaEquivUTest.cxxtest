@@ -71,7 +71,7 @@ AlphaEquivUTest:: AlphaEquivUTest(void)
 	logger().set_level(Logger::DEBUG);
 	logger().set_print_to_stdout_flag(true);
 
-	uri = "rocks:///tmp/cog-rocks-unit-test";
+	uri = "rocks:///tmp/cog-rocks-alpha-equiv-utest";
 }
 
 /*

@@ -8,7 +8,7 @@
 
 (use-modules (ice-9 threads))
 
-(define sto (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+(define sto (RocksStorageNode "rocks:///tmp/cog-rocks-thread-count"))
 (define (open-sto) (cog-open sto))
 (define (close-sto) (cog-close sto))
 

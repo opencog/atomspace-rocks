@@ -36,7 +36,7 @@
 
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-diamond-test"))
 	(cog-open storage)
 	(store-frames top-space)
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
@@ -61,7 +61,7 @@
 	(cog-set-atomspace! new-base)
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-diamond-test"))
 	(cog-open storage)
 
 	; Load all of the AtomSpaces.

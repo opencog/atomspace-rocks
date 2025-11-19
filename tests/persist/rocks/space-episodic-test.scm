@@ -62,7 +62,7 @@
 	(count-all (cog-value (ConceptNode "foo") (Predicate "repressed mem")))))
 
 ; Dump all three AtomSpaces to the same file.
-(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-space-episodic-test"))
 (cog-open rsn)
 (store-atomspace)
 (store-atomspace (AtomSpace "happy thoughts"))
@@ -84,7 +84,7 @@
 
 ; Load everything from the DB.
 
-(define gsn (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+(define gsn (RocksStorageNode "rocks:///tmp/cog-rocks-space-episodic-test"))
 
 (cog-open gsn)
 (load-atomspace)

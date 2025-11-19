@@ -32,7 +32,7 @@
 	(store-atom (ListLink (Concept "foo") (List (Concept "bar"))))
 	(cog-close mstorage)
 
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
 	(cog-open storage)
 	(store-frames (cog-atomspace))
 	(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
@@ -57,7 +57,7 @@
 	(cog-atomspace-clear (cog-atomspace))
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
 	(cog-open storage)
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
@@ -91,7 +91,7 @@
 	(cog-atomspace-clear (cog-atomspace))
 
 	; Load enought to get started.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
 	(cog-open storage)
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
@@ -107,7 +107,7 @@
 	(cog-atomspace-clear (cog-atomspace))
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
 	(cog-open storage)
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")

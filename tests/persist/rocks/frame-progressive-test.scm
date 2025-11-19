@@ -57,7 +57,7 @@
 	(define base-space (cog-atomspace))
 
 	; Open storage immediately.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-progressive-test"))
 	(cog-open storage)
 
 	; We plan to store multiple atomspaces.
@@ -132,13 +132,13 @@
 	(define new-base (cog-new-atomspace))
 	(cog-set-atomspace! new-base)
 
-	; (cog-rocks-open "rocks:///tmp/cog-rocks-unit-test")
+	; (cog-rocks-open "rocks:///tmp/cog-rocks-frame-progressive-test")
 	; (cog-rocks-stats)
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
 
 	; Load everything.
-	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-unit-test"))
+	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-progressive-test"))
 	(cog-open storage)
 
 	; Load all of the AtomSpace Frames.
