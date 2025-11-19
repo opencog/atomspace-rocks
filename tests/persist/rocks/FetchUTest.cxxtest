@@ -77,7 +77,7 @@ FetchUTest::FetchUTest(void)
 	srv_open = "(cog-open (RocksStorageNode \"" + uri + "\"))\n";
 
 	// Other unit tests leave junk laying around...
-	unlink("/tmp/cog-rocks-unit-test");
+	unlink("/tmp/cog-rocks-fetch-utest");
 #if 0
 	RocksStorage *store = new RocksStorage(uri);
 	store->open();
