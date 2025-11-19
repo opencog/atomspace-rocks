@@ -8,6 +8,9 @@
 (use-modules (opencog) (opencog persist) (opencog persist-rocks))
 (use-modules (opencog test-runner))
 
+(include "test-utils.scm")
+(whack "/tmp/cog-rocks-space-episodic-test")
+
 ; ---------------------------------------------------------------------
 (opencog-test-runner)
 (define tname "store_episodes")
@@ -123,5 +126,6 @@
 ; Clean up.
 
 (test-end tname)
+(whack "/tmp/cog-rocks-space-episodic-test")
 
 (opencog-test-end)
