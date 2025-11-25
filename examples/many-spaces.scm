@@ -27,7 +27,7 @@
 
 ; Create an "index" of the spaces above. This is not required; however,
 ; if you plan to store many AtomSpaces together, you might want to record
-; what you've packaged up. This is one posible way.
+; what you've packaged up. This is one possible way.
 (Edge (Predicate "bundle") (List (Item "AtomSpace Bundle Alpha") as-one))
 (Edge (Predicate "bundle") (List (Item "AtomSpace Bundle Alpha") as-two))
 (Edge (Predicate "bundle") (List (Item "Bundle Beta") as-three))
@@ -51,7 +51,7 @@
 (EdgeLink (Predicate "three-ness") (Item "Just an old lump of coal"))
 (cog-prt-atomspace)
 
-; Retun to the main space
+; Return to the main space
 (cog-set-atomspace! as-main)
 
 ; Store the various AtmoSpaces. Here, they are stored in one big gulp,
@@ -96,19 +96,27 @@
 ; StorageNode declaration, and ObjectNode messages being sent to it.
 (cog-prt-atomspace)
 
+; Restore the second space first. The point here is that the restore
+; order does not matter. Print it out and make sure it has the contents
+; you think it should.
 (define as-two (AtomSpace "bar"))
 (cog-set-atomspace! as-two)
 (load-atomspace as-two)
 (cog-prt-atomspace)
 
+; Lets go back to the main space. Make sure there was no leakage.
 (cog-set-atomspace! as-main)
 (cog-prt-atomspace)
 
+; Now get the next one. Unlike the last time, we don't set it as the
+; current space. That's OK, it will still load correctly. Note that the
+; print will happen in the main space, and not the loaded space.
 (define as-one (AtomSpace "foo"))
-; (cog-set-atomspace! as-one)
+;;; (cog-set-atomspace! as-one) ; Skip me!
 (load-atomspace as-one)
 (cog-prt-atomspace)
 
+; Switch spaces and print. Make sure these are what you expect.
 (cog-set-atomspace! as-one)
 (cog-prt-atomspace)
 
@@ -118,4 +126,23 @@
 (cog-set-atomspace! as-main)
 (cog-prt-atomspace)
 
+; Now load the main space. This will have the "indexes" that were
+; created earlier.
+(load-atomspace as-main)
+(cog-prt-atomspace)
 
+; What about the third space? It's currently empty ...
+(define as-three (AtomSpace "bing"))
+(cog-set-atomspace! as-three)
+(cog-prt-atomspace)
+
+; Load it, and see. When `load-stomspace` is called without an
+; argument, the current AtomSpace is assumed.
+(load-atomspace)
+(cog-prt-atomspace)
+
+; Tidy conclusion.
+(cog-close rsn)
+
+; The End. That's All, Folks!
+; -------------------------------------------------------------------
