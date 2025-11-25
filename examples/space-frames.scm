@@ -9,8 +9,8 @@
 ; "Kripke frame": each frame is a changeset, a delta, of all changes to
 ; the AtomSpace, sitting atop of a stack (or DAG) of AtomSpace
 ; changesets underneath. So, much like git changesets, each layered on
-; the last, and git branches, offering different merged histories of
-; changes, with the ability to explore each changeset, individually.
+; the last, and, like git branches, offering different merged histories
+; of changes, with the ability to explore each changeset, individually.
 ;
 ; Why is this useful? Several examples:
 ;
@@ -33,7 +33,14 @@
 ; AtomSpace Frame provides a place to record that context-specific
 ; knowledge: a different set of Atoms, and different Values attached to
 ; each Atom.
-
+;
+; One word of caution: Using frames can have significant impacts on
+; performance. This is not so much in storage, as in the AtomSpace
+; itself. If an atom is not immediately found in the top-most layer,
+; then progressively deeper layers must be searched. This can add up.
+; However, actual performance is very imlementation-dependent, and may
+; have changed substantially since this note was written! YMMV!
+;
 ; -------------------------------------------------------------------
 ; General boilerplate & setup.
 
