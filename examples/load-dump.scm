@@ -19,20 +19,25 @@
 (use-modules (opencog) (opencog persist))
 (use-modules (opencog persist-rocks))
 
-; Note three slashes, not two!
-(cog-rocks-open "rocks:///tmp/foo.rdb")
-
 ; ---------------------------------------
-; Create and store Atoms to the database.
+; Create some Atoms; attach some Values to them.
 ;
 ; Lets create some Atoms, and then store everything.
-(Concept "foo" (stv 0.1 0.2))
-(Concept "bar" (stv 0.3 0.4))
-(Set (List (Set (List (Concept "bazzzz" (stv 0.5 0.6))))))
-(store-atomspace)
+(cog-set-value! (Concept "foo") (Predicate "some place")
+	(FloatValue 0.1 0.2))
+(cog-set-value! (Concept "bar") (Predicate "some place")
+	(FloatValue 0.3 0.4))
+(Set (List (Set (List (Concept "bazzzz")))))
+(cog-set-value! (Concept "bazzzz") (Predicate "other place")
+	(FloatValue 0.5 0.6))
 
-; Log out ...
-(cog-rocks-close)
+; ---------------------------------------
+; Open a database, and store the entire AtomSpace.
+;
+(define rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
+(cog-open rsn)
+(store-atomspace)
+(cog-close rsn)
 
 ; Remove everything in the AtomSpace ...
 (cog-atomspace-clear)
@@ -41,8 +46,12 @@
 (cog-get-all-roots)
 
 ; Reconnect to the database, and fetch everything in it.
-(cog-rocks-open "rocks:///tmp/foo.rdb")
+; The StorageNode needs to be re-declaredm since the `clear`,
+; above, wiped it out.
+(set! rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
+(cog-open rsn)
 (load-atomspace)
+(cog-close rsn)
 
 ; Verify that everything came back
 (cog-get-all-roots)

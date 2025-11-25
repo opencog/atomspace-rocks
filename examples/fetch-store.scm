@@ -10,8 +10,12 @@
 (use-modules (opencog) (opencog persist))
 (use-modules (opencog persist-rocks))
 
+; Define the database to connect to; it is a filepath.
 ; Note three slashes, not two!
-(cog-rocks-open "rocks:///tmp/foo.rdb")
+(define rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
+
+; Open it for I/O
+(cog-open rsn)
 
 ; --------------
 ; Storing and Loading Atoms
@@ -50,6 +54,10 @@
 ; on (Predicate "blo") was clobbered by the one fetched from the
 ; database.
 (cog-keys->alist (Concept "a"))
+
+; Optionally close the connection.
+; Not strictly required; cleanup happens anyway, on exit.
+(cog-close rsn)
 
 ; p.s. "flo blo" is how they say "flow blue" in Texas.
 ; That's all! Thanks for paying attention!
