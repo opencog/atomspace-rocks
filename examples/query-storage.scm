@@ -54,7 +54,7 @@
 ; Verify that the current AtomSpace is indeed empty.
 (cog-get-all-roots)
 
-; The `clear` above wipes everything out. Re-declare and reopen.
+; The `clear` above wipes everything out. Redeclare and reopen.
 (set! rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
 (cog-open rsn)
 ; -------------------------

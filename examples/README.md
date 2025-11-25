@@ -18,7 +18,7 @@ In ASCII-art:
  +-------------+
 ```
 
-RocksDB is a fast, modern and very popular database. It acheives high
+RocksDB is a fast, modern and very popular database. It achieves high
 performance through a large variety of techniques; one of these is by
 avoiding the complexity of supporting multiple simultaneous users. This
 single-user constraint carries over to Atomese processes as well. The
@@ -52,7 +52,7 @@ The next demo is more curious. It allows queries to be run so that only
 a specific portion of the database is loaded into the AtomSpace. The
 query will run correctly, in that it will behave as if the entire
 AtomSpace had been loaded into RAM. However, it does not actually
-require that everything be loaded; Atoms are fectched from the filestore
+require that everything be loaded; Atoms are fetched from the file-store
 in an as-needed basis.  This is currently a bit experimental; the API
 is subject to change without notice (and there may be bugs?)
 
