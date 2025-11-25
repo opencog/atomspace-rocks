@@ -43,6 +43,7 @@ ADD_GUILE_TEST(FrameLinks frame-links-test.scm)
 ADD_GUILE_TEST(FrameValues frame-values-test.scm)
 ADD_GUILE_TEST(FramePrint frame-print-test.scm)
 ADD_GUILE_TEST(Promote promote-test.scm)
+ADD_GUILE_TEST(QueryStorage query-storage-test.scm)
 #
 ADD_CXXTEST(LargeFlatUTest)
 ADD_CXXTEST(LargeZipfUTest)
