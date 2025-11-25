@@ -266,11 +266,15 @@ void RocksStorage::makeOrder(Handle hasp,
 		const auto& pr = _frame_map.find(hasp);
 
 		// This will happen when user is attempting to load Atoms
-		// into an AtomSpace that doesn't match (isn't known) to
-		// what's held on disk. So, user error.
+		// into an AtomSpace that hasn't been stored to disk. The
+		// lookup is by name, so the user probably mmsityped the name.
+		// Anyway its a user error.
 		if (_frame_map.end() == pr)
 			throw IOException(TRACE_INFO,
-				"Request to load into AtomSpace not stored on disk!\n");
+				"The AtomSpace to be loaded is not stored on disk!\n"
+				"\tYou asked to load into %s\n"
+				"\tList all stored AtomSpaces with `(load-frames)`\n",
+				hasp->to_string("").c_str());
 
 		order.insert({strtoaid(pr->second), hasp});
 		size_t nas = hasp->get_arity();
