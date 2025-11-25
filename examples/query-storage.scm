@@ -29,7 +29,6 @@
 ;
 (use-modules (opencog) (opencog persist))
 (use-modules (opencog persist-rocks))
-(cog-rocks-open "rocks:///tmp/foo.rdb")
 
 ; -----------------------
 ; Populate the Atomspace.
@@ -42,8 +41,12 @@
 (Evaluation (Predicate "foo")
 	(List (Concept "B") (Concept "C") (Concept "oh boy!")))
 
+; -----------------------
 ; Push the entire atomspace out to disk.
+(define rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
+(cog-open rsn)
 (store-atomspace)
+(cog-close rsn)
 
 ; Clear the local AtomSpace (the Atoms remain on disk, just not in RAM).
 (cog-atomspace-clear)
@@ -51,6 +54,9 @@
 ; Verify that the current AtomSpace is indeed empty.
 (cog-get-all-roots)
 
+; The `clear` above wipes everything out. Re-declare and reopen.
+(set! rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
+(cog-open rsn)
 ; -------------------------
 ; Querying with Meet links.
 ;
