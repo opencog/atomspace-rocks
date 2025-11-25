@@ -64,7 +64,7 @@ class RocksStorage : public StorageNode
 		// The Handles are *always* AtomSpacePtr's
 		std::unordered_map<Handle, const std::string> _frame_map;
 		std::unordered_map<std::string, Handle> _fid_map;
-		HandleSeq _top_frames;
+		UnorderedHandleSet _top_frames;
 		void updateFrameMap(const Handle&, const std::string&);
 		typedef std::map<uint64_t, Handle> FramePath;
 		FramePath getPath(const Handle&);

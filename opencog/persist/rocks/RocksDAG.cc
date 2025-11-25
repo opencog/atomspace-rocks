@@ -66,15 +66,13 @@ void RocksStorage::updateFrameMap(const Handle& hasp,
 	_frame_map.insert({hasp, sid});
 	_fid_map.insert({sid, hasp});
 
-#if 0
 	// Update the top-frame list, too. Returned by loadFrameDAG()
 	for (const Handle& hi : hasp->getIncomingSet())
 	{
 		if (_frame_map.end() != _frame_map.find(hi))
 			return;
 	}
-	_top_frames.push_back(hasp);
-#endif
+	_top_frames.insert(hasp);
 }
 
 /// Search for the indicated AtomSpace, returning it's sid (string ID).
@@ -197,7 +195,10 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 
 	// If already loaded, just return the top frames.
 	if (_fid_map.size() > 0)
-		return _top_frames;
+	{
+		HandleSeq tops(_top_frames.begin(), _top_frames.end());
+		return tops;
+	}
 
 	// Load all frames.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -223,11 +224,16 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 			subs.insert(ho);
 	}
 
-	// The tops of the DAG are all the spaces that are not subspaces.
+	// The tops (roots) of the DAG are all the spaces that are not
+	// subspaces.
+	HandleSeq roots;
 	std::set_difference(all.begin(), all.end(),
 	                    subs.begin(), subs.end(),
-	                    std::back_inserter(_top_frames));
-	return _top_frames;
+	                    std::back_inserter(roots));
+	_top_frames.clear();
+	_top_frames.reserve(roots.size());
+	_top_frames.insert(roots.begin(), roots.end());
+	return roots;
 }
 
 /// Store the entire collection of AtomSpace frames.
