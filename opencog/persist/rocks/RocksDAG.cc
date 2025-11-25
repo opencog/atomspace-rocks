@@ -254,21 +254,23 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 void RocksStorage::makeOrder(Handle hasp,
                              std::map<uint64_t, Handle>& order)
 {
+	// Get a map of what's held in storage.
+	if (_fid_map.size() == 0)
+		loadFrameDAG();
+
 // XXX TODO: we should probably cache the results, instead of
 // recomputing every time!?
 	// As long as there's a stack of Frames, just loop.
 	while (true)
 	{
 		const auto& pr = _frame_map.find(hasp);
-		if (_frame_map.end() == pr)
 
-			// Maybe it's safe to auto-load here, i.e. to call
-			// loadFrameDAG() and merge the results. Maybe. But
-			// for now, we're going to throw, instead, until the
-			// general use-patterns clear up a bit more.
+		// This will happen when user is attempting to load Atoms
+		// into an AtomSpace that doesn't match (isn't known) to
+		// what's held on disk. So, user error.
+		if (_frame_map.end() == pr)
 			throw IOException(TRACE_INFO,
-				"Cannot use an AtomSpace DAG inconsistent with stored DAG!\n"
-				"Did you forget to call `(load-frames)`?");
+				"Request to load into AtomSpace not stored on disk!\n");
 
 		order.insert({strtoaid(pr->second), hasp});
 		size_t nas = hasp->get_arity();
@@ -283,7 +285,8 @@ void RocksStorage::makeOrder(Handle hasp,
 }
 
 // =========================================================
-// Debug utility
+// Debug utility. Should return exactly the same thing as
+// what's in _top_frames.
 
 HandleSeq RocksStorage::topFrames(void)
 {
