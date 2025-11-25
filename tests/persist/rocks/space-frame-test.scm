@@ -1,6 +1,6 @@
 ;
 ; space-frame-test.scm
-; Test ability to store and retreive multiple atomspaces.
+; Test ability to store and retrieve multiple atomspaces.
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog test-runner))

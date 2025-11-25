@@ -184,7 +184,7 @@ uint64_t RocksStorage::strtoaid(const std::string& sid) const
 // This encoding is far more compact than an s-expression encoding.
 // However, it has a downside: one must maintain a local in-RAM cache
 // of sid-to-frame mappings. Since the grand-total number of AtomSpaces
-// is unlikely to ever exceeed a few ten-thousand, the RAM footprint of
+// is unlikely to ever exceed a few ten-thousand, the RAM footprint of
 // this lookup remains tolerably small.
 //
 // The downside explains why this same encoding is not used for Atoms.
@@ -791,7 +791,7 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 		// It might be safe to auto-store, here, i.e. by calling
 		// convertForFrames(HandleCast(getAtomSpace()));
 		// and then silently proceeding. But for now, we throw,
-		// until general usage patterns and desirable beahvior
+		// until general usage patterns and desirable behavior
 		// becomes a bit more clear.
 		throw IOException(TRACE_INFO,
 			"Attempting to delete %s from %s, "

@@ -54,7 +54,7 @@ ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
                 -DPROJECT_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
 # ===============================================================
-# Check for existance of various required, optional packages.
+# Check for existence of various required, optional packages.
 # Listed in alphabetical order, more or less.
 # CogUtil must come first, because it supplies various FindXXX macros.
 
@@ -80,7 +80,7 @@ include(OpenCogInstallOptions)
 include(Summary)
 
 # ===================================================================
-# Check for existance of various required, optional packages.
+# Check for existence of various required, optional packages.
 
 # AtomSpace
 FIND_PACKAGE(AtomSpace 5.0.3 CONFIG REQUIRED)
@@ -211,7 +211,7 @@ ADD_CUSTOM_TARGET(cscope
 
 # ===================================================================
 # Packaging
-# XXX FIXME. Packging below is stale/wrong/broken.
+# XXX FIXME. Packaging below is stale/wrong/broken.
 ## Architecture the package is for.
 ## TODO: Will give error on non debian distros, fix it.
 EXECUTE_PROCESS(COMMAND  dpkg --print-architecture
@@ -225,8 +225,9 @@ STRING(TIMESTAMP UTC_DATE %Y%m%d UTC)
 FILE(WRITE "${PROJECT_BINARY_DIR}/install_manifest.txt")
 ## It doesn't have a header-file declaring the version similar to cogutil and
 ## atomspace.
-# SEMANTIC_VERSION is set in `lib/AtomSpaceRocksConfig.cmake.in`
-# SET(SEMANTIC_VERSION 1.3.0)
+# SEMANTIC_VERSION is set in `cmake/CMakeLists.txt`
+# and passes through `cmake/AtomSpaceRocksConfig.cmake.in`
+# SET(SEMANTIC_VERSION 1.5.3)
 
 ## Cpack configuration
 SET(CPACK_GENERATOR "DEB")

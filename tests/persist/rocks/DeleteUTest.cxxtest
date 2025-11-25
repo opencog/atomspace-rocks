@@ -428,7 +428,7 @@ void DeleteUTest::test_remove(void)
     TSM_ASSERT("Initial unexpected atomspace size",
           ((unsigned)(7*idx+1)) == _as->get_size());
     /* Delete some atoms with non-empty incoming sets.
-     * This should result in thier being removed from the atomspace,
+     * This should result in their being removed from the atomspace,
      * but NOT fom the backend!
      */
     store->barrier();
@@ -507,7 +507,7 @@ void DeleteUTest::test_recurse(void)
     store->store_atomspace();
 
     /* Perform recursive extract of some nodes.
-     * This should result in thier being removed from the atomspace,
+     * This should result in their being removed from the atomspace,
      * but NOT fom the backend!
      */
     store->barrier();

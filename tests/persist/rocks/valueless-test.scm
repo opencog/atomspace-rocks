@@ -1,6 +1,6 @@
 ;
 ; valueless-test.scm
-; Test ability to store and retreive atoms without any values.
+; Test ability to store and retrieve atoms without any values.
 ;
 (use-modules (srfi srfi-1))
 (use-modules (opencog) (opencog test-runner))

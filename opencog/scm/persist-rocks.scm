@@ -106,6 +106,6 @@ cog-rocks-check cog-rocks-scrub
 
     RSN must be a RocksStorageNode.
 
-    After frame deletions, the databae might contain records of Atoms
+    After frame deletions, the database might contain records of Atoms
     that are not in any frame. This function will delete them.
 ")

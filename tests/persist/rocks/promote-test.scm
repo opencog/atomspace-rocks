@@ -90,7 +90,7 @@
 	; Start with a blank slate.
 	(cog-atomspace-clear (cog-atomspace))
 
-	; Load enought to get started.
+	; Load enough to get started.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
 	(cog-open storage)
 	; (cog-rocks-stats storage)

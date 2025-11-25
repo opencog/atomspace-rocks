@@ -42,7 +42,7 @@
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 	(store-atom (Concept "foo"))
 
-	; Store the two variants, with the explict spaces in which
+	; Store the two variants, with the explicit spaces in which
 	; they come from.
 	(cog-set-atomspace! left-space)
 	(store-atom (Concept "bar"))
@@ -52,7 +52,7 @@
 )
 
 ; -------------------------------------------------------------------
-; Test ability to restor the above.
+; Test ability to restore the above.
 
 (define (test-diamond)
 	(setup-and-store)

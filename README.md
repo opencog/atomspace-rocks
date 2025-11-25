@@ -63,13 +63,13 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is ***Version 1.5.2***.  All unit tests pass.  It has been used in
+This is ***Version 1.5.3***.  All unit tests pass.  It has been used in
 at least one major project, to process tens of millions of Atoms.
 
 This code is 2x or 3x faster than the
 [PostgresStorageNode](https://github.com/opencog/atomspace-pgres)
 on synthetic benchmarks, and has been observed to run 12x faster
-in a real-world application. At least half of thise performance
+in a real-world application. At least half of this performance
 difference can be explained by the fact that the PostgresStorageNode
 is old and has a sub-optimal design. Someone should port the Rocks
 code here to create a new, better Postgres StorageNode.

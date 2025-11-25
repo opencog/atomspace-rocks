@@ -167,7 +167,7 @@ void MultiPersistUTest::atomCompare(Handle a, Handle b, std::string where)
         {
             printf("Mismatching la = %s\n", la->to_string().c_str());
             printf("Mismatching lb = %s\n", lb->to_string().c_str());
-            TSM_ASSERT_EQUALS("Link mis-match", la, lb);
+            TSM_ASSERT_EQUALS("Link mismatch", la, lb);
         }
     }
 
@@ -231,7 +231,7 @@ void MultiPersistUTest::add_to_space(int idx, AtomSpace *as,
     h4[idx]->setValue(truth_key(), stv4);
     n4[idx] = NodeCast(h4[idx]);
 
-    // We need to store these, as we will test the fetch of thier
+    // We need to store these, as we will test the fetch of their
     // values just a little while later.
     store->store_atom(h1[idx]);
     store->store_atom(h2[idx]);
