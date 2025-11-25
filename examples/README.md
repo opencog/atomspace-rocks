@@ -2,13 +2,14 @@ AtomSpace RocksDB Backend Usage Examples
 ----------------------------------------
 Save and restore AtomSpace contents to a RocksDB database. The RocksDB
 database is a single-user, local-host-only file-backed database. That
-means that only one AtomSpace can connect to it at any given moment.
+means that only one Atomese process can work with it at any given moment.
 
 In ASCII-art:
 
 ```
  +-------------+
- |  AtomSpace  |
+ |   Atomese   |
+ |   Process   |
  |             |
  +---- API-----+
  |             |
@@ -17,11 +18,31 @@ In ASCII-art:
  +-------------+
 ```
 
-RocksDB is a "real" database, and so datasets too big to fit into RAM
-can be stored in it.  This back-end does not try to guess what your
-working set is; it is up to you to load, work with and save those Atoms
-that are important for you. The goal of the examples is to show exactly
-how to do this. These are:
+RocksDB is a fast, modern and very popular database. It acheives high
+performance through a large variety of techniques; one of these is by
+avoiding the complexity of supporting multiple simultaneous users. This
+single-user constraint carries over to Atomese processes as well. The
+CogServer, and the
+[`atomspace-cog`](https://github/opencog/atomspace-cog) facility can be
+used to get multi-user access. See the wiki pages for
+[StorageNode](https://wiki.opencog.org/w/StorageNode) for more info.
+
+The RocksStorageNode allows you to work with datasets that are too big
+to fit in RAM; it also provides long-term off-line storage.
+
+The basic RocksStorage back-end does not try to guess what your working
+set is; it is up to you to load, work with and save those Atoms that are
+important for you. Some of the
+[ProxyNodes](https://wiki.opencog.org/w/ProxyNode) provide more
+sophisticated storage management. These are layered on top of existing
+StorageNodes, or on top of other ProxyNodes.
+
+
+The goal of the examples here is to show how to use RocksStorage
+directly, to save and restore individual Values, Atoms or entire
+AtomSpaces.
+
+Examples, from basic to sophisticated:
 
 * [fetch-store.scm](fetch-store.scm) -- Basic fetch and store of single atoms
 * [load-dump.scm](load-dump.scm) -- Loading and saving entire AtomSpaces.
