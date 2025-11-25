@@ -67,8 +67,9 @@ class RocksStorage : public StorageNode
 		UnorderedHandleSet _top_frames;
 		void updateFrameMap(const Handle&, const std::string&);
 		typedef std::map<uint64_t, Handle> FramePath;
-		FramePath getPath(const Handle&);
+		const FramePath& getPath(const Handle&);
 		void makeOrder(Handle, FramePath&);
+		std::unordered_map<Handle, FramePath> _path_cache;
 
 		std::mutex _mtx_frame;
 		std::string encodeFrame(const Handle&);

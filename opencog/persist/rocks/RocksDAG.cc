@@ -66,6 +66,9 @@ void RocksStorage::updateFrameMap(const Handle& hasp,
 	_frame_map.insert({hasp, sid});
 	_fid_map.insert({sid, hasp});
 
+	// Clobber. Better safe than sorry.
+	_path_cache.clear();
+
 	// Update the top-frame list, too. Returned by loadFrameDAG()
 	for (const Handle& hi : hasp->getIncomingSet())
 	{
@@ -260,12 +263,21 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 /// for it.
 ///
 /// `hasp` is an AtomSpacePtr.
-RocksStorage::FramePath RocksStorage::getPath(const Handle& hasp)
+const RocksStorage::FramePath& RocksStorage::getPath(const Handle& hasp)
 {
-// XXX TODO: cache the results, instead of recomputing every time!
+	// Try to find it in the cache, first.
+	const auto& pr = _path_cache.find(hasp);
+	if (_path_cache.end() != pr)
+		return pr->second;
+
+	// Make the path, save it.
 	FramePath path;
 	makeOrder(hasp, path);
-	return path;
+	_path_cache.emplace(hasp, std::move(path));
+
+	// Grab what we just made.
+	const auto& prc = _path_cache.find(hasp);
+	return prc->second;
 }
 
 void RocksStorage::makeOrder(Handle hasp, FramePath& order)
