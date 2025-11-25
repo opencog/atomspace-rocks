@@ -65,6 +65,14 @@ void RocksStorage::updateFrameMap(const Handle& hasp,
 	std::lock_guard<std::mutex> flck(_mtx_frame);
 	_frame_map.insert({hasp, sid});
 	_fid_map.insert({sid, hasp});
+
+	// Update the top-frame list, too. Returned by loadFrameDAG()
+	for (const Handle& hi : hasp->getIncomingSet())
+	{
+		if (_frame_map.end() != _frame_map.find(hi))
+			return;
+	}
+	_top_frames.push_back(hasp);
 }
 
 /// Search for the indicated AtomSpace, returning it's sid (string ID).
