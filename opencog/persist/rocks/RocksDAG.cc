@@ -59,6 +59,14 @@ std::string RocksStorage::encodeFrame(const Handle& hasp)
 	return txt;
 }
 
+void RocksStorage::updateFrameMap(const Handle& hasp,
+                                  const std::string& sid)
+{
+	std::lock_guard<std::mutex> flck(_mtx_frame);
+	_frame_map.insert({hasp, sid});
+	_fid_map.insert({sid, hasp});
+}
+
 /// Search for the indicated AtomSpace, returning it's sid (string ID).
 /// The argument must *always* be an AtomSpacePtr.  If the AtomSpace-sid
 /// pairing has not yet been written to storage, it will be; otherwise,
@@ -94,9 +102,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 	_rfile->Get(rocksdb::ReadOptions(), "f@" + sframe, &sid);
 	if (0 < sid.size())
 	{
-		std::lock_guard<std::mutex> flck(_mtx_frame);
-		_frame_map.insert({hasp, sid});
-		_fid_map.insert({sid, hasp});
+		updateFrameMap(hasp, sid);
 		return sid;
 	}
 
@@ -107,11 +113,7 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 
 	// Issue a band-new aid for this frame.
 	sid = get_new_aid();
-	{
-		std::lock_guard<std::mutex> flck(_mtx_frame);
-		_frame_map.insert({hasp, sid});
-		_fid_map.insert({sid, hasp});
-	}
+	updateFrameMap(hasp, sid);
 
 	// The rest is safe to do in parallel.
 	lck.unlock();
