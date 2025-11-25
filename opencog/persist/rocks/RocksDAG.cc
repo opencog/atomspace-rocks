@@ -178,10 +178,17 @@ Handle RocksStorage::getFrame(const std::string& fid)
 // DAG API
 
 /// Load the entire collection of AtomSpace frames.
-/// The load is done unconditionally, each time this is called.
+/// The full load is done only once.
+/// This returns a list of all of the frames that are not subrames.
+/// This list is not used anywhere in the code here, but it is mandated
+/// by the BackingStore API. That is, this list is handed back to users.
 HandleSeq RocksStorage::loadFrameDAG(void)
 {
 	CHECK_OPEN;
+
+	// If already loaded, just return the top frames.
+	if (_fid_map.size() > 0)
+		return _top_frames;
 
 	// Load all frames.
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
@@ -208,11 +215,10 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 	}
 
 	// The tops of the DAG are all the spaces that are not subspaces.
-	HandleSeq tops;
 	std::set_difference(all.begin(), all.end(),
 	                    subs.begin(), subs.end(),
-	                    std::back_inserter(tops));
-	return tops;
+	                    std::back_inserter(_top_frames));
+	return _top_frames;
 }
 
 /// Store the entire collection of AtomSpace frames.

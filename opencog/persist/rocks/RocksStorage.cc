@@ -227,6 +227,7 @@ void RocksStorage::close()
 	_multi_space = false;
 	_frame_map.clear();
 	_fid_map.clear();
+	_top_frames.clear();
 }
 
 std::string RocksStorage::get_version(void)
