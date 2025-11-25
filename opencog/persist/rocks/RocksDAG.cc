@@ -66,6 +66,7 @@ void RocksStorage::updateFrameMap(const Handle& hasp,
 	_frame_map.insert({hasp, sid});
 	_fid_map.insert({sid, hasp});
 
+#if 0
 	// Update the top-frame list, too. Returned by loadFrameDAG()
 	for (const Handle& hi : hasp->getIncomingSet())
 	{
@@ -73,6 +74,7 @@ void RocksStorage::updateFrameMap(const Handle& hasp,
 			return;
 	}
 	_top_frames.push_back(hasp);
+#endif
 }
 
 /// Search for the indicated AtomSpace, returning it's sid (string ID).
@@ -177,10 +179,7 @@ Handle RocksStorage::getFrame(const std::string& fid)
 	// Handle asp = HandleCast(_atom_space);
 	// Handle fas = Sexpr::decode_frame(asp, sframe);
 	Handle fas = decodeFrame(sframe);
-	std::lock_guard<std::mutex> flck(_mtx_frame);
-	_frame_map.insert({fas, fid});
-	_fid_map.insert({fid, fas});
-
+	updateFrameMap(fas, fid);
 	return fas;
 }
 
