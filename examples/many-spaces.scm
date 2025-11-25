@@ -14,21 +14,33 @@
 ; Create four AtomSpaces. One will be called the "main space"; it's
 ; not actually special, but plays a convenient role for the demo.
 (define as-main (AtomSpace "main space"))
+(cog-set-atomspace! as-main)
+
+; The remaining three spaces are declared *after* setting the main
+; space. This has the effect of causing them "exist" in the main space,
+; but not otherwise having any sort of parent-child or inheritance or
+; stacking semantics. They are placed in the main space, only so that
+; they are not accidentally garbage-collected during the demo.
 (define as-one (AtomSpace "foo"))
 (define as-two (AtomSpace "bar"))
 (define as-three (AtomSpace "bing"))
 
-; Make sure we are running in the main space. Create an index of the
-; spaces above. Ths is not required; however, if you plan to store many
-; AtomSpaces together, you might want to record what you've packaged up.
-(cog-set-atomspace! as-main)
+; Create an "index" of the spaces above. This is not required; however,
+; if you plan to store many AtomSpaces together, you might want to record
+; what you've packaged up. This is one posible way.
 (Edge (Predicate "bundle") (List (Item "AtomSpace Bundle Alpha") as-one))
 (Edge (Predicate "bundle") (List (Item "AtomSpace Bundle Alpha") as-two))
 (Edge (Predicate "bundle") (List (Item "Bundle Beta") as-three))
 
+; Verify that the the main space contains what you think it contains.
 (cog-prt-atomspace)
+
+; Now populate the various spaces with unique content.
+; The prints help verify that contents are not bleeding over from one
+; space to another. The result of the print should be what you think it
+; should be.
 (cog-set-atomspace! as-one)
-(Concept "I am in as One!")
+(Concept "I am in Space One!")
 (cog-prt-atomspace)
 
 (cog-set-atomspace! as-two)
@@ -39,26 +51,49 @@
 (EdgeLink (Predicate "three-ness") (Item "Just an old lump of coal"))
 (cog-prt-atomspace)
 
+; Retun to the main space
 (cog-set-atomspace! as-main)
 
+; Store the various AtmoSpaces. Here, they are stored in one big gulp,
+; but it doesn't have to be done this way: they can be dribbled in.
+; An initial call to `store-frames` can someties be optional, but is
+; strongly recommended to avoid confusion. It effectively tells the
+; StorageNode to expect multiple AtomSpaces to be stored. Here, it is
+; optional ONLY because `as-main` was NOT stored first! The StorageNode
+; notices that the very first stored AtomSpace differs from the space
+; that the StorageNode is declared in, and thus deduces its will need to
+; work in a multi-space mode.
 (define rsn (RocksStorageNode "rocks:///tmp/bundle-demo"))
 (cog-open rsn)
-; (store-frames as-one)
+; (store-frames as-main)
 (store-atomspace as-one)
-; (store-frames as-two)
-; (store-frames as-three)
 (store-atomspace as-two)
+(store-atomspace as-three)
+(store-atomspace as-main)
 (cog-close rsn)
 
-(cog-atomspace-clear)
 ; -------------------------------------------------
+; Done with the store. Now exist guile completely, and restart. Or,
+; if you are truly lazy, just clear the main AtomSpace. The demo is
+; more convincing, if you just exit and restart.
+(cog-atomspace-clear)
+
+; -------------------------------------------------
+; Restart.
 (use-modules (opencog) (opencog persist) (opencog persist-rocks))
 
-(define as-main (cog-atomspace))
+; The spaces are identified by the names that they are given. So, on
+; restart, be sure to recreate with the same name; else confusion will
+; result.
+(define as-main (AtomSpace "main space"))
+(cog-set-atomspace! as-main)
+
+; Define the database location, and open it.
 (define rsn (RocksStorageNode "rocks:///tmp/bundle-demo"))
 (cog-open rsn)
-; (load-frames)
 
+; Print the current main space. It should be nearly empty, but for the
+; StorageNode declaration, and ObjectNode messages being sent to it.
 (cog-prt-atomspace)
 
 (define as-two (AtomSpace "bar"))
