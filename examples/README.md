@@ -46,9 +46,22 @@ Examples, from basic to sophisticated:
 
 * [fetch-store.scm](fetch-store.scm) -- Basic fetch and store of single atoms
 * [load-dump.scm](load-dump.scm) -- Loading and saving entire AtomSpaces.
-* [multiple-databases.scm](multiple-databases.scm) -- Several at once.
 
-The next demo is more curious. It allows queries to be run so that only
+A single AtomSpace can be stored in several different StorageNodes.
+Alternately, multiple AtomSpaces can be stored in a single Storagenode.
+These two cases are explored in the next two demos:
+
+* [multiple-databases.scm](multiple-databases.scm) -- Several at once.
+* [many-spaces.scm](many-spaces.scm)
+
+AtomSpaces can be stacked, one on top another. Each space in the stack
+is called a "frame", and it holds a change-set: all of the Atoms and
+Values that changed from the spaces further down in the stack. This
+stack (actually, a DAG) can be stored and fetched, just as above.
+
+* [space-frames.scm](space-frames.scm) -- A stack of AtomSpace Frames.
+
+The last demo is more curious. It allows queries to be run so that only
 a specific portion of the database is loaded into the AtomSpace. The
 query will run correctly, in that it will behave as if the entire
 AtomSpace had been loaded into RAM. However, it does not actually
@@ -58,9 +71,4 @@ is subject to change without notice (and there may be bugs?)
 
 * [query-storage.scm](query-storage.scm) -- Run queries out of the database.
 
-AtomSpaces can be stacked, one on top another. Each space in the stack
-is called a "frame", and it holds a change-set: all of the Atoms and
-Values that changed from the spaces further down in the stack. This
-stack (actually, a DAG) can be stored and fetched, just as above.
-
-* [space-frames.scm](space-frames.scm) -- A stack of AtomSpace Frames.
+------
