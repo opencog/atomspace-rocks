@@ -247,8 +247,13 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 // =========================================================
 // General utility
 
-/// Create a total order out of a partial order, such that earlier
-/// AtomSpaces *always* appear before later ones.
+/// Create a path from the given Atomspace to its root(s). The path is
+/// such that earlier AtomSpaces *always* appear before later ones.
+/// This is a partial order; it will sometimes (usually?) be a total
+/// order, unless there are diamonds in the path, or multiple roots.
+/// Most real-world use cases don't seem to do this. But we do test
+/// for it.
+///
 /// `hasp` is an AtomSpacePtr.
 /// `order` is the total order being created.
 void RocksStorage::makeOrder(Handle hasp,
