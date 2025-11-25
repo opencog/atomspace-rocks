@@ -255,16 +255,20 @@ void RocksStorage::storeFrameDAG(AtomSpace* top)
 /// for it.
 ///
 /// `hasp` is an AtomSpacePtr.
-/// `order` is the total order being created.
-void RocksStorage::makeOrder(Handle hasp,
-                             std::map<uint64_t, Handle>& order)
+RocksStorage::FramePath RocksStorage::getPath(const Handle& hasp)
+{
+// XXX TODO: cache the results, instead of recomputing every time!
+	FramePath path;
+	makeOrder(hasp, path);
+	return path;
+}
+
+void RocksStorage::makeOrder(Handle hasp, FramePath& order)
 {
 	// Get a map of what's held in storage.
 	if (_fid_map.size() == 0)
 		loadFrameDAG();
 
-// XXX TODO: we should probably cache the results, instead of
-// recomputing every time!?
 	// As long as there's a stack of Frames, just loop.
 	while (true)
 	{

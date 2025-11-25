@@ -689,8 +689,7 @@ void RocksStorage::getAtom(const Handle& h)
 
 	// For multi-spaces, determine the path-DAG from the top space
 	// to the bottom, and load from the bottom-up.
-	std::map<uint64_t, Handle> frame_order;
-	makeOrder(HandleCast(h->getAtomSpace()), frame_order);
+	FramePath frame_order = getPath(HandleCast(h->getAtomSpace()));
 	for (const auto& frit: frame_order)
 	{
 		AtomSpace* as = (AtomSpace*) frit.second.get();
@@ -1061,9 +1060,9 @@ void RocksStorage::loadInset(AtomSpace* as, const std::string& ist)
 	size_t offset = -1;
 	if ('-' == ist[istlen - 1]) offset = 0;
 
-	std::map<uint64_t, Handle> frame_order;
+	FramePath frame_order;
 	if (_multi_space)
-		makeOrder(HandleCast(as), frame_order);
+		frame_order = getPath(HandleCast(HandleCast(as)));
 
 	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
 	for (it->Seek(ist); it->Valid() and it->key().starts_with(ist); it->Next())
@@ -1146,7 +1145,7 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 }
 
 size_t RocksStorage::loadAtomsPfx(
-                        const std::map<uint64_t, Handle>& frame_order,
+                        const FramePath& frame_order,
                         const std::string& pfx)
 {
 	size_t cnt = 0;
@@ -1225,9 +1224,7 @@ void RocksStorage::loadAtomsAllFrames(AtomSpace* as)
 	if (not _multi_space)
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	std::map<uint64_t, Handle> frame_order;
-	makeOrder(HandleCast(as), frame_order);
-
+	FramePath frame_order = getPath(HandleCast(HandleCast(as)));
 	loadAtomsPfx(frame_order, "n@");
 
 	size_t height = 1;
@@ -1298,8 +1295,7 @@ void RocksStorage::loadTypeAllFrames(AtomSpace* as, Type t)
 	if (not _multi_space)
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	std::map<uint64_t, Handle> frame_order;
-	makeOrder(HandleCast(as), frame_order);
+	FramePath frame_order = getPath(HandleCast(HandleCast(as)));
 
 	std::string pfx = nameserver().isNode(t) ? "n@(" : "l@(";
 	std::string typ = pfx + nameserver().getTypeName(t);

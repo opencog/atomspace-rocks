@@ -66,7 +66,9 @@ class RocksStorage : public StorageNode
 		std::unordered_map<std::string, Handle> _fid_map;
 		HandleSeq _top_frames;
 		void updateFrameMap(const Handle&, const std::string&);
-		void makeOrder(Handle, std::map<uint64_t, Handle>&);
+		typedef std::map<uint64_t, Handle> FramePath;
+		FramePath getPath(const Handle&);
+		void makeOrder(Handle, FramePath&);
 
 		std::mutex _mtx_frame;
 		std::string encodeFrame(const Handle&);
@@ -112,7 +114,7 @@ class RocksStorage : public StorageNode
 		void getKeysMonospace(AtomSpace*, const std::string&, const Handle&);
 		void getKeysMulti(AtomSpace*, const std::string&, const Handle&);
 		void loadAtoms(AtomSpace*);
-		size_t loadAtomsPfx(const std::map<uint64_t, Handle>&,
+		size_t loadAtomsPfx(const FramePath&,
 		                    const std::string&);
 		size_t loadAtomsHeight(const std::map<uint64_t, Handle>&,
 		                       size_t);
