@@ -1,10 +1,7 @@
 ;
 ; multiple-databases.scm
 ;
-; Demo of using StorageNodes.
-;
-; This is an alternative to `cog-rocks-open` and allows multiple
-; databases to be open at the same time.
+; Demo of using multiple StorageNodes at the same time.
 ;
 ; ----------------------------------------------
 ; Getting started, making the initial connection.

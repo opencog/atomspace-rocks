@@ -46,6 +46,7 @@ Examples, from basic to sophisticated:
 
 * [fetch-store.scm](fetch-store.scm) -- Basic fetch and store of single atoms
 * [load-dump.scm](load-dump.scm) -- Loading and saving entire AtomSpaces.
+* [multiple-databases.scm](multiple-databases.scm) -- Several at once.
 
 The next demo is more curious. It allows queries to be run so that only
 a specific portion of the database is loaded into the AtomSpace. The
@@ -56,12 +57,6 @@ in an as-needed basis.  This is currently a bit experimental; the API
 is subject to change without notice (and there may be bugs?)
 
 * [query-storage.scm](query-storage.scm) -- Run queries out of the database.
-
-All AtomSpace backends are encapsulated with `StorageNode`s, and can
-thus be treated as ordinary Atoms. Among other things, this allows
-multiple databases to be simultaneously opened for reading and writing.
-
-* [multiple-databases.scm](multiple-databases.scm) -- Several at once.
 
 AtomSpaces can be stacked, one on top another. Each space in the stack
 is called a "frame", and it holds a change-set: all of the Atoms and
