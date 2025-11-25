@@ -10,11 +10,18 @@
 ;
 (use-modules (opencog) (opencog persist) (opencog persist-rocks))
 
-(define as-main (cog-atomspace))
+; ---------------------------------------------------------------
+; Create four AtomSpaces. One will be called the "main space"; it's
+; not actually special, but plays a convenient role for the demo.
+(define as-main (AtomSpace "main space"))
 (define as-one (AtomSpace "foo"))
 (define as-two (AtomSpace "bar"))
 (define as-three (AtomSpace "bing"))
 
+; Make sure we are running in the main space. Create an index of the
+; spaces above. Ths is not required; however, if you plan to store many
+; AtomSpaces together, you might want to record what you've packaged up.
+(cog-set-atomspace! as-main)
 (Edge (Predicate "bundle") (List (Item "AtomSpace Bundle Alpha") as-one))
 (Edge (Predicate "bundle") (List (Item "AtomSpace Bundle Alpha") as-two))
 (Edge (Predicate "bundle") (List (Item "Bundle Beta") as-three))
