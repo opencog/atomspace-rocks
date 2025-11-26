@@ -104,6 +104,7 @@ void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 {
 	SchemeEval* tev = SchemeEval::get_scheme_evaluator(as);
 
+	int error_count = 0;
 	for (int i=0; i<nloops; i++)
 	{
 		char a = (std::rand() % 26) + 'A';
@@ -122,7 +123,15 @@ void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 		obs += b;
 		obs += "\")";
 		tev->eval(obs);
+		if (tev->eval_error())
+		{
+			error_count++;
+			printf("Thread %d iteration %d: EVAL ERROR\n", thread_id, i);
+		}
 	}
+	if (error_count > 0)
+		printf("Thread %d had %d evaluation errors!\n", thread_id, error_count);
+	TS_ASSERT_EQUALS(0, error_count);
 }
 
 // ============================================================
