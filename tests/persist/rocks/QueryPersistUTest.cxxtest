@@ -24,6 +24,7 @@
  */
 
 #include <cstdio>
+#include <filesystem>
 
 #include <opencog/atoms/atom_types/atom_types.h>
 #include <opencog/atoms/base/Atom.h>
@@ -53,7 +54,13 @@ class QueryPersistUTest :  public CxxTest::TestSuite
 		{
 			// erase the log file if no assertions failed
 			if (!CxxTest::TestTracker::tracker().suiteFailed())
+			{
 				std::remove(logger().get_filename().c_str());
+				// Also remove the database directory
+				// URI is "rocks:///tmp/..." so path starts at position 8
+				std::string dbpath = uri.substr(8);
+				std::filesystem::remove_all(dbpath);
+			}
 		}
 
 		void setUp(void);
