@@ -78,9 +78,9 @@
 	(define left-bottom (cog-outgoing-atom left-space 0))
 	(define right-bottom (cog-outgoing-atom right-space 0))
 	(test-equal "base-equal" left-bottom right-bottom)
-	(test-equal "base-uuid"
-		(cog-atomspace-uuid left-bottom)
-		(cog-atomspace-uuid right-bottom))
+	(test-equal "base-name"
+		(cog-name left-bottom)
+		(cog-name right-bottom))
 
 	; Work on the current surface, but expect to find the deeper ListLink.
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))

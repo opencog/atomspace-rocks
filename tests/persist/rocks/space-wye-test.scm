@@ -71,9 +71,9 @@
 	(define left-space (cog-outgoing-atom top-space 0))
 	(define right-space (cog-outgoing-atom top-space 1))
 	(test-assert "wye-unequal" (not (equal? left-space right-space)))
-	(test-assert "wye-uuid" (not (equal?
-		(cog-atomspace-uuid left-space)
-		(cog-atomspace-uuid right-space))))
+	(test-assert "wye-name" (not (equal?
+		(cog-name left-space)
+		(cog-name right-space))))
 
 	; Work on the current surface, but expect to find the deeper ListLink.
 	(define lilly (ListLink (Concept "foo") (Concept "bar")))

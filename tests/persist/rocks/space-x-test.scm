@@ -96,9 +96,9 @@
 	(define left-space (cog-outgoing-atom mid1-space 0))
 	(define right-space (cog-outgoing-atom mid2-space 1))
 	(test-assert "exe-bot-unequal" (not (equal? left-space right-space)))
-	(test-assert "exe-uuid" (not (equal?
-		(cog-atomspace-uuid top1-space)
-		(cog-atomspace-uuid top2-space))))
+	(test-assert "exe-name" (not (equal?
+		(cog-name top1-space)
+		(cog-name top2-space))))
 
 	(cog-set-atomspace! mid2-space)
 	; Work on the current surface, but expect to find the deeper ListLink.
