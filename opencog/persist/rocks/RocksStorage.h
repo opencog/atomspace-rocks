@@ -75,6 +75,7 @@ class RocksStorage : public StorageNode
 		std::string encodeFrame(const Handle&);
 		std::string writeFrame(const Handle&);
 		std::string writeFrame(AtomSpace* as) {
+			if (nullptr == as) return "0";
 			return writeFrame(HandleCast(as));
 		}
 		Handle decodeFrame(const std::string&);
