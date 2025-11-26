@@ -107,8 +107,8 @@ void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 	int error_count = 0;
 	for (int i=0; i<nloops; i++)
 	{
-		char a = (std::rand() % 26) + 'A';
-		char b = (std::rand() % 26) + 'A';
+		char a = (std::rand() % 4) + 'A';
+		char b = (std::rand() % 4) + 'A';
 
 		// Create string `(cmd "foo-XXX" "foo-YYY")`
 		std::string obs = "(";
@@ -151,6 +151,19 @@ void ThreadCountUTest::check(size_t expected, const char* cmd)
 	}
 
 	printf("Observed total count of %lu for %s\n", totcnt, cmd);
+
+	if (totcnt != expected)
+	{
+		printf("ERROR: Expected %lu but got %lu (diff=%ld)\n",
+		       expected, totcnt, (long)(expected - totcnt));
+		for (const Handle& e : edges)
+		{
+			ValuePtr tvp = e->getValue(key);
+			FloatValuePtr fv = FloatValueCast(tvp);
+			double cnt = fv ? fv->value()[2] : 0.0;
+			printf("  Edge: %s count=%.0f\n", e->to_short_string().c_str(), cnt);
+		}
+	}
 	TS_ASSERT_EQUALS(totcnt, expected);
 }
 
