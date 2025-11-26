@@ -204,7 +204,7 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 	for (int i=0; i < MAX_THREADS; i++)
 		thread_increment_count[i].store(0);
 
-	printf("Start creating %d threads\n", n_threads);
+	printf("Start creating %d threads for %s\n", n_threads, cmd);
 	std::vector<std::thread> thread_pool;
 	for (int i=0; i < n_threads; i++) {
 		thread_pool.push_back(
@@ -213,17 +213,17 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 
 	for (std::thread& t : thread_pool) t.join();
 	store->barrier();
-	printf("Done joining threads\n");
+	printf("Done joining threads for %s\n", cmd);
 
 	size_t thread_total = 0;
-	printf("Per-thread increment counts:\n");
+	printf("Per-thread increment counts for %s:\n", cmd);
 	for (int i=0; i < n_threads; i++) {
 		size_t cnt = thread_increment_count[i].load();
 		thread_total += cnt;
 		printf("  Thread %d: %lu increments\n", i, cnt);
 	}
-	printf("Total increments reported by threads: %lu (expected %d)\n",
-	       thread_total, n_threads * n_loops);
+	printf("Total increments reported by threads: %lu (expected %d) for %s\n",
+	       thread_total, n_threads * n_loops, cmd);
 
 	printf("Final atomspace size=%lu\n", as->get_size());
 	// Verify the atomspace size
