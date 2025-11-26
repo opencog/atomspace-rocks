@@ -92,7 +92,14 @@
 	(cog-open storage)
 
 	; Load all of the AtomSpace Frames.
-	(define top-space (car (load-frames)))
+	; There are two frames at the top, and we want the newer one.
+	; The second one is the root space; it doesn't have the stack.
+	; This is awkward. I don't entirely like it. For now, it works.
+	(define the-frames (load-frames))
+	; (format #t "The frames are ~A\n" the-frames)
+	(define space-a (car the-frames))
+	(define space-b (cadr the-frames))
+	(define top-space space-a)
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
