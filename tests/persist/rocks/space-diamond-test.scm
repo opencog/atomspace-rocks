@@ -16,9 +16,9 @@
 
 (define (setup-and-store)
 	(define base-space (cog-atomspace))
-	(define left-space (cog-new-atomspace base-space))
-	(define right-space (cog-new-atomspace base-space))
-	(define top-space (cog-new-atomspace (list left-space right-space)))
+	(define left-space (AtomSpace base-space))
+	(define right-space (AtomSpace base-space))
+	(define top-space (AtomSpace (list left-space right-space)))
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
@@ -57,7 +57,7 @@
 (define (test-diamond)
 	(setup-and-store)
 
-	(define new-base (cog-new-atomspace))
+	(define new-base (AtomSpace))
 	(cog-set-atomspace! new-base)
 
 	; Load everything.

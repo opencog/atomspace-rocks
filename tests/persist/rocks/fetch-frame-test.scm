@@ -16,9 +16,9 @@
 
 (define (setup-and-store)
 	(define base-space (cog-atomspace))
-	(define mid1-space (cog-new-atomspace base-space))
-	(define mid2-space (cog-new-atomspace mid1-space))
-	(define surface-space (cog-new-atomspace mid2-space))
+	(define mid1-space (AtomSpace base-space))
+	(define mid2-space (AtomSpace mid1-space))
+	(define surface-space (AtomSpace mid2-space))
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
@@ -68,7 +68,7 @@
 	; (cog-rocks-close)
 
 	; Start with a blank slate.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
@@ -119,7 +119,7 @@
 	; (cog-rocks-close)
 
 	; Start with a blank slate.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
@@ -174,7 +174,7 @@
 	; (cog-rocks-close)
 
 	; Start with a blank slate.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	; Load incoming set of just one atom.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))

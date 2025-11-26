@@ -35,7 +35,7 @@
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
 	(cog-open storage)
 	(store-frames (cog-atomspace))
-	(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
+	(cog-set-atomspace! (AtomSpace (cog-atomspace)))
 	(set-cnt! (Concept "foo") (FloatValue 1 0 7))
 	(store-atom (Concept "foo"))
 	(store-atom (Concept "bar"))

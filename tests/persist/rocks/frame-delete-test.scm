@@ -22,10 +22,10 @@
 
 	; The base space is the current space.
 	(define base-space (cog-atomspace))
-	(define mid1-space (cog-new-atomspace base-space))
-	(define mid2-space (cog-new-atomspace mid1-space))
-	(define mid3-space (cog-new-atomspace mid2-space))
-	(define surface-space (cog-new-atomspace mid3-space))
+	(define mid1-space (AtomSpace base-space))
+	(define mid2-space (AtomSpace mid1-space))
+	(define mid3-space (AtomSpace mid2-space))
+	(define surface-space (AtomSpace mid3-space))
 
 	; (format #t "setup space top ~A\n" (cog-name surface-space))
 	; (format #t "setup space mid ~A\n" (cog-name mid3-space))
@@ -78,7 +78,7 @@
 (define (test-deep DELETE)
 
 	; Set a brand new current space
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	(setup-and-store DELETE)
 
@@ -189,7 +189,7 @@
 
 	; Define a brand new space on which the other
 	; atomspaces will be built.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	(setup-deep-change DELETE)
 

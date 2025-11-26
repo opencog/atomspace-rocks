@@ -70,7 +70,7 @@
 	(setup-and-store)
 
 	; Clear everything - start fresh
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	; Recreate the main space and open storage
 	(define as-main (AtomSpace "main space"))
@@ -139,7 +139,7 @@
 	(setup-and-store)
 
 	; Clear and restart
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	(define as-main (AtomSpace "main space"))
 	(cog-set-atomspace! as-main)
@@ -194,7 +194,7 @@
 	(setup-and-store)
 
 	; Clear and restart
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	(define as-main (AtomSpace "main space"))
 	(cog-set-atomspace! as-main)
@@ -251,7 +251,7 @@
 	(setup-and-store)
 
 	; Clear and restart
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	(define as-main (AtomSpace "main space"))
 	(cog-set-atomspace! as-main)

@@ -26,13 +26,13 @@
 	(set-cnt! (Concept "bar") (FloatValue 1 0 4))
 
 	(define base-space (cog-atomspace))
-	(define mid1-space (cog-new-atomspace base-space))
+	(define mid1-space (AtomSpace base-space))
 
 	(cog-set-atomspace! mid1-space)
 	(set-cnt! (List (Concept "foo") (Concept "bar")) (FloatValue 1 0 5))
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 
-	(define mid2-space (cog-new-atomspace mid1-space))
+	(define mid2-space (AtomSpace mid1-space))
 	(cog-set-atomspace! mid2-space)
 
 	; Delete it (which writes to DB),
@@ -41,12 +41,12 @@
 	(set-cnt! (Concept "foo") (FloatValue 1 0 6))
 	(store-atom (Concept "foo"))
 
-	(define mid3-space (cog-new-atomspace mid2-space))
+	(define mid3-space (AtomSpace mid2-space))
 	(cog-set-atomspace! mid3-space)
 	(set-cnt! (List (Concept "foo") (Concept "bar")) (FloatValue 1 0 7))
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 
-	(define surface-space (cog-new-atomspace mid3-space))
+	(define surface-space (AtomSpace mid3-space))
 	(cog-set-atomspace! surface-space)
 	(store-frames surface-space)
 
@@ -67,7 +67,7 @@
 	(setup-and-store)
 
 	; Start with a blank slate.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-resave-test"))

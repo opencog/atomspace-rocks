@@ -16,8 +16,8 @@
 
 (define (setup-and-store)
 	(define left-space (cog-atomspace))
-	(define right-space (cog-new-atomspace))
-	(define top-space (cog-new-atomspace (list left-space right-space)))
+	(define right-space (AtomSpace))
+	(define top-space (AtomSpace (list left-space right-space)))
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! left-space)
@@ -52,7 +52,7 @@
 	; (cog-rocks-get "")
 	; (cog-rocks-close)
 
-	(define new-base (cog-new-atomspace))
+	(define new-base (AtomSpace))
 	(cog-set-atomspace! new-base)
 
 	; Load everything.

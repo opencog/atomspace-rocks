@@ -16,9 +16,9 @@
 
 (define (setup-and-store)
 	(define base-space (cog-atomspace))
-	(define mid1-space (cog-new-atomspace base-space))
-	(define mid2-space (cog-new-atomspace mid1-space))
-	(define surface-space (cog-new-atomspace mid2-space))
+	(define mid1-space (AtomSpace base-space))
+	(define mid2-space (AtomSpace mid1-space))
+	(define surface-space (AtomSpace mid2-space))
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
@@ -55,7 +55,7 @@
 (define (delete-top-frame)
 
 	; Start with a blank slate.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-delete-test"))
@@ -93,7 +93,7 @@
 	; reference, and (this is important) **make sure** the ref
 	; is actually referenced at the very end, i.e. so that it does
 	; not accidentally go out of scope!
-	(define keep-me-around (cog-new-atomspace))
+	(define keep-me-around (AtomSpace))
 	(cog-set-atomspace! keep-me-around)
 
 	; Load everything.
@@ -109,7 +109,7 @@
 	(delete-top-frame)
 
 	; Load everything. Again.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 	(cog-open storage)
 	(set! top-space (car (load-frames)))
 	(cog-set-atomspace! top-space)
@@ -121,7 +121,7 @@
 	(delete-top-frame)
 
 	; Load everything. Again.
-	(cog-set-atomspace! (cog-new-atomspace))
+	(cog-set-atomspace! (AtomSpace))
 	(cog-open storage)
 	(set! top-space (car (load-frames)))
 	(cog-set-atomspace! top-space)

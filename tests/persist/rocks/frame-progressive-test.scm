@@ -45,9 +45,9 @@
 (define (recompute N NLOOP)
 	(when (< 0 NLOOP)
 		(store-stuff N)
-		(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
+		(cog-set-atomspace! (AtomSpace (cog-atomspace)))
 		(cog-delete-recursive! (Concept "bar"))
-		(cog-set-atomspace! (cog-new-atomspace (cog-atomspace)))
+		(cog-set-atomspace! (AtomSpace (cog-atomspace)))
 		(recompute (+ N 3) (- NLOOP 1)))
 )
 
@@ -129,7 +129,7 @@
 	(progressive-store STACK-DEPTH)
 
 	; Set a brand new current space
-	(define new-base (cog-new-atomspace))
+	(define new-base (AtomSpace))
 	(cog-set-atomspace! new-base)
 
 	; (cog-rocks-open "rocks:///tmp/cog-rocks-frame-progressive-test")
