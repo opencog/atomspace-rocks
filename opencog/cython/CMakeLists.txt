@@ -22,7 +22,6 @@ TARGET_LINK_LIBRARIES(storage_rocks_cython
 	persist-rocks
 	persist-monospace
 	${AS_NEEDED}
-	persist
 	storage-types
 	atomspace
 	${Python3_LIBRARIES}

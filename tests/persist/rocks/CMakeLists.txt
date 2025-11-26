@@ -3,8 +3,7 @@
 
 LINK_LIBRARIES(
 	persist-rocks
-   persist
-   atomspace
+	atomspace
 )
 
 # The nine unit tests, ported over from the

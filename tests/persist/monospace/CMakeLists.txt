@@ -3,8 +3,7 @@
 
 LINK_LIBRARIES(
 	persist-monospace
-   persist
-   atomspace
+	atomspace
 )
 
 # The nine unit tests, ported over from the
