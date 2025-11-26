@@ -99,7 +99,7 @@ void MonoFetchUTest::tearDown(void)
 
 void MonoFetchUTest::atomCompare(Handle a, Handle b, std::string where)
 {
-	printf("Check %s expect %s\n", where.c_str(), a->to_string().c_str());
+	logger().debug("Check %s expect %s", where.c_str(), a->to_string().c_str());
 	TSM_ASSERT("No atom found", b != nullptr);
 
 	if (nullptr == b) return;
