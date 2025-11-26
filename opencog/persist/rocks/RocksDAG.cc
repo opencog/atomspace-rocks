@@ -42,11 +42,11 @@ using namespace opencog;
 /// where the numbers are the string sid's of the outgoing set.
 std::string RocksStorage::encodeFrame(const Handle& hasp)
 {
-	// We should say `getTypeName()` as below, expect that today,
+	// We should say `getTypeName()` as below, except that today,
 	// this will always be `AtomSpace`, 100% of the time. So the
 	// fancier type lookup is not needed.
 	// std::string txt = "(" + nameserver().getTypeName(hasp->get_type()) + " ";
-	std::string txt = "(as ";
+	std::string txt = "(AtomSpace ";
 
 	std::stringstream ss;
 	ss << std::quoted(hasp->get_name());
@@ -139,10 +139,11 @@ std::string RocksStorage::writeFrame(const Handle& hasp)
 /// Decode the string encoding of the Frame
 Handle RocksStorage::decodeFrame(const std::string& senc)
 {
-	if (0 != senc.compare(0, 5, "(as \""))
+	if (0 != senc.compare(0, 12, "(AtomSpace \""))
 		throw IOException(TRACE_INFO, "Internal Error!");
 
-	size_t pos = 4;
+	static const size_t skip = strlen("(AtomSpace ");
+	size_t pos = skip;
 	size_t ros = -1;
 	std::string name = Sexpr::get_node_name(senc, pos, ros, FRAME);
 
