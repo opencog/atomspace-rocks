@@ -25,6 +25,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include <cstdio>
+#include <filesystem>
 
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/base/Link.h>
@@ -61,7 +62,13 @@ class BasicDeleteUTest :  public CxxTest::TestSuite
 		{
 			// erase the log file if no assertions failed
 			if (!CxxTest::TestTracker::tracker().suiteFailed())
+			{
 				std::remove(logger().get_filename().c_str());
+				// Also remove the database directory
+				// URI is "monospace:///tmp/..." so path starts at position 12
+				std::string dbpath = uri.substr(12);
+				std::filesystem::remove_all(dbpath);
+			}
 		}
 
 		void setUp(void);

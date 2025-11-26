@@ -26,6 +26,7 @@
 
 #include <atomic>
 #include <cstdio>
+#include <filesystem>
 #include <thread>
 
 #include <opencog/atoms/atom_types/atom_types.h>
@@ -76,7 +77,11 @@ class MultiPersistUTest :  public CxxTest::TestSuite
         {
             // erase the log file if no assertions failed
             if (!CxxTest::TestTracker::tracker().suiteFailed())
+            {
                 std::remove(logger().get_filename().c_str());
+                // Also remove the database directory
+                std::filesystem::remove_all("/tmp/cog-mono-multi-persist-utest");
+            }
         }
 
         void setUp(void);

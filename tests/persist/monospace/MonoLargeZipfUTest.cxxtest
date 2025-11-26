@@ -25,6 +25,7 @@
  */
 
 #include <cstdio>
+#include <filesystem>
 
 #include <opencog/atoms/atom_types/atom_types.h>
 #include <opencog/atoms/base/Atom.h>
@@ -79,7 +80,11 @@ LargeZipfUTest::~LargeZipfUTest()
 {
 	// erase the log file if no assertions failed
 	if (!CxxTest::TestTracker::tracker().suiteFailed())
+	{
 		std::remove(logger().get_filename().c_str());
+		// Also remove the database directory
+		std::filesystem::remove_all("/tmp/cog-mono-large-zipf-utest");
+	}
 }
 
 /*
