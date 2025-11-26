@@ -24,6 +24,7 @@
  * Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#include <atomic>
 #include <cstdio>
 #include <random>
 #include <string>
@@ -47,6 +48,10 @@ class ThreadCountUTest :  public CxxTest::TestSuite
 		AtomSpacePtr as;
 		SchemeEval* eval;
 		int n_threads;
+
+		// Per-thread increment counters for debugging
+		static constexpr int MAX_THREADS = 32;
+		std::atomic<size_t> thread_increment_count[MAX_THREADS];
 
 	public:
 
@@ -105,8 +110,10 @@ void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 	SchemeEval* tev = SchemeEval::get_scheme_evaluator(as);
 
 	int error_count = 0;
+	size_t local_increment_count = 0;
 	for (int i=0; i<nloops; i++)
 	{
+		// Reduce number of unique atoms to increase contention.
 		char a = (std::rand() % 4) + 'A';
 		char b = (std::rand() % 4) + 'A';
 
@@ -128,7 +135,13 @@ void ThreadCountUTest::worker(int thread_id, int nloops, const char *cmd)
 			error_count++;
 			printf("Thread %d iteration %d: EVAL ERROR\n", thread_id, i);
 		}
+		else
+		{
+			local_increment_count++;
+		}
 	}
+	thread_increment_count[thread_id].store(local_increment_count);
+
 	if (error_count > 0)
 		printf("Thread %d had %d evaluation errors!\n", thread_id, error_count);
 	TS_ASSERT_EQUALS(0, error_count);
@@ -140,28 +153,33 @@ void ThreadCountUTest::check(size_t expected, const char* cmd)
 {
 	Handle key = eval->eval_h("(Predicate \"kayfabe\")");
 	size_t totcnt = 0;
+	size_t edge_count = 0;
 	HandleSeq edges;
 	as->get_root_set_by_type(edges, EDGE_LINK);
 	for (const Handle& e : edges)
 	{
+		edge_count++;
 		ValuePtr tvp = e->getValue(key);
 		FloatValuePtr fv = FloatValueCast(tvp);
 		if (fv) totcnt += fv->value()[2];
 		// printf("Got %s\n", e->to_string().c_str());
 	}
 
-	printf("Observed total count of %lu for %s\n", totcnt, cmd);
+	printf("Observed total count of %lu across %lu edges for %s\n",
+	       totcnt, edge_count, cmd);
 
 	if (totcnt != expected)
 	{
 		printf("ERROR: Expected %lu but got %lu (diff=%ld)\n",
 		       expected, totcnt, (long)(expected - totcnt));
+		printf("Dumping all %lu edges:\n", edge_count);
 		for (const Handle& e : edges)
 		{
 			ValuePtr tvp = e->getValue(key);
 			FloatValuePtr fv = FloatValueCast(tvp);
 			double cnt = fv ? fv->value()[2] : 0.0;
-			printf("  Edge: %s count=%.0f\n", e->to_short_string().c_str(), cnt);
+			printf("  Edge: %s count=%.0f\n",
+			       e->to_short_string().c_str(), cnt);
 		}
 	}
 	TS_ASSERT_EQUALS(totcnt, expected);
@@ -182,6 +200,10 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 	// Clear out left-over junk, just in case.
 	store->erase();
 
+	// Initialize per-thread counters
+	for (int i=0; i < MAX_THREADS; i++)
+		thread_increment_count[i].store(0);
+
 	printf("Start creating %d threads\n", n_threads);
 	std::vector<std::thread> thread_pool;
 	for (int i=0; i < n_threads; i++) {
@@ -192,6 +214,16 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 	for (std::thread& t : thread_pool) t.join();
 	store->barrier();
 	printf("Done joining threads\n");
+
+	size_t thread_total = 0;
+	printf("Per-thread increment counts:\n");
+	for (int i=0; i < n_threads; i++) {
+		size_t cnt = thread_increment_count[i].load();
+		thread_total += cnt;
+		printf("  Thread %d: %lu increments\n", i, cnt);
+	}
+	printf("Total increments reported by threads: %lu (expected %d)\n",
+	       thread_total, n_threads * n_loops);
 
 	printf("Final atomspace size=%lu\n", as->get_size());
 	// Verify the atomspace size
