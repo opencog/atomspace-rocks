@@ -236,13 +236,11 @@ HandleSeq RocksStorage::loadFrameDAG(void)
 	                    std::back_inserter(roots));
 
 	// Sort by name for deterministic ordering; the default sort order
-	// is driven by the 64-bit hashes, which is randomized. For frames
-	// that get the default timestamp name, this places newer frames
-	// before earlier frames. Most users shouldn't care, but the
-	// `frame-delete-test.scm` unit test twerks on this ordering. :-(
+	// is driven by the 64-bit hashes, which is randomized. The sort
+	// order is acscending alphabetic.
 	std::sort(roots.begin(), roots.end(),
 	          [](const Handle& a, const Handle& b) {
-	             return a->get_name() > b->get_name();
+	             return a->get_name() < b->get_name();
              });
 
 	_top_frames.clear();

@@ -15,11 +15,11 @@
 ; Common setup, used by all tests.
 
 (define (setup-and-store)
-	(define left-space (cog-atomspace))
-	(define right-space (AtomSpace))
-	(define mid-space (AtomSpace (list left-space right-space)))
-	(define top1-space (AtomSpace mid-space))
-	(define top2-space (AtomSpace mid-space))
+	(define left-space (AtomSpace "left space"))
+	(define right-space (AtomSpace "right space"))
+	(define mid-space (AtomSpace "mid space" (list left-space right-space)))
+	(define top1-space (AtomSpace "top1" mid-space))
+	(define top2-space (AtomSpace "top2" mid-space))
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! left-space)
@@ -75,6 +75,7 @@
 
 	; Load all of the Frames.
 	(define top-spaces (load-frames))
+	; (format #t "The top spaces are ~A\n" top-spaces)
 	(define top1-space (first top-spaces))
 	(define top2-space (second top-spaces))
 

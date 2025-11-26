@@ -21,11 +21,12 @@
 (define (setup-and-store DELETE)
 
 	; The base space is the current space.
-	(define base-space (cog-atomspace))
-	(define mid1-space (AtomSpace base-space))
-	(define mid2-space (AtomSpace mid1-space))
-	(define mid3-space (AtomSpace mid2-space))
-	(define surface-space (AtomSpace mid3-space))
+	; (define base-space (cog-atomspace))
+	(define base-space (AtomSpace "base space"))
+	(define mid1-space (AtomSpace "mid-1" base-space))
+	(define mid2-space (AtomSpace "mid-2" mid1-space))
+	(define mid3-space (AtomSpace "mid-3" mid2-space))
+	(define surface-space (AtomSpace "surf" mid3-space))
 
 	; (format #t "setup space top ~A\n" (cog-name surface-space))
 	; (format #t "setup space mid ~A\n" (cog-name mid3-space))
@@ -97,9 +98,7 @@
 	; This is awkward. I don't entirely like it. For now, it works.
 	(define the-frames (load-frames))
 	; (format #t "The frames are ~A\n" the-frames)
-	(define space-a (car the-frames))
-	(define space-b (cadr the-frames))
-	(define top-space space-a)
+	(define top-space (car the-frames))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
