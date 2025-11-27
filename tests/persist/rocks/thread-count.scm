@@ -30,6 +30,10 @@
 
 (define (pushy TXTA TXTB)
 	(define base-as (cog-push-atomspace))
+	; If you want this test to pass, you MUST uncomment the line below!
+	; See notes in ThreadCountUTest::test_push_pop() for an explanation.
+	; (cog-atomspace-cow! #f)
+
 	(define ca (Concept TXTA))
 	(define cb (Concept TXTB))
 	(define edge (Edge (Predicate "foo") (List ca cb)))
