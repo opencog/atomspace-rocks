@@ -84,15 +84,12 @@ storage = RocksStorage("rocks:///tmp/foo")
 # The StorageNode API works by sending messages to StorageNodes via
 # set_value(). All messages are PredicateNodes naming the operation.
 space.set_value(storage, Predicate("*-open-*"), VoidValue())
-print("Opened connection to storage")
 
 # Store the one and only edge created above.
 space.set_value(storage, Predicate("*-store-atom-*"), e)
-print("Stored the edge")
 
 # Close the connection to storage.
 space.set_value(storage, Predicate("*-close-*"), VoidValue())
-print("Closed the connection to storage")
 
 # The entire contents of the AtomSpace could have been stored with
 # just one simple command:
