@@ -76,6 +76,18 @@ p.get_value(Predicate("floaty things"))
 # using it with RocksStorageNode, which is built on top of the RocksDB
 # disk database.  Rocks is nice, because it requires no config to use.
 
+# The StorageNode API is implemented as a message-passing API. This
+# uses exactly the same generic 'atomspace.set_value(atom, key, value)'
+# system available for all Atoms. However, for StorageNodes (and more
+# generally, for ObjectNodes, and more narrowly, for SensoryNodes)
+# certain keys are interpreted as messages, requesting that some action
+# be taken, rather than just static keys specifying a location. Such
+# message-passing API's can be understood as a form of dynamic
+# object-orientedd programming: the messages can be thought of as being
+# methods on a class instance, which are "called" when the message is
+# is sent, whereas a plain key corresponds to a member or field: a named
+# location on the class instance, where things can be stored.
+
 # Create a RocksDB StorageNode.
 # The rocks:// URL specifies a directory in the local filesystem.
 storage = RocksStorage("rocks:///tmp/foo")
@@ -87,6 +99,11 @@ space.set_value(storage, Predicate("*-open-*"), VoidValue())
 
 # Store the one and only edge created above.
 space.set_value(storage, Predicate("*-store-atom-*"), e)
+
+# Also store the predicate. Although it is implicitly stored, when the
+# edge above is stored, it is stored without the attached key-value
+# pairs. To store these, the Atom must be explicitly named.
+space.set_value(storage, Predicate("*-store-atom-*"), p)
 
 # Close the connection to storage.
 space.set_value(storage, Predicate("*-close-*"), VoidValue())
@@ -124,11 +141,9 @@ prt_atomspace_contents(space)
 # The clear clobbers the StorageNode; create it again.
 storage = RocksStorageNode("rocks:///tmp/foo")
 space.set_value(storage, Predicate("*-open-*"), VoidValue())
-print("Reopened connection to storage")
 
 # Bulk restore: load the entire AtomSpace from storage in one step.
 # This restores everything, and is the easiest way to load data.
-print("\nBulk restore: loading entire AtomSpace from storage...")
 space.set_value(storage, Predicate("*-load-atomspace-*"), space)
 
 # Close storage for now.
@@ -143,8 +158,6 @@ prt_atomspace_contents(space)
 # one at a time, or in groups. Storae can even be queried (!); see the
 # scheme examples for details; they port over easily to python.
 #
-print("\n--- Demonstrating selective fetch operations ---")
-
 # Clear and start over.
 space.clear()
 print("Cleared AtomSpace again, size is now:", len(space))
@@ -163,16 +176,23 @@ space.set_value(storage, Predicate("*-open-*"), VoidValue())
 # for this, the LinkValue is the obvious choice.
 
 print("\nSelective fetch: restore just one atom by name.")
-url_pred = Predicate("My collection of URLs")
+hurly = Predicate("My collection of URLs")
 space.set_value(storage, Predicate("*-fetch-atom-*"),
-	LinkValue([space, url_pred]))
+	LinkValue([space, hurly]))
 
 # The requested Atom, and all of the Values attached to it, have been
 # placed directly into the AtomSpace. That is why there is no need to
 # say 'my_stuff = space.set_value(storage, ...)' -- everything goes
-# straight into the current AtomSpace. Now, the above fetch is a bit
-# silly, because there are no Values attached to "My Collection"; we'll
-# get back to that.
+# straight into the current AtomSpace.
+
+# Verify that all the key-value pairs were fetched:
+hurly.get_keys()
+
+for key in hurly.get_keys():
+	val = hurly.get_value(key)
+	print(f"{key} points at {val}")
+
+# Note that the keyes were also automatically placed in the AtomSpace:
 prt_atomspace_contents(space)
 
 # Restore all Edges held in storage, by fetching the incoming set.
