@@ -55,12 +55,12 @@ space.set_value(p, Predicate("stringy thing"), StringValue(["a","bb","king"]))
 space.set_value(p, Predicate("atomic thing"), Concept("gadget"))
 
 # The list of keys is readily available:
-p.get_keys()
+KeysOf(p).execute()
 
 # Values can be fetched individually:
-p.get_value(Predicate("atomic thing"))
-p.get_value(Predicate("stringy thing"))
-p.get_value(Predicate("floaty things"))
+ValueOf(p, Predicate("atomic thing")).execute()
+ValueOf(p, Predicate("stringy thing")).execute()
+ValueOf(p, Predicate("floaty things")).execute()
 
 # Note that Values can be gotten directly, while sets must go through
 # the space. This requirement comes into play when multiple AtomSpaces
@@ -86,12 +86,18 @@ storage = RocksStorage("rocks:///tmp/foo")
 space.set_value(storage, Predicate("*-open-*"), VoidValue())
 
 # Store the one and only edge created above.
+# (This uses pure Atomese style; see immediately below.)
+SetValue(storage, Predicate("*-store-atom-*"), e).execute()
+
+# This could have been done in the same way as before. However, pure
+# Atomese style is an important part of working with Atomese, and so
+# was illustrated above.)
 space.set_value(storage, Predicate("*-store-atom-*"), e)
 
 # Also store the predicate. Although it is implicitly stored, when the
 # edge above is stored, it is stored without the attached key-value
 # pairs. To store these, the Atom must be explicitly named.
-space.set_value(storage, Predicate("*-store-atom-*"), p)
+SetValue(storage, Predicate("*-store-atom-*"), p).execute()
 
 # Close the connection to storage.
 space.set_value(storage, Predicate("*-close-*"), VoidValue())
@@ -132,7 +138,8 @@ space.set_value(storage, Predicate("*-open-*"), VoidValue())
 
 # Bulk restore: load the entire AtomSpace from storage in one step.
 # This restores everything, and is the easiest way to load data.
-space.set_value(storage, Predicate("*-load-atomspace-*"), space)
+# space.set_value(storage, Predicate("*-load-atomspace-*"), space)
+SetValue(storage, Predicate("*-load-atomspace-*"), space).execute()
 
 # Close storage for now.
 space.set_value(storage, Predicate("*-close-*"), VoidValue())
