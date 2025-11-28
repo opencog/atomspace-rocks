@@ -36,13 +36,38 @@ set_thread_atomspace(space)
 #    Edge (Predicate ("some edge label"),
 #          List (Item ("from vertex"), Item ("to vertex")))
 #
-e = Edge(
-	Predicate("My collection of URLs"),
+p = Predicate("My collection of URLs")
+e = Edge(p,
 	List(
 		Item("file:///Home Computer/folders/My photo album"),
 		Item("Fantastic Sunset on Sunday.jpg")))
 
 print("Here's your data:", e)
+
+# To make the demo more fun, we'll also attach some static data to the
+# Predicate. This is done by using set_value to specify a triplet:
+# an Atom, a key, and the Value to attach at that key. The Atom can be
+# any Atom, and so can the key. By convention, PredicateNodes are used
+# for simple keys with simple string names. The Values can be any Value,
+# which includes Atoms as a special case.
+space.set_value(p, Predicate("floaty things"), FloatValue([1,2,3]))
+space.set_value(p, Predicate("stringy thing"), StringValue(["a","bb","king"]))
+space.set_value(p, Predicate("atomic thing"), Concept("gadget"))
+
+# The list of keys is readily available:
+p.get_keys()
+
+# Values can be fetched individually:
+p.get_value(Predicate("atomic thing"))
+p.get_value(Predicate("stringy thing"))
+p.get_value(Predicate("floaty things"))
+
+# Note that Values can be gotten directly, while sets must go through
+# the space. This requirement comes into play when multiple AtomSpaces
+# are in use. Such multiple spaces can be stacked on one-another, or
+# kept disjoint; dispatching the setter through the space is required
+# for proper copy-on-write semantics, atom hiding and other more
+# advanced multi-space operations.
 
 # -------------------------------------------
 # AtomSpace contents can be stored and loaded from disk, and sent over
