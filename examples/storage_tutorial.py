@@ -36,11 +36,11 @@ set_thread_atomspace(space)
 #    Edge (Predicate ("some edge label"),
 #          List (Item ("from vertex"), Item ("to vertex")))
 #
-e = EdgeLink(
-	PredicateNode("My collection of URLs"),
-	ListLink(
-		ItemNode("file:///Home Computer/folders/My photo album"),
-		ItemNode("Fantastic Sunset on Sunday.jpg")))
+e = Edge(
+	Predicate("My collection of URLs"),
+	List(
+		Item("file:///Home Computer/folders/My photo album"),
+		Item("Fantastic Sunset on Sunday.jpg")))
 
 print("Here's your data:", e)
 
@@ -53,21 +53,27 @@ print("Here's your data:", e)
 
 # Create a RocksDB StorageNode.
 # The rocks:// URL specifies a directory in the local filesystem.
-storage = RocksStorageNode("rocks:///tmp/foo")
+storage = RocksStorage("rocks:///tmp/foo")
 
 # Open a connection to storage using message-passing.
 # The StorageNode API works by sending messages to StorageNodes via
 # set_value(). All messages are PredicateNodes naming the operation.
-space.set_value(storage, PredicateNode("*-open-*"), VoidValue())
+space.set_value(storage, Predicate("*-open-*"), VoidValue())
 print("Opened connection to storage")
 
 # Store the one and only edge created above.
-space.set_value(storage, PredicateNode("*-store-atom-*"), e)
+space.set_value(storage, Predicate("*-store-atom-*"), e)
 print("Stored the edge")
 
 # Close the connection to storage.
-space.set_value(storage, PredicateNode("*-close-*"), VoidValue())
+space.set_value(storage, Predicate("*-close-*"), VoidValue())
 print("Closed the connection to storage")
+
+# The entire contents of the AtomSpace could have been stored with
+# just one simple command:
+#    space.set_value(storage, PredicateNode("*-store-atomspace-*"), space)
+# This was not done, mostly just to show that one can also do granular
+# save and restore.
 
 # -------------------------------------------
 # The rest of this demo is about restoring the Atom that was just saved.
@@ -95,28 +101,67 @@ prt_atomspace_contents(space)
 # -------------------------------------------
 # The clear clobbers the StorageNode; create it again.
 storage = RocksStorageNode("rocks:///tmp/foo")
-space.set_value(storage, PredicateNode("*-open-*"), VoidValue())
+space.set_value(storage, Predicate("*-open-*"), VoidValue())
 print("Reopened connection to storage")
 
-# -------------------------------------------
-# Restore one atom: the predicate, whose name we magically know already.
-# The fetch-atom message requires a LinkValue containing the AtomSpace
-# and the atom to fetch.
-print("Restore one atom: the predicate, whose name we magically know already.")
-url_pred = PredicateNode("URL")
-space.set_value(storage, PredicateNode("*-fetch-atom-*"),
-	LinkValue([space, url_pred]))
+# Bulk restore: load the entire AtomSpace from storage in one step.
+# This restores everything, and is the easiest way to load data.
+print("\nBulk restore: loading entire AtomSpace from storage...")
+space.set_value(storage, Predicate("*-load-atomspace-*"), space)
+
+# Close storage for now.
+space.set_value(storage, Predicate("*-close-*"), VoidValue())
+
+print("After bulk restore:")
 prt_atomspace_contents(space)
 
-# Restore all Edges in storage by fetching the incoming set.
-print("Restore all Edges in storage.")
-space.set_value(storage, PredicateNode("*-fetch-incoming-set-*"),
+# -------------------------------------------
+# Bulk restore of everything can be impractical, if the dataset is
+# large. In this case, individual Atoms, and even Values, can be loaded,
+# one at a time, or in groups. Storae can even be queried (!); see the
+# scheme examples for details; they port over easily to python.
+#
+print("\n--- Demonstrating selective fetch operations ---")
+
+# Clear and start over.
+space.clear()
+print("Cleared AtomSpace again, size is now:", len(space))
+
+# Reopen storage
+storage = RocksStorage("rocks:///tmp/foo")
+space.set_value(storage, Predicate("*-open-*"), VoidValue())
+
+# Restore one atom: the predicate, whose name "My collection" we already
+# know, as if by magic.  The fetch-atom message argument must be either
+# a ListLink or a LinkValue containing the AtomSpace and the atom to
+# fetch. Since Links are *always* stored in the AtomSpace, and Values
+# are *never* stored in the AtomSpace, ths gives you some flexibility
+# in how to represent the arguments. As a general rule, one should not
+# pollute the AtomSpace with suprious transient temporary junk, and
+# for this, the LinkValue is the obvious choice.
+
+print("\nSelective fetch: restore just one atom by name.")
+url_pred = Predicate("My collection of URLs")
+space.set_value(storage, Predicate("*-fetch-atom-*"),
+	LinkValue([space, url_pred]))
+
+# The requested Atom, and all of the Values attached to it, have been
+# placed directly into the AtomSpace. That is why there is no need to
+# say 'my_stuff = space.set_value(storage, ...)' -- everything goes
+# straight into the current AtomSpace. Now, the above fetch is a bit
+# silly, because there are no Values attached to "My Collection"; we'll
+# get back to that.
+prt_atomspace_contents(space)
+
+# Restore all Edges held in storage, by fetching the incoming set.
+print("\nFetch incoming set: restore all links containing that atom.")
+space.set_value(storage, Predicate("*-fetch-incoming-set-*"),
 	LinkValue([space, url_pred]))
 
 # Close the connection to storage.
 space.set_value(storage, PredicateNode("*-close-*"), VoidValue())
 
-print("After restoring, the AtomSpace size is " + str(len(space)))
+print("\nAfter selective restore:")
 prt_atomspace_contents(space)
 
 print("Good bye!")
