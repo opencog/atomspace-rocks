@@ -46,6 +46,7 @@ Examples, from basic to sophisticated:
 
 * [fetch-store.scm](fetch-store.scm) -- Basic fetch and store of single atoms
 * [load-dump.scm](load-dump.scm) -- Loading and saving entire AtomSpaces.
+* [storage_tutorial.py](storage_tutorial.py) -- Same topics, in python.
 
 A single AtomSpace can be stored in several different StorageNodes.
 Alternately, multiple AtomSpaces can be stored in a single Storagenode.
