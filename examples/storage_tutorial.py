@@ -174,10 +174,10 @@ space.set_value(storage, Predicate("*-fetch-atom-*"),
 # straight into the current AtomSpace.
 
 # Verify that all the key-value pairs were fetched:
-hurly.get_keys()
+KeysOf(hurly).execute()
 
-for key in hurly.get_keys():
-	val = hurly.get_value(key)
+for key in KeysOf(hurly).execute().to_list():
+	val = ValueOf(hurly, key).execute()
 	print(f"{key} points at {val}")
 
 # Note that the keyes were also automatically placed in the AtomSpace:
@@ -262,13 +262,13 @@ print("Good bye!")
 # longer description of the messages. A complete list of messages for
 # a given StorageNode can be optained by saying
 #
-#     storage.get_messages()
+#     MessagesOf(storage).execute()
 #
 # The validity of a message can be tested by saying
 #
-#     storage.is_message(Predicate("*-open-*"))
-#     storage.is_message(Predicate("foobar"))
-#     storage.is_message(Concept("*-dingdong-*"))
+#     IsMessage(storage, Predicate("*-open-*")).execute()
+#     IsMessage(storage, Predicate("foobar")).execute()
+#     IsMessage(storage, Concept("*-dingdong-*")).execute()
 #
 # THE END.
 # ---------------------------------------------------------------------
