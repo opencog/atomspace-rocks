@@ -76,18 +76,6 @@ p.get_value(Predicate("floaty things"))
 # using it with RocksStorageNode, which is built on top of the RocksDB
 # disk database.  Rocks is nice, because it requires no config to use.
 
-# The StorageNode API is implemented as a message-passing API. This
-# uses exactly the same generic 'atomspace.set_value(atom, key, value)'
-# system available for all Atoms. However, for StorageNodes (and more
-# generally, for ObjectNodes, and more narrowly, for SensoryNodes)
-# certain keys are interpreted as messages, requesting that some action
-# be taken, rather than just static keys specifying a location. Such
-# message-passing API's can be understood as a form of dynamic
-# object-orientedd programming: the messages can be thought of as being
-# methods on a class instance, which are "called" when the message is
-# is sent, whereas a plain key corresponds to a member or field: a named
-# location on the class instance, where things can be stored.
-
 # Create a RocksDB StorageNode.
 # The rocks:// URL specifies a directory in the local filesystem.
 storage = RocksStorage("rocks:///tmp/foo")
@@ -196,14 +184,13 @@ for key in hurly.get_keys():
 prt_atomspace_contents(space)
 
 # Restore all Edges held in storage, by fetching the incoming set.
-print("\nFetch incoming set: restore all links containing that atom.")
 space.set_value(storage, Predicate("*-fetch-incoming-set-*"),
 	LinkValue([space, url_pred]))
 
 # Close the connection to storage.
-space.set_value(storage, PredicateNode("*-close-*"), VoidValue())
+space.set_value(storage, Predicate("*-close-*"), VoidValue())
 
-print("\nAfter selective restore:")
+print("\nAfter restorint the Incoming Set:")
 prt_atomspace_contents(space)
 
 print("Good bye!")
@@ -213,12 +200,26 @@ print("Good bye!")
 #
 #    `atomspace.set_value(storage, message, args)`.
 #
-# A small handfule of messages do not require arguments; these work by
+# A small handful of messages do not require arguments; these work by
 # saying
 #
 #    result = `atomspace.get_value(storage, message)`.
 #
 # Messages are always PredicateNodes naming the operation.
+#
+# The StorageNode API is a message-passing API. It uses exactly the
+# same generic 'atomspace.set_value(atom, key, value)' interface
+# available for all Atoms. However, for StorageNodes (and more
+# generally, for ObjectNodes, and more narrowly, for SensoryNodes)
+# certain keys are interpreted as messages, requesting that some action
+# be taken, rather than just static keys specifying a location.
+#
+# Such message-passing API's can be understood as a form of dynamic
+# object-oriented programming: the messages can be thought of as being
+# methods on a class instance, which are "called" when the message is
+# is sent, whereas a plain key corresponds to a member or field: a named
+# location on the class instance, where things can be stored.
+#
 # Common messages:
 #
 # * `*-open-*` and `*-close-*` to open/close storage connections.
@@ -261,7 +262,13 @@ print("Good bye!")
 # longer description of the messages. A complete list of messages for
 # a given StorageNode can be optained by saying
 #
-#     storage.getMessages()
+#     storage.get_messages()
+#
+# The validity of a message can be tested by saying
+#
+#     storage.is_message(Predicate("*-open-*"))
+#     storage.is_message(Predicate("foobar"))
+#     storage.is_message(Concept("*-dingdong-*"))
 #
 # THE END.
 # ---------------------------------------------------------------------
