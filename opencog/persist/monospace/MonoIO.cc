@@ -207,7 +207,7 @@ std::string MonoStorage::writeAtom(const Handle& h)
 	std::string shash, sid, satom, pfx;
 
 	// If it's alpha-convertible, then look for equivalents.
-	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
+	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_SIG);
 	if (convertible)
 	{
 		shash = "h@" + aidtostr(h->get_hash());
@@ -460,7 +460,7 @@ Handle MonoStorage::getLink(Type t, const HandleSeq& hs)
 {
 	CHECK_OPEN;
 	// If it's alpha-convertible, then look for equivalents.
-	bool convertible = nameserver().isA(t, ALPHA_CONVERTIBLE_LINK);
+	bool convertible = nameserver().isA(t, ALPHA_CONVERTIBLE_SIG);
 	if (convertible)
 	{
 		Handle h = createLink(hs, t);
@@ -494,7 +494,7 @@ std::string MonoStorage::findAtom(const Handle& h)
 	CHECK_OPEN;
 	// If it's alpha-convertible, maybe we already know about
 	// an alpha-equivalent form...
-	if (nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK))
+	if (nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_SIG))
 	{
 		std::string shash = "h@" + aidtostr(h->get_hash());
 		std::string sid;
@@ -510,7 +510,7 @@ std::string MonoStorage::findAtom(const Handle& h)
 	return sid;
 }
 
-/// If an Atom is an ALPHA_CONVERTIBLE_LINK, then we have to look
+/// If an Atom is an ALPHA_CONVERTIBLE_SIG, then we have to look
 /// for it's hash, and figure out if we already know it in a different
 /// but alpha-equivalent form. Return the sid of that form, if found.
 Handle MonoStorage::findAlpha(const Handle& h, const std::string& shash,
@@ -549,7 +549,7 @@ void MonoStorage::removeAtom(AtomSpace* as, const Handle& h, bool recursive)
 #endif
 
 	// Are we even holding the Atom to be deleted?
-	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_LINK);
+	bool convertible = nameserver().isA(h->get_type(), ALPHA_CONVERTIBLE_SIG);
 	std::string sid;
 	std::string satom;
 	std::string shash;

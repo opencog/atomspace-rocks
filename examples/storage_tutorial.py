@@ -273,9 +273,9 @@ print("Good bye!")
 #
 # The validity of a message can be tested by saying
 #
-#     IsMessage(storage, Predicate("*-open-*")).execute()
-#     IsMessage(storage, Predicate("foobar")).execute()
-#     IsMessage(storage, Concept("*-dingdong-*")).execute()
+#     IsMessage(Predicate("*-open-*")).execute()
+#     IsMessage(Predicate("foobar")).execute()
+#     IsMessage(Concept("*-dingdong-*")).execute()
 #
 # THE END.
 # ---------------------------------------------------------------------
