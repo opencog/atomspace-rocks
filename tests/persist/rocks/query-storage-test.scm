@@ -204,7 +204,7 @@
 	(define results-key (Predicate "results"))
 
 	; Find all structures containing (Concept "B")
-	(define b-holders (MaximalJoin (Present (Concept "B"))))
+	(define b-holders (MaximalJoin (Concept "B")))
 	(fetch-query b-holders results-key)
 	(define result (cog-value b-holders results-key))
 
