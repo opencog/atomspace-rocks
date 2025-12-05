@@ -85,15 +85,15 @@
 	(load-atomspace as-two)
 
 	(test-assert "two-has-resident"
-		(not (null? (cog-node 'Concept "Resident of Two, here!"))))
+		(cog-node 'Concept "Resident of Two, here!"))
 	(test-assert "two-has-list"
-		(not (null? (cog-link 'List (Concept "two-a") (Concept "two-b")))))
+		(cog-link 'List (Concept "two-a") (Concept "two-b")))
 
 	; Verify space two does NOT have content from other spaces
 	(test-assert "two-not-have-one-content"
-		(null? (cog-node 'Concept "I am in Space One!")))
+		(not (cog-node 'Concept "I am in Space One!")))
 	(test-assert "two-not-have-three-content"
-		(null? (cog-node 'Concept "Three's company")))
+		(not (cog-node 'Concept "Three's company")))
 
 	; Load and verify space one
 	(define as-one (AtomSpace "foo"))
@@ -101,13 +101,13 @@
 	(load-atomspace as-one)
 
 	(test-assert "one-has-content"
-		(not (null? (cog-node 'Concept "I am in Space One!"))))
+		(cog-node 'Concept "I am in Space One!"))
 	(test-assert "one-has-also"
-		(not (null? (cog-node 'Concept "Also in One"))))
+		(cog-node 'Concept "Also in One"))
 
 	; Verify space one does NOT have content from other spaces
 	(test-assert "one-not-have-two-content"
-		(null? (cog-node 'Concept "Resident of Two, here!")))
+		(not (cog-node 'Concept "Resident of Two, here!")))
 
 	; Load and verify space three
 	(define as-three (AtomSpace "bing"))
@@ -115,11 +115,11 @@
 	(load-atomspace as-three)
 
 	(test-assert "three-has-edge"
-		(not (null? (cog-link 'EdgeLink
+		(cog-link 'EdgeLink
 			(Predicate "three-ness")
-			(Item "Just an old lump of coal")))))
+			(Item "Just an old lump of coal")))
 	(test-assert "three-has-company"
-		(not (null? (cog-node 'Concept "Three's company"))))
+		(cog-node 'Concept "Three's company"))
 
 	(cog-close storage)
 )
@@ -152,11 +152,11 @@
 
 	; Verify the bundle index exists
 	(test-assert "bundle-predicate-exists"
-		(not (null? (cog-node 'Predicate "bundle"))))
+		(cog-node 'Predicate "bundle"))
 	(test-assert "bundle-alpha-item-exists"
-		(not (null? (cog-node 'Item "AtomSpace Bundle Alpha"))))
+		(cog-node 'Item "AtomSpace Bundle Alpha"))
 	(test-assert "bundle-beta-item-exists"
-		(not (null? (cog-node 'Item "Bundle Beta"))))
+		(cog-node 'Item "Bundle Beta"))
 
 	; Verify the AtomSpace nodes are in the index
 	(define as-one (AtomSpace "foo"))
@@ -164,17 +164,17 @@
 	(define as-three (AtomSpace "bing"))
 
 	(test-assert "edge-to-foo-exists"
-		(not (null? (cog-link 'Edge
+		(cog-link 'Edge
 			(Predicate "bundle")
-			(List (Item "AtomSpace Bundle Alpha") as-one)))))
+			(List (Item "AtomSpace Bundle Alpha") as-one)))
 	(test-assert "edge-to-bar-exists"
-		(not (null? (cog-link 'Edge
+		(cog-link 'Edge
 			(Predicate "bundle")
-			(List (Item "AtomSpace Bundle Alpha") as-two)))))
+			(List (Item "AtomSpace Bundle Alpha") as-two)))
 	(test-assert "edge-to-bing-exists"
-		(not (null? (cog-link 'Edge
+		(cog-link 'Edge
 			(Predicate "bundle")
-			(List (Item "Bundle Beta") as-three)))))
+			(List (Item "Bundle Beta") as-three)))
 
 	(cog-close storage)
 )
@@ -213,25 +213,25 @@
 	; Verify space two doesn't have space one's content
 	(cog-set-atomspace! as-two)
 	(test-assert "two-no-one-content"
-		(null? (cog-node 'Concept "I am in Space One!")))
+		(not (cog-node 'Concept "I am in Space One!")))
 
 	; Verify space three doesn't have space one's content
 	(cog-set-atomspace! as-three)
 	(test-assert "three-no-one-content"
-		(null? (cog-node 'Concept "I am in Space One!")))
+		(not (cog-node 'Concept "I am in Space One!")))
 
 	; Now load space two and verify it has correct content
 	(load-atomspace as-two)
 	(cog-set-atomspace! as-two)
 	(test-assert "two-loaded-has-content"
-		(not (null? (cog-node 'Concept "Resident of Two, here!"))))
+		(cog-node 'Concept "Resident of Two, here!"))
 
 	; Verify space three doesn't have space two's content
 	(cog-set-atomspace! as-three)
 	(test-assert "three-no-two-content"
-		(null? (cog-node 'Concept "Resident of Two, here!")))
+		(not (cog-node 'Concept "Resident of Two, here!")))
 	(test-assert "three-no-two-list"
-		(null? (cog-link 'List (Concept "two-a") (Concept "two-b"))))
+		(not (cog-link 'List (Concept "two-a") (Concept "two-b"))))
 
 	(cog-close storage)
 )
@@ -271,11 +271,11 @@
 
 	; Verify content was loaded
 	(test-assert "three-loaded-via-no-arg"
-		(not (null? (cog-node 'Concept "Three's company"))))
+		(cog-node 'Concept "Three's company"))
 	(test-assert "three-has-edge-via-no-arg"
-		(not (null? (cog-link 'EdgeLink
+		(cog-link 'EdgeLink
 			(Predicate "three-ness")
-			(Item "Just an old lump of coal")))))
+			(Item "Just an old lump of coal")))
 
 	(cog-close storage)
 )
