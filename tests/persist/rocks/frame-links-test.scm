@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; frame-links-test.scm
 ; Test ability to restore complex link structures.

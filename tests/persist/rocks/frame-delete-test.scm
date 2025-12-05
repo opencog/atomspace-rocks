@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; frame-delete-test.scm
 ;

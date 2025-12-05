@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; promote-test.scm
 ; Verify that plain stores can be upgraded to frame stores.

@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; space-episodic.scm -- Unit test for RocksStorageNode w/AtomSpaces
 ;

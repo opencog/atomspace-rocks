@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; value-store-test.scm
 ; Verify that only the top values are stored.

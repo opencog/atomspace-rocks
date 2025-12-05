@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; space-wye-test.scm
 ; Test wye-shaped inheritance patterns for multiple atomspaces.

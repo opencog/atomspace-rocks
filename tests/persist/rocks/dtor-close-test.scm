@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; Test for issue #19 -- Destructor not being called.
 ; The fix is in the AtomSpace, but its easier to check here.

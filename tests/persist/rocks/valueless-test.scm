@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; valueless-test.scm
 ; Test ability to store and retrieve atoms without any values.

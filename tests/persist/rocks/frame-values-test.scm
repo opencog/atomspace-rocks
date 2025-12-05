@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; frame-values-test.scm
 ; Test ability to change and delete values.

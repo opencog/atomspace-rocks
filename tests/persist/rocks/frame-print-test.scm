@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; frame-print-test.scm
 ; Test for crash (null-pointer deref) for a simple usercase.

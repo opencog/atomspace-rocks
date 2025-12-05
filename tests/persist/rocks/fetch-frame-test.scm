@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; fetch-frame-test.scm
 ; Test ability of specific fetch methods w/ multiple atomspaces.

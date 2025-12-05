@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; space-link-test.scm
 ; Test ability to store Links containing AtomSpaces.

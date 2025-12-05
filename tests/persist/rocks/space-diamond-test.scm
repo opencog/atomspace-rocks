@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; space-diamond-test.scm
 ; Test diamond-shaped inheritance patterns for multiple atomspaces.

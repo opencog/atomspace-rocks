@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; value-frame-test.scm
 ; Cross-over of space-frame-test.scm and value-store-test.scm

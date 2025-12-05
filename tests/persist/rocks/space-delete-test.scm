@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; space-delete-test.scm
 ; Test ability to delete an atomspace.

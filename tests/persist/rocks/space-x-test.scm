@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; space-x-test.scm
 ; Test x-shaped inheritance patterns for multiple atomspaces.

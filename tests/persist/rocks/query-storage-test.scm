@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; query-storage-test.scm
 ; Unit test verifying the query-storage.scm demo.

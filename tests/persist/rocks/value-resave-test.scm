@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; value-resave-test.scm
 ; Store, delete and then store again a value.

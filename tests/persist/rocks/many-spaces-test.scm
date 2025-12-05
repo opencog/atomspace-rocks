@@ -1,3 +1,5 @@
+#! /usr/bin/env -S guile -s
+!#
 ;
 ; many-spaces-test.scm
 ; Unit test verifying the many-spaces.scm demo.
