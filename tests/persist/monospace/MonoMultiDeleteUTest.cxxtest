@@ -168,9 +168,42 @@ void MultiDeleteUTest::test_add_delete(void)
 	for (std::thread& t : thread_pool) t.join();
 	printf("Done joining threads\n");
 
-	printf("Final atomspace size=%lu\n", as->get_size());
-	// Verify the atomspace size
-	// TS_ASSERT_EQUALS(as->get_size(), 2);
+	printf("Post-update AtomSpace size=%lu\n", as->get_size());
+	// printf("AtomSpace contents =\n%s\n", as->to_string().c_str());
+
+	// Verify the local AtomSpace size. Should be 18:
+	// The StorageNode itself, the (Concept "aaaa") and
+	// 16 from thread-id modulo 17
+	TS_ASSERT_EQUALS(as->get_size(), 8 + n_threads);
+
+	// Verify the DB contents: pull everything from the DB,
+	// back to here. Do this "independently", by closing and
+	// reopening; this forces the Storagenode through assorted
+	// flush and close code, potentially exposing bugs.
+	store->close();
+
+	HandleSeq hs;
+	as->get_handles_by_type(hs, CONCEPT_NODE);
+	for (const Handle& h : hs)
+		as->extract_atom(h);
+	hs.clear();
+	printf("AtomSpace contents =\n%s\n", as->to_string().c_str());
+	TS_ASSERT_EQUALS(as->get_size(), 1);
+
+	store->open();
+	TS_ASSERT(store->connected())
+
+	store->load_atomspace();
+	printf("Final AtomSpace size=%lu\n", as->get_size());
+
+	// Size should be 19: the 18 from before plus that annoying
+	// (Predicate "*-TruthValueKey-*")
+	size_t expected_size = 9 + n_threads;
+	if (as->get_size() != expected_size)
+		printf("Error: Bad size! AtomSpace contents =\n%s\n",
+			as->to_string().c_str());
+
+	TS_ASSERT_EQUALS(as->get_size(), expected_size);
 
 	store->erase();
 	store->close();
