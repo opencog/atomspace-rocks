@@ -195,10 +195,15 @@ void MultiDeleteUTest::test_add_delete(void)
 	store->load_atomspace();
 	printf("Final AtomSpace size=%lu\n", as->get_size());
 
-#if NOOOOOOOOOO
-// XXX FIXME its failing!
+#if THIS_IS_NOT_TRUE
 	// Size should be 19: the 18 from before plus that annoying
 	// (Predicate "*-TruthValueKey-*")
+	//
+	// Well, but this will not hold true, because the insert and
+	// remove ran in different threads, asynchronously, and so
+	// there may have been inserts after the "matching" remove.
+	// This will hold for the MonoMultiDeleteUTest, because
+	// everything is processed synchronously, there. But not here.
 	size_t expected_size = 9 + n_threads;
 	if (as->get_size() != expected_size)
 		printf("Error: Bad size! AtomSpace contents =\n%s\n",
