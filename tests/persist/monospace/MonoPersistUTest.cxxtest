@@ -247,16 +247,20 @@ void PersistUTest::fetch_space(int idx, StorageNodePtr space)
 
 void PersistUTest::check_space(int idx, AtomSpace *space, std::string dbgmsg)
 {
-    Handle hb1 = space->get_handle(n1[idx]->get_type(), n1[idx]->get_name());
+    std::string nam1 = n1[idx]->get_name();
+    Handle hb1 = space->get_node(n1[idx]->get_type(), std::move(nam1));
     atomCompare(h1[idx], hb1, dbgmsg + "-hb1");
 
-    Handle hb2 = space->get_handle(n2[idx]->get_type(), n2[idx]->get_name());
+    std::string nam2 = n2[idx]->get_name();
+    Handle hb2 = space->get_node(n2[idx]->get_type(), std::move(nam2));
     atomCompare(h2[idx], hb2, dbgmsg + "-hb2");
 
-    Handle hb3 = space->get_handle(n3[idx]->get_type(), n3[idx]->get_name());
+    std::string nam3 = n3[idx]->get_name();
+    Handle hb3 = space->get_node(n3[idx]->get_type(), std::move(nam3));
     atomCompare(h3[idx], hb3, dbgmsg + "-hb3");
 
-    Handle hb4 = space->get_handle(n4[idx]->get_type(), n4[idx]->get_name());
+    std::string nam4 = n4[idx]->get_name();
+    Handle hb4 = space->get_node(n4[idx]->get_type(), std::move(nam4));
     atomCompare(h4[idx], hb4, dbgmsg + "-hb4");
 
     HandleSeq hvec;
@@ -265,30 +269,34 @@ void PersistUTest::check_space(int idx, AtomSpace *space, std::string dbgmsg)
     hvec.push_back(hb3);
     hvec.push_back(hb4);
 
-    Handle hlb = space->get_handle(hl[idx]->get_type(), hvec);
+    Handle hlb = space->get_link(hl[idx]->get_type(), std::move(hvec));
     atomCompare(hl[idx], hlb, dbgmsg + "-hlinkb");
 
     HandleSeq hv2({hlb, hb2});
-    Handle hlb2 = space->get_handle(hl2[idx]->get_type(), hv2);
+    Handle hlb2 = space->get_link(hl2[idx]->get_type(), std::move(hv2));
     atomCompare(hl2[idx], hlb2, dbgmsg + "-hlinkb2");
 
     HandleSeq hv3({hb1, hlb2, hb3});
-    Handle hlb3 = space->get_handle(hl3[idx]->get_type(), hv3);
+    Handle hlb3 = space->get_link(hl3[idx]->get_type(), std::move(hv3));
     atomCompare(hl3[idx], hlb3, dbgmsg + "-hlinkb3");
 }
 
 void PersistUTest::check_empty(int idx, AtomSpace *space)
 {
-    Handle hb1 = space->get_handle(n1[idx]->get_type(), n1[idx]->get_name());
+    std::string nam1 = n1[idx]->get_name();
+    Handle hb1 = space->get_node(n1[idx]->get_type(), std::move(nam1));
     TSM_ASSERT("Should not find this atom", hb1 == Handle::UNDEFINED);
 
-    Handle hb2 = space->get_handle(n2[idx]->get_type(), n2[idx]->get_name());
+    std::string nam2 = n2[idx]->get_name();
+    Handle hb2 = space->get_node(n2[idx]->get_type(), std::move(nam2));
     TSM_ASSERT("Should not find this atom", hb2 == Handle::UNDEFINED);
 
-    Handle hb3 = space->get_handle(n3[idx]->get_type(), n3[idx]->get_name());
+    std::string nam3 = n3[idx]->get_name();
+    Handle hb3 = space->get_node(n3[idx]->get_type(), std::move(nam3));
     TSM_ASSERT("Should not find this atom", hb3 == Handle::UNDEFINED);
 
-    Handle hb4 = space->get_handle(n4[idx]->get_type(), n4[idx]->get_name());
+    std::string nam4 = n4[idx]->get_name();
+    Handle hb4 = space->get_node(n4[idx]->get_type(), std::move(nam4));
     TSM_ASSERT("Should not find this atom", hb4 == Handle::UNDEFINED);
 
     HandleSeq hvec;
@@ -297,7 +305,7 @@ void PersistUTest::check_empty(int idx, AtomSpace *space)
     hvec.push_back(h3[idx]);
     hvec.push_back(h4[idx]);
 
-    Handle hlb = space->get_handle(hl[idx]->get_type(), hvec);
+    Handle hlb = space->get_link(hl[idx]->get_type(), std::move(hvec));
     TSM_ASSERT("Should not find this atom", hlb == Handle::UNDEFINED);
 }
 

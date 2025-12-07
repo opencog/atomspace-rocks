@@ -193,14 +193,15 @@ void LargeZipfUTest::check_space(AtomSpace *space, std::string dbgmsg)
 {
 	for (int w=0; w<NWORDS; w++)
 	{
-		Handle h = space->get_handle(hword[w]->get_type(), hword[w]->get_name());
+		std::string nam = hword[w]->get_name();
+		Handle h = space->get_node(hword[w]->get_type(), std::move(nam));
 		atomCompare(hword[w], h, dbgmsg + "-word-" + std::to_string(w));
 	}
 
 	for (int p=0; p<npairs; p++)
 	{
-		Handle h = space->get_handle(hpair[p]->get_type(),
-		                             hpair[p]->getOutgoingSet());
+		HandleSeq hs = hpair[p]->getOutgoingSet();
+		Handle h = space->get_link(hpair[p]->get_type(), std::move(hs));
 		atomCompare(hpair[p], h, dbgmsg + "pair-" + std::to_string(p));
 	}
 }
@@ -209,14 +210,15 @@ void LargeZipfUTest::check_empty(AtomSpace *space)
 {
 	for (int w=0; w<NWORDS; w++)
 	{
-		Handle h = space->get_handle(hword[w]->get_type(), hword[w]->get_name());
+		std::string nam = hword[w]->get_name();
+		Handle h = space->get_node(hword[w]->get_type(), std::move(nam));
 		TSM_ASSERT("Should not find this word", h == Handle::UNDEFINED);
 	}
 
 	for (int p=0; p<npairs; p++)
 	{
-		Handle h = space->get_handle(hpair[p]->get_type(),
-		                             hpair[p]->getOutgoingSet());
+		HandleSeq hs = hpair[p]->getOutgoingSet();
+		Handle h = space->get_link(hpair[p]->get_type(), std::move(hs));
 		TSM_ASSERT("Should not find this pair", h == Handle::UNDEFINED);
 	}
 }
