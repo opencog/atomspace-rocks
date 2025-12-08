@@ -38,9 +38,11 @@
 
 	(cog-set-atomspace! mid2-space)
 	(cog-delete! (Concept "even"))
+	(cog-extract! (Concept "even"))
 
 	(cog-set-atomspace! mid3-space)
 	(cog-delete! (Concept "odd"))
+	(cog-extract! (Concept "odd"))
 
 	(cog-set-atomspace! mid4-space)
 	(store-atom (Concept "even"))

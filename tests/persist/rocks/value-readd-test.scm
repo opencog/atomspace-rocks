@@ -40,6 +40,7 @@
 	; Delete it (which writes to DB),
 	; but then restore it (which writes again).
 	(cog-delete-recursive! (Concept "foo"))
+	(cog-extract-recursive! (Concept "foo"))
 	(set-cnt! (Concept "foo") (FloatValue 1 0 6))
 	(store-atom (ListLink (Concept "foo") (Concept "faa")))
 

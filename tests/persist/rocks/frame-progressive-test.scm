@@ -49,6 +49,7 @@
 		(store-stuff N)
 		(cog-set-atomspace! (AtomSpace (cog-atomspace)))
 		(cog-delete-recursive! (Concept "bar"))
+		(cog-extract-recursive! (Concept "bar"))
 		(cog-set-atomspace! (AtomSpace (cog-atomspace)))
 		(recompute (+ N 3) (- NLOOP 1)))
 )

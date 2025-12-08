@@ -41,6 +41,7 @@
 	; but then restore it (which writes again).
 	; But it has no values. Next, write an explicit value.
 	(cog-delete-recursive! (Concept "foo"))
+	(cog-extract-recursive! (Concept "foo"))
 	(store-atom (Concept "foo"))
 	(set-cnt! (Concept "foo") (FloatValue 1 0 6))
 	(store-value (Concept "foo") (Predicate "kayfabe"))
