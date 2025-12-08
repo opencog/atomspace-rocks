@@ -171,10 +171,10 @@ void MultiDeleteUTest::test_add_delete(void)
 	printf("Post-update AtomSpace size=%lu\n", as->get_size());
 	// printf("AtomSpace contents =\n%s\n", as->to_string().c_str());
 
-	// Verify the local AtomSpace size. Should be 18:
+	// Verify the local AtomSpace size. Should be 34:
 	// The StorageNode itself, the (Concept "aaaa") and
-	// 16 from thread-id modulo 17
-	TS_ASSERT_EQUALS(as->get_size(), 8 + n_threads);
+	// 16 Concept and Lists from thread-id modulo 16
+	TS_ASSERT_EQUALS(as->get_size(), 2 + 2*(n_threads+6));
 
 	// Verify the DB contents: pull everything from the DB,
 	// back to here. Do this "independently", by closing and
@@ -185,7 +185,7 @@ void MultiDeleteUTest::test_add_delete(void)
 	HandleSeq hs;
 	as->get_handles_by_type(hs, CONCEPT_NODE);
 	for (const Handle& h : hs)
-		as->extract_atom(h);
+		as->extract_atom(h, true);
 	hs.clear();
 	printf("AtomSpace contents =\n%s\n", as->to_string().c_str());
 	TS_ASSERT_EQUALS(as->get_size(), 1);
@@ -198,7 +198,7 @@ void MultiDeleteUTest::test_add_delete(void)
 
 	// Size should be 19: the 18 from before plus that annoying
 	// (Predicate "*-TruthValueKey-*")
-	size_t expected_size = 9 + n_threads;
+	size_t expected_size = 3 + n_threads + 6;
 	if (as->get_size() != expected_size)
 		printf("Error: Bad size! AtomSpace contents =\n%s\n",
 			as->to_string().c_str());

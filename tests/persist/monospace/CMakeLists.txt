@@ -18,7 +18,7 @@ TARGET_LINK_LIBRARIES(MonoFetchUTest execution)
 # ADD_CXXTEST(MonoDeleteUTest)
 ADD_CXXTEST(MonoAlphaEquivUTest)
 ADD_CXXTEST(MonoMultiPersistUTest)
-# ADD_CXXTEST(MonoMultiDeleteUTest)
+ADD_CXXTEST(MonoMultiDeleteUTest)
 ADD_CXXTEST(MonoQueryPersistUTest)
 #
 ADD_CXXTEST(MonoLargeFlatUTest)
