@@ -197,12 +197,17 @@ void MultiDeleteUTest::test_add_delete(void)
 
 	// Size should be 19: the 18 from before plus that annoying
 	// (Predicate "*-TruthValueKey-*")
-	size_t expected_size = 3 + n_threads + 6;
-	if (as->get_size() != expected_size)
+	// Well, actually, there is no guarantee that the removes will
+	// happen after the stores. Best we can do is check lower and
+	// upper bounds of 18 and 34:
+	size_t min_size = 3 + n_threads + 6;
+	size_t max_size = 3 + 2*(n_threads + 6);
+	if (as->get_size() < min_size or max_size < as->get_size())
 		printf("Error: Bad size! AtomSpace contents =\n%s\n",
 			as->to_string().c_str());
 
-	TS_ASSERT_EQUALS(as->get_size(), expected_size);
+	TS_ASSERT(as->get_size() >= min_size);
+	TS_ASSERT(as->get_size() <= max_size);
 
 	store->erase();
 	store->close();
