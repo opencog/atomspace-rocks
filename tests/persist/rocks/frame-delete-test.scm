@@ -121,14 +121,14 @@
 
 	; Should be absent in the next level.
 	(cog-set-atomspace! mid1-space)
-	(test-assert "mid1-absent" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid1-absent" (not (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! mid2-space)
 	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
 	(test-equal "mid2-tv" 5 (get-cnt (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! mid3-space)
-	(test-assert "mid3-absent" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid3-absent" (not (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! surface-space)
 	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
@@ -228,7 +228,7 @@
 
 	; Should be absent in the next level.
 	(cog-set-atomspace! mid1-space)
-	(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid1-space" (not (cog-node 'Concept "foo")))
 
 	; Test remaining levels.
 	(cog-set-atomspace! mid2-space)
@@ -236,7 +236,7 @@
 	(test-equal "mid2-tv" 4 (get-cnt (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! mid3-space)
-	(test-assert "mid3-space" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid3-space" (not (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! surface-space)
 	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
@@ -343,7 +343,7 @@
 
 	; Should be absent in the next level.
 	(cog-set-atomspace! mid1-space)
-	(test-assert "mid1-space" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid1-space" (not (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! mid2-space)
 	(test-assert "mid2-space" (cog-atom? (cog-node 'Concept "foo")))
@@ -352,7 +352,7 @@
 		(ListLink (Concept "foo") (Concept "bar"))))
 
 	(cog-set-atomspace! mid3-space)
-	(test-assert "mid3-space" (nil? (cog-node 'Concept "foo")))
+	(test-assert "mid3-space" (not (cog-node 'Concept "foo")))
 
 	(cog-set-atomspace! surface-space)
 	(test-assert "surface-space" (cog-atom? (cog-node 'Concept "foo")))
