@@ -434,7 +434,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 	store->open();
 	TS_ASSERT(store->connected())
 
-	// We expect 5 keys, including the truth-value key.
+	// We expect 5 keys, including the truth-value key. 4 without it.
 	// That's because the (Concept "x") sitting in the Value
 	// was never actually deleted; thus it is restored.
 	printf("Loading the atomspace ...\n");
@@ -461,7 +461,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 	store->store_atom(hb);
 	store->barrier();
 
-	TS_ASSERT_EQUALS(as->get_size(), 7);
+	TS_ASSERT_EQUALS(as->get_size(), 6);
 
 	// Remove the value .. again
 	store->remove_atom(as, hx);
