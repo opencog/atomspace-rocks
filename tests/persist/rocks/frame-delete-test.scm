@@ -144,7 +144,7 @@
 
 (define deep-delete "test deep delete")
 (test-begin deep-delete)
-(test-deep cog-delete!)
+(test-deep (lambda (x) (cog-delete! x) (cog-extract! x)))
 (test-end deep-delete)
 
 (whack "/tmp/cog-rocks-frame-delete-test")
@@ -252,7 +252,7 @@
 
 (define deep-change-delete "test deep change-delete")
 (test-begin deep-change-delete)
-(test-deep-change cog-delete!)
+(test-deep-change (lambda (x) (cog-delete! x) (cog-extract! x)))
 (test-end deep-change-delete)
 
 (whack "/tmp/cog-rocks-frame-delete-test")
@@ -370,7 +370,7 @@
 (whack "/tmp/cog-rocks-frame-delete-test")
 (define deep-link-delete "test deep link-delete")
 (test-begin deep-link-delete)
-(test-deep-link cog-delete-recursive!)
+(test-deep-link (lambda (x) (cog-delete-recursive! x) (cog-extract-recursive! x)))
 (test-end deep-link-delete)
 
 ; ===================================================================
