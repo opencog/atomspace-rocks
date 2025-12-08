@@ -104,7 +104,7 @@
 
 	; ----------------------------------
 	(cog-set-atomspace! mid2-space)
-	(test-assert "no-link-2" (nil?
+	(test-assert "no-link-2" (not
 		(cog-link 'List (Concept "foo") (Concept "bar"))))
 	(test-equal "foo2-space" mid2-space (cog-atomspace (cog-node 'Concept "foo")))
 	(test-equal "bar2-space" base-space (cog-atomspace (cog-node 'Concept "bar")))

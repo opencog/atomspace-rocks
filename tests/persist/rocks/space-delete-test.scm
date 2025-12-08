@@ -136,7 +136,7 @@
 	(define mid1-space top-space)
 	(define base-space (cog-outgoing-atom mid1-space 0))
 
-	(test-assert "lily-gone" (nil? (cog-link 'ListLink
+	(test-assert "lily-gone" (not (cog-link 'ListLink
 		(Concept "foo") (Concept "bar"))))
 
 	; Verify appropriate atomspace membership
