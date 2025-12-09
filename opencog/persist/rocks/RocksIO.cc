@@ -571,6 +571,23 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 		}
 		if (as) key = as->add_atom(key);
 
+		// Check for flag marker predicates and restore the flags.
+		// The mark will set the value automatically.
+		if (key->is_type(PREDICATE_NODE))
+		{
+			const std::string& kname = key->get_name();
+			if (kname == "*-IsKeyFlag-*")
+			{
+				markAtomIsKey(h);
+				continue;
+			}
+			if (kname == "*-IsMessageFlag-*")
+			{
+				markAtomIsMessage(h);
+				continue;
+			}
+		}
+
 		// read-only Atomspaces will refuse insertion of keys.
 		// However, we have to special-case the truth values.
 		// Mostly because (PredicateNode "*-TruthValueKey-*")
@@ -650,6 +667,23 @@ void RocksStorage::getKeysMulti(AtomSpace* as,
 
 		Handle key = getAtom(rks.substr(kidoff));
 		key = as->add_atom(key);
+
+		// Check for flag marker predicates and restore the flags.
+		// The mark will set the value automatically.
+		if (key->is_type(PREDICATE_NODE))
+		{
+			const std::string& kname = key->get_name();
+			if (kname == "*-IsKeyFlag-*")
+			{
+				markAtomIsKey(h);
+				continue;
+			}
+			if (kname == "*-IsMessageFlag-*")
+			{
+				markAtomIsMessage(h);
+				continue;
+			}
+		}
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
