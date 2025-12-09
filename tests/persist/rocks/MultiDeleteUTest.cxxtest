@@ -173,6 +173,7 @@ void MultiDeleteUTest::test_add_delete(void)
 	// Verify the local AtomSpace size. Should be 34:
 	// The StorageNode itself, the (Concept "aaaa") and
 	// 16 Concept and Lists from thread-id modulo 16
+	// Note: *-IsKeyFlag-* is NOT added by store_atom, only by load operations
 	TS_ASSERT_EQUALS(as->get_size(), 2 + 2*(n_threads+6));
 
 	// Verify the DB contents: pull everything from the DB,
@@ -195,13 +196,13 @@ void MultiDeleteUTest::test_add_delete(void)
 	store->load_atomspace();
 	printf("Final AtomSpace size=%lu\n", as->get_size());
 
-	// Size should be 19: the 18 from before plus that annoying
-	// (Predicate "*-TruthValueKey-*")
+	// Size should be 20: the 18 from before plus
+	// (Predicate "*-TruthValueKey-*") and (Predicate "*-IsKeyFlag-*")
 	// Well, actually, there is no guarantee that the removes will
 	// happen after the stores. Best we can do is check lower and
-	// upper bounds of 18 and 34:
-	size_t min_size = 3 + n_threads + 6;
-	size_t max_size = 3 + 2*(n_threads + 6);
+	// upper bounds of 20 and 36:
+	size_t min_size = 4 + n_threads + 6;
+	size_t max_size = 4 + 2*(n_threads + 6);
 	if (as->get_size() < min_size or max_size < as->get_size())
 		printf("Error: Bad size! AtomSpace contents =\n%s\n",
 			as->to_string().c_str());

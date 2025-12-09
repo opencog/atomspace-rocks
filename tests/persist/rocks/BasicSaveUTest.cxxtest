@@ -426,8 +426,9 @@ void BasicSaveUTest::test_table()
     size_t num_fetched = table2->get_size();
     printf("test_table: Done loading table; fetched %lu, expected %lu\n",
            num_fetched, num_stored);
-    // One extra, for the (PredicateNode "*-TruthValueKey-*")
-    TSM_ASSERT("Wrong number of atoms fetched", num_fetched == num_stored+1);
+    // Two extra, for (PredicateNode "*-TruthValueKey-*")
+    // and (PredicateNode "*-IsKeyFlag-*")
+    TSM_ASSERT("Wrong number of atoms fetched", num_fetched == num_stored+2);
 
     idx = 0;
     check_table(idx++, table2, "aaa ");

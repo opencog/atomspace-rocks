@@ -59,8 +59,8 @@
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))
 	(count-all (cog-value (ConceptNode "foo") (Predicate "repressed mem"))))
 
-; Verify contents
-(test-assert "base-count" (equal? 12 (count-all)))
+; Verify contents (+1 for *-IsKeyFlag-*)
+(test-assert "base-count" (equal? 13 (count-all)))
 (test-assert "space1-count" (equal? 8
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 6
@@ -102,8 +102,9 @@
 ; Plus two more: (Predicate "*-store-atomspace-*")
 ; and (Predicate "*-load-atomspace-*") and *-open-* and *-close-*
 ; and (Predicate "kayfabe") from test-utils.
+; +1 for (Predicate "*-IsKeyFlag-*")
 
-(test-assert "base-count" (equal? 17 (count-all)))
+(test-assert "base-count" (equal? 18 (count-all)))
 (test-assert "space1-count" (equal? 0
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 0
@@ -114,7 +115,8 @@
 (load-atomspace (AtomSpace "crushing defeat"))
 (cog-close gsn)
 
-(test-assert "base-count" (equal? 18 (count-all)))
+; +1 for (Predicate "*-IsKeyFlag-*")
+(test-assert "base-count" (equal? 19 (count-all)))
 (test-assert "space1-count" (equal? 8
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 6

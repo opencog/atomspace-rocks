@@ -348,11 +348,12 @@ void ValueSaveUTest::test_load_by_type()
 	store->fetch_all_atoms_of_type(CONCEPT_NODE);
 	store->barrier();
 
-	// Six: 4 ConceptNodes, the PredicateNode "*-TruthValueKey-*"
-	// and PredicateNode "some pred key" -- the two preds show up
-	// when the attached values are fetched.
+	// Eight: 4 ConceptNodes, PredicateNode "*-TruthValueKey-*",
+	// PredicateNode "*-IsKeyFlag-*", PredicateNode "some pred key",
+	// and the MonoStorageNode -- the preds show up when the
+	// attached values are fetched.
 	printf ("fetched %lu atoms\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 7);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 8);
 
 	Handle gkey = as->add_node(PREDICATE_NODE, "some pred key");
 	Handle gaf = as->add_node(CONCEPT_NODE, "float node");
@@ -512,8 +513,9 @@ void ValueSaveUTest::test_link_by_type()
 	// only the values on the C-links should be fetched.
 	store->fetch_all_atoms_of_type(LIST_LINK);
 	store->barrier();
+	// +1 for *-IsKeyFlag-*
 	printf ("fetched %lu atoms\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 15);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 16);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");
@@ -722,9 +724,10 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	store->fetch_all_atoms_of_type(LIST_LINK);
 	store->barrier();
 
-	// We created 9 new atoms above, so expect 15 from before plus 9
-	printf ("fetched %lu atoms, expecting 24\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 24);
+	// We created 9 new atoms above, so expect 16 from before plus 9
+	// +1 for *-IsKeyFlag-*
+	printf ("fetched %lu atoms, expecting 25\n", as->get_size());
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 25);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");
@@ -936,8 +939,9 @@ void ValueSaveUTest::test_incoming()
 	store->fetch_incoming_set(gal, false);
 	store->fetch_incoming_set(gav, false);
 	store->barrier();
+	// +1 for *-IsKeyFlag-*
 	printf ("fetched %lu atoms\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 15);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 16);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");
