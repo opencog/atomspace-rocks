@@ -817,6 +817,10 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)
 {
 	CHECK_OPEN;
+
+	// Refuse to delete atoms that are in use as keys or messages.
+	if (h->isKey() or h->isMessage()) return;
+
 #ifdef HAVE_DELETE_RANGE
 	rocksdb::Slice start, end;
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);

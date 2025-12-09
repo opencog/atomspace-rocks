@@ -542,6 +542,10 @@ Handle MonoStorage::findAlpha(const Handle& h, const std::string& shash,
 void MonoStorage::removeAtom(AtomSpace* as, const Handle& h, bool recursive)
 {
 	CHECK_OPEN;
+
+	// Refuse to delete atoms that are in use as keys or messages.
+	if (h->isKey() or h->isMessage()) return;
+
 #ifdef HAVE_DELETE_RANGE
 	rocksdb::Slice start, end;
 	_rfile->DeleteRange(rocksdb::WriteOptions(), start, end);
