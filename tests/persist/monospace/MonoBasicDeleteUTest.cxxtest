@@ -306,12 +306,13 @@ void BasicDeleteUTest::test_key_deletion(void)
 		printf("key=%s\n", k->get_name().c_str());
 	TS_ASSERT_EQUALS(hs.size(), 3);
 
-	// Remove one of the keys. But MonoStorage will not allow this,
-	// it explicitly observes the key is in use, and blocks the removal.
+	// Remove one of the keys. But neither the AtomSpace, nor
+	// MonoStorage allow this, and it stays both in the AtomSpace,
+	// and in storage.
 	store->remove_atom(as, kb);
 	as->extract_atom(kb);
 	// +1 for *-IsKeyFlag-*
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 6);
 
 	// Verify the key was NOT deleted by loading only PredicateNodes.
 	delete as;

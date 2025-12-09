@@ -310,7 +310,7 @@ void BasicDeleteUTest::test_key_deletion(void)
 	store->remove_atom(as, kb);
 	as->extract_atom(kb);
 	// +1 for *-IsKeyFlag-*
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 6);
 
 	// Verify the key was NOT deleted by loading only PredicateNodes.
 	delete as;
