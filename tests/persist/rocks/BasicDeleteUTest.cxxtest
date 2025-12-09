@@ -345,10 +345,11 @@ void BasicDeleteUTest::test_key_deletion(void)
 	store->open();
 	TS_ASSERT(store->connected())
 
-	// We expect 6 atoms (+1 for *-IsKeyFlag-*)
+	// We expect 7 atoms (+1 for *-IsKeyFlag-*)
 	printf("Loading the atomspace ...\n");
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 6);
+	TS_ASSERT_EQUALS(as->get_size(), 7);
+	printf("AtomSpace contents=\n%s\n", as->to_string().c_str());
 
 	// Verify that there are only three keys
 	ha = as->add_node(CONCEPT_NODE, "a");
