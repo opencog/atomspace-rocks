@@ -63,26 +63,44 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is ***Version 1.5.3***.  All unit tests pass.  It has been used in
+This is ***Version 1.6.0***.  All unit tests pass.  It has been used in
 at least one major project, to process tens of millions of Atoms.
 
-This code is 2x or 3x faster than the
-[PostgresStorageNode](https://github.com/opencog/atomspace-pgres)
-on synthetic benchmarks, and has been observed to run 12x faster
-in a real-world application. At least half of this performance
-difference can be explained by the fact that the PostgresStorageNode
-is old and has a sub-optimal design. Someone should port the Rocks
-code here to create a new, better Postgres StorageNode.
+The list of changes since January 2024 is long and fairly boring;
+mostly bug fixes and patches forced by updates to the core AtomSpace.
+The following changes are notable:
+
+* The `*-delete-*` message only deletes Atoms from the on-disk
+  AtomSpace DB.  Deleting from the local (in-RAM) AtomSpace must now
+  be performed as a distinct step.
+* Atoms that are used as keys or messages cannot be deleted.
+* The Python API has been fixed so it actually works. It uses the new
+  message-passing system.
+* The base `StorageNode` (provided by
+  [atomspace-storage](https://github.com/opencog/atomspace-storage))
+  now uses a message-passing system to perform all actions. Typical
+  messages include `*-open-*`, `*-close-*`, `*-load-atom-*`,
+  `*-store-atom-*` and so on. The same base set is supported by all
+  `StorageNode`s (and `ProxyNode`s), not just atomspace-rocks.
+  See the wiki pages for
+  [StorageNode](https://wiki.opencog.org/w/StorageNode) and
+  [ObjectNode](https://wiki.opencog.org/w/ObjectNode).
+
 
 Building and Installing
 -----------------------
-The build and install of `atomspace-rocks` follows the same pattern as
-other AtomSpace projects.
-
 RocksDB is a prerequisite. On Debian/Ubuntu, `apt install librocks-dev`
-Then build, install and test:
+
+The build and install of `atomspace-rocks` follows the same pattern as
+other AtomSpace projects. Prerequisites include the AtomSpace itself
+(from https://github.com/opencog/atomspace) and the generic StorageNode
+API (from https://github.com/opencog/atomspace-storage).
+
+All Atomese projects, including this one, use the same build, install
+and test pattern:
 ```
     cd to project dir atomspace-rocks
+    git pull
     mkdir build
     cd build
     cmake ..

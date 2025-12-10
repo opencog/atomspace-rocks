@@ -12,7 +12,7 @@ install(EXPORT AtomSpaceRocksTargets
 	DESTINATION ${ConfigPackageLocation}
 )
 
-SET(SEMANTIC_VERSION 1.5.3)
+SET(SEMANTIC_VERSION 1.6.0)
 
 configure_package_config_file(AtomSpaceRocksConfig.cmake.in
 	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfig.cmake
