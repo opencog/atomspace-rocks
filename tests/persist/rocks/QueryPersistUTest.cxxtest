@@ -37,7 +37,6 @@
 #include <opencog/persist/rocks/RocksStorage.h>
 
 #include <opencog/util/Logger.h>
-#include <opencog/util/Config.h>
 
 using namespace opencog;
 
