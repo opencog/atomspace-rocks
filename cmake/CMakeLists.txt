@@ -1,6 +1,6 @@
 
 # CMake boilerplate that allows users to do
-#    find_package(AtomspaceRocks REQUIRED 1.5.3)
+#    find_package(AtomspaceRocks REQUIRED 1.6.0)
 # and have it work.
 
 include(CMakePackageConfigHelpers)
@@ -12,8 +12,6 @@ install(EXPORT AtomSpaceRocksTargets
 	DESTINATION ${ConfigPackageLocation}
 )
 
-SET(SEMANTIC_VERSION 1.6.0)
-
 configure_package_config_file(AtomSpaceRocksConfig.cmake.in
 	${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfig.cmake
 	INSTALL_DESTINATION ${ConfigPackageLocation}
@@ -22,7 +20,7 @@ configure_package_config_file(AtomSpaceRocksConfig.cmake.in
 
 write_basic_package_version_file(
 	"${CMAKE_CURRENT_BINARY_DIR}/AtomSpaceRocksConfigVersion.cmake"
-	VERSION ${SEMANTIC_VERSION}
+	VERSION ${PROJECT_VERSION}
 	COMPATIBILITY SameMajorVersion
 )
 
