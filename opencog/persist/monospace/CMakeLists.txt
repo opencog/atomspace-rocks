@@ -27,7 +27,7 @@ ADD_GUILE_EXTENSION(SCM_CONFIG persist-monospace
 # directory that lets other packages FIND_PACKAGE(AtomSpaceMonoSpace)
 INSTALL (TARGETS persist-monospace
 	EXPORT AtomSpaceMonoSpaceTargets
-	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
+	DESTINATION "${CMAKE_INSTALL_LIBDIR}/opencog"
 )
 
 INSTALL (FILES

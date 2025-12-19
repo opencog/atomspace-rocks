@@ -29,7 +29,7 @@ ADD_GUILE_EXTENSION(SCM_CONFIG persist-rocks
 # directory that lets other packages FIND_PACKAGE(AtomSpaceRocks)
 INSTALL (TARGETS persist-rocks
 	EXPORT AtomSpaceRocksTargets
-	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
+	DESTINATION "${CMAKE_INSTALL_LIBDIR}/opencog"
 )
 
 INSTALL (FILES

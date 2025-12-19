@@ -27,7 +27,7 @@ ADD_DEPENDENCIES(persist-rocks-types persist_rocks_atom_types)
 
 # Install targets
 INSTALL (TARGETS persist-rocks-types EXPORT AtomSpaceRocksTargets
-	DESTINATION "lib${LIB_DIR_SUFFIX}/opencog"
+	DESTINATION "${CMAKE_INSTALL_LIBDIR}/opencog"
 )
 
 INSTALL (FILES
