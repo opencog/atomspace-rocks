@@ -93,14 +93,6 @@ ELSE (ROCKSDB_FOUND)
 ENDIF (ROCKSDB_FOUND)
 
 # ----------------------------------------------------------
-# Needed for unit tests
-
-FIND_PACKAGE(Cxxtest)
-IF (NOT CXXTEST_FOUND)
-	MESSAGE(STATUS "CxxTest missing: needed for unit tests.")
-ENDIF (NOT CXXTEST_FOUND)
-
-# ----------------------------------------------------------
 # Guile Python and Cython
 
 include(OpenCogFindGuile)
@@ -138,51 +130,12 @@ INCLUDE(OpenCogCython)
 ADD_SUBDIRECTORY(cmake)
 ADD_SUBDIRECTORY(opencog)
 
-IF (CXXTEST_FOUND)
-	ENABLE_TESTING()
-	ADD_CUSTOM_TARGET(tests)
-	ADD_SUBDIRECTORY(tests EXCLUDE_FROM_ALL)
-	IF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-		# doing coverage stuff while running tests if this is the Coverage build
-		ADD_CUSTOM_TARGET(check
-			# TODO lcov should be found by cmake first
-			# TODO set it up so that we can pick to run coverage per test, or
-			# combined across all tests (the latter is MUCH faster). Use a define?
-			# There is coverage specific stuff in AddCxxTest.cmake now...
-			WORKING_DIRECTORY tests
-			COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure $(ARGS)
-
-			# This script combines the coverage analysis of each test,
-			# then creates html in tests/lcov
-			# Note: this should now be run separately...
-			#COMMAND ${PROJECT_SOURCE_DIR}/scripts/combine_lcov.sh
-			COMMENT "Running tests with coverage..."
-		)
-	ELSE (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-		# Coverage is disabled; test normally
-		ADD_CUSTOM_TARGET(check
-			DEPENDS tests
-			WORKING_DIRECTORY tests
-			COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure $(ARGS)
-			COMMENT "Running tests..."
-		)
-	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
-
-	ADD_CUSTOM_TARGET(test_mono
-		DEPENDS tests
-		WORKING_DIRECTORY tests/persist/monospace
-		COMMAND ${CMAKE_CTEST_COMMAND} $(ARGS)
-		COMMENT "Running Monospace tests..."
-	)
-
-	ADD_CUSTOM_TARGET(test_multi
-		DEPENDS tests
-		WORKING_DIRECTORY tests/persist/rocks
-		COMMAND ${CMAKE_CTEST_COMMAND} $(ARGS)
-		COMMENT "Running Multispace tests..."
-	)
-
-ENDIF (CXXTEST_FOUND)
+INCLUDE(OpenCogTestOptions)
+OPENCOG_SETUP_TESTING()
+OPENCOG_ADD_TEST_TARGET(test_mono
+	tests/persist/monospace "Running Monospace tests...")
+OPENCOG_ADD_TEST_TARGET(test_multi
+	tests/persist/rocks "Running Multispace tests...")
 
 ADD_CUSTOM_TARGET(cscope
 	COMMAND find opencog examples tests -name '*.cc' -o -name '*.h' -o -name '*.cxxtest' -o -name '*.scm' > ${CMAKE_SOURCE_DIR}/cscope.files
@@ -242,7 +195,6 @@ FIND_PACKAGE(Doxygen)
 # ===================================================================
 # Show a summary of what we found, what we will do.
 
-SUMMARY_ADD("AtomSpace-Rocks" "AtomSpace RocksDB Backend" HAVE_ROCKSDB)
 SUMMARY_ADD("Cython"     "Cython (python) bindings" HAVE_CYTHON)
 SUMMARY_ADD("Doxygen"    "Code documentation" DOXYGEN_FOUND)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
