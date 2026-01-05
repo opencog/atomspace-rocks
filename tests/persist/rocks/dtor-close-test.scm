@@ -73,7 +73,7 @@
 
 ; Accessing it by printing it will clobber the guile smob pointer.
 ; Well, we already clobbered it with the `cog-atom?` above, so we
-; don't need this. Anyway, we need ither abovem or the print below,
+; don't need this. Anyway, we need either the above or the print below,
 ; or some other access.
 ;
 ; Note that the define, further below, will not clobber it, but only
