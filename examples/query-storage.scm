@@ -170,7 +170,7 @@
 ; the entire incoming set of (Concept "B").  More info about JoinLinks
 ; can be found on the wiki page https://wiki.opencog.org/w/JoinLink
 
-(define b-holders (MaximalJoin (Present (Concept "B"))))
+(define b-holders (MaximalJoin (Concept "B")))
 
 ; Just like before...
 (fetch-query b-holders results-key)

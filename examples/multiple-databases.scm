@@ -33,7 +33,7 @@
 ; -------------
 ; Erase everything in the AtomSpace. Do this to avoid confusion in
 ; the next steps. Alternately, quit guile, and restart guile.
-(clear)
+(cog-atomspace-clear)
 
 ; -------------
 ; Loading Atoms

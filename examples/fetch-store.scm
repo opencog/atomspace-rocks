@@ -25,7 +25,7 @@
 (cog-set-value! (Concept "a") (Predicate "blo") (FloatValue 4 5 6))
 
 ; Take a look at it:
-(cog-keys->alist (Concept "a"))
+(cog-keys (Concept "a"))
 
 ; Save it:
 (store-atom (Concept "a"))
@@ -42,7 +42,7 @@
 (fetch-value (Concept "a") (Predicate "blo"))
 
 ; Take a look at it:
-(cog-keys->alist (Concept "a"))
+(cog-keys (Concept "a"))
 
 ; Change the value (but don't store it)
 (cog-set-value! (Concept "a") (Predicate "blo") (StringValue "a" "b" "c"))
@@ -53,7 +53,7 @@
 ; Verify that all of the keys arrived. Notice that the "new" Value
 ; on (Predicate "blo") was clobbered by the one fetched from the
 ; database.
-(cog-keys->alist (Concept "a"))
+(cog-keys (Concept "a"))
 
 ; Optionally close the connection.
 ; Not strictly required; cleanup happens anyway, on exit.

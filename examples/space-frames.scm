@@ -80,8 +80,8 @@
 	(store-atom (Concept "bar"))
 
 	(cog-set-atomspace! mid2-space)
-	(cog-set-value! (ListLink (Concept "foo") (Concept "bar")
-		(Predicate "key") (FloatValue 1 0 5)))
+	(cog-set-value! (ListLink (Concept "foo") (Concept "bar"))
+		(Predicate "key") (FloatValue 1 0 5))
 	(store-atom (ListLink (Concept "foo") (Concept "bar")))
 
 	; Change the ctv on `foo`. This will hade the earlier value.
