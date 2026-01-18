@@ -157,12 +157,13 @@
 (check-spaces "bar-space" mid1-space (cog-atomspace (gdr lilly)))
 
 ; The above ListLink was first created in the mid2-space, and it
-; captured the truth values on `foo` and `bar` as they were, in this
-; space. But then, later on, in the top space, the value on `foo` was
-; changed. Lets take a closer look at that.
+; captured the values on `foo` and `bar` as they were, in this
+; space. But then, later on, in mid3-space, the value on `foo` was
+; changed (and this is visible from surface-space). Lets take a closer
+; look at that.
 (cog-set-atomspace! surface-space)
 (define top-lilly (ListLink (Concept "foo") (Concept "bar")))
-(format #t "The top-most list link is:\n~A\n" lilly)
+(format #t "The top-most list link is:\n~A\n" top-lilly)
 
 ; Another handy printer.
 (define (check-equal MSG A B)

@@ -176,7 +176,10 @@
 (cog-set-value! rsn (*-fetch-query-*) b-holders results-key)
 (cog-value b-holders results-key)
 
-; Verify that everything landed in the AtomSpace.
+; Verify that everything landed in the AtomSpace. Note that this is
+; different from MeetLink behavior! With MeetLink, only the query
+; results are brought into the AtomSpace, not the structures that were
+; searched. With JoinLink, the matched structures ARE brought in.
 (cog-get-all-roots)
 
 ; ------------------------
