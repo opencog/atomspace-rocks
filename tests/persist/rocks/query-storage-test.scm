@@ -181,7 +181,7 @@
 		(equal? (cog-type meta-value) 'FloatValue))
 
 	; Timestamp should be a reasonable Unix time (> year 2020)
-	(define timestamp (car (cog-value->list meta-value)))
+	(define timestamp (cog-value-ref meta-value 0))
 	(test-assert "timestamp-reasonable" (> timestamp 1577836800))
 
 	(cog-set-value! storage (*-close-*))

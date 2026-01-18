@@ -99,9 +99,9 @@
 	; There are two frames at the top, and we want the newer one.
 	; The second one is the root space; it doesn't have the stack.
 	; This is awkward. I don't entirely like it. For now, it works.
-	(define the-frames (cog-value->list (cog-value storage (*-load-frames-*))))
+	; (define the-frames (cog-value->list (cog-value storage (*-load-frames-*))))
 	; (format #t "The frames are ~A\n" the-frames)
-	(define top-space (car the-frames))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
@@ -207,7 +207,7 @@
 	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpace Frames.
-	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
@@ -320,7 +320,7 @@
 	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpace Frames.
-	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)

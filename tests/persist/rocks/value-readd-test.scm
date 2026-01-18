@@ -76,7 +76,7 @@
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-readd-test"))
 	(cog-set-value! storage (*-open-*))
-	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 	(cog-set-atomspace! top-space)
 	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
 	; (cog-rocks-stats storage)

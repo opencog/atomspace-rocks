@@ -146,7 +146,7 @@
 	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpace Frames.
-	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)

@@ -76,7 +76,7 @@
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
 	(cog-set-value! storage (*-open-*))
-	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 	(cog-set-atomspace! top-space)
 	(cog-set-value! storage (*-fetch-atom-*) (LinkValue top-space (Concept "foo")))
 	(cog-set-value! storage (*-close-*))
@@ -127,7 +127,7 @@
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
 	(cog-set-value! storage (*-open-*))
-	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 	(cog-set-atomspace! top-space)
 	(cog-set-value! storage (*-load-atoms-of-type-*) (Type 'Concept))
 	(cog-set-value! storage (*-close-*))
@@ -182,7 +182,7 @@
 	; Load incoming set of just one atom.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
 	(cog-set-value! storage (*-open-*))
-	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 	(cog-set-atomspace! top-space)
 	(cog-set-value! storage (*-fetch-incoming-set-*) (LinkValue top-space (Concept "foo")))
 
