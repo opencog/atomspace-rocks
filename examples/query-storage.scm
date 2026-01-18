@@ -44,9 +44,9 @@
 ; -----------------------
 ; Push the entire atomspace out to disk.
 (define rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
-(cog-open rsn)
-(store-atomspace)
-(cog-close rsn)
+(cog-set-value! rsn (*-open-*))
+(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
+(cog-set-value! rsn (*-close-*))
 
 ; Clear the local AtomSpace (the Atoms remain on disk, just not in RAM).
 (cog-atomspace-clear)
@@ -56,7 +56,7 @@
 
 ; The `clear` above wipes everything out. Redeclare and reopen.
 (set! rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
-(cog-open rsn)
+(cog-set-value! rsn (*-open-*))
 ; -------------------------
 ; Querying with Meet links.
 ;
@@ -71,7 +71,7 @@
 (define results-key (Predicate "results"))
 
 ; Find and fetch all tails at the remote server.
-(fetch-query get-tail results-key)
+(cog-set-value! rsn (*-fetch-query-*) get-tail results-key)
 
 ; Take a look at what was found.
 (cog-value get-tail results-key)
@@ -94,14 +94,14 @@
 ;
 ; Add some more data, push it out to the server, and delete it locally.
 (List (Concept "A") (Concept "F"))
-(store-atomspace)
+(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
 (cog-extract-recursive! (Concept "F"))
 
 ; Verify that (Concept "F") is gone
 (cog-get-all-roots)
 
 ; Re-run the query
-(fetch-query get-tail results-key)
+(cog-set-value! rsn (*-fetch-query-*) get-tail results-key)
 
 ; Take a look at what was found. ... oh no, its the old cached result!
 (cog-value get-tail results-key)
@@ -111,10 +111,10 @@
 (cog-set-value! get-tail results-key #f)
 
 ; Now brute-force kill it in the server:
-(store-value get-tail results-key)
+(cog-set-value! rsn (*-store-value-*) get-tail results-key)
 
 ; ... and rerun the query. This time, we expect all the results.
-(fetch-query get-tail results-key)
+(cog-set-value! rsn (*-fetch-query-*) get-tail results-key)
 (cog-value get-tail results-key)
 
 ; --------------
@@ -135,22 +135,22 @@
 ;
 ; Let's repeat some of the above.
 (List (Concept "A") (Concept "G"))
-(store-atomspace)
+(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
 (cog-extract-recursive! (Concept "G"))
 
 ; Oh no! The cache is stale! Missing (Concept "G")!
-(fetch-query get-tail results-key)
+(cog-set-value! rsn (*-fetch-query-*) get-tail results-key)
 (cog-value get-tail results-key)
 
 ; We want meta-data, and we want a fresh re-computation.
 (define metadata (Predicate "my metadata"))
-(fetch-query get-tail results-key metadata #t)
+(cog-set-value! rsn (*-fetch-query-*) (LinkValue (cog-atomspace) get-tail results-key metadata (BoolValue #t)))
 
 ; Yay! it worked!
 (cog-value get-tail results-key)
 
 ; Tell us more!
-(fetch-value get-tail metadata)
+(cog-set-value! rsn (*-fetch-value-*) get-tail metadata)
 (cog-value get-tail metadata)
 
 ; Currently, the above returns seconds since January 1, 1970
@@ -173,7 +173,7 @@
 (define b-holders (MaximalJoin (Concept "B")))
 
 ; Just like before...
-(fetch-query b-holders results-key)
+(cog-set-value! rsn (*-fetch-query-*) b-holders results-key)
 (cog-value b-holders results-key)
 
 ; Verify that everything landed in the AtomSpace.
@@ -194,7 +194,7 @@
 	(OrderedLink (Variable "tail") (Concept "by") (Variable "tail"))
 ))
 
-(fetch-query tail-by-tail results-key)
+(cog-set-value! rsn (*-fetch-query-*) tail-by-tail results-key)
 (cog-value tail-by-tail results-key)
 
 ; That's all! Thanks for paying attention!

@@ -6,12 +6,12 @@
 ; everything can be slow, and is generally not needed. Thus, one can
 ; load portions of the AtomSpace:
 ;
-; load-referers ATOM -- to load only those graphs containing ATOM
-; load-atoms-of-type TYPE -- to load only atoms of type TYPE
-; load-atomspace -- load everything.
+; (*-fetch-incoming-set-*) ATOM -- to load only those graphs containing ATOM
+; (*-load-atoms-of-type-*) TYPE -- to load only atoms of type TYPE
+; (*-load-atomspace-*) -- load everything.
 ;
-; store-referers ATOM -- store all graphs that contain ATOM
-; store-atomspace -- store everything.
+; (*-store-incoming-set-*) ATOM -- store all graphs that contain ATOM
+; (*-store-atomspace-*) -- store everything.
 ;
 ; -------------------------------
 ; Basic initialization and set-up
@@ -35,9 +35,9 @@
 ; Open a database, and store the entire AtomSpace.
 ;
 (define rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
-(cog-open rsn)
-(store-atomspace)
-(cog-close rsn)
+(cog-set-value! rsn (*-open-*))
+(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
+(cog-set-value! rsn (*-close-*))
 
 ; Remove everything in the AtomSpace ...
 (cog-atomspace-clear)
@@ -46,12 +46,12 @@
 (cog-get-all-roots)
 
 ; Reconnect to the database, and fetch everything in it.
-; The StorageNode needs to be re-declaredm since the `clear`,
+; The StorageNode needs to be re-declared since the `clear`,
 ; above, wiped it out.
 (set! rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
-(cog-open rsn)
-(load-atomspace)
-(cog-close rsn)
+(cog-set-value! rsn (*-open-*))
+(cog-set-value! rsn (*-load-atomspace-*) (cog-atomspace))
+(cog-set-value! rsn (*-close-*))
 
 ; Verify that everything came back
 (cog-get-all-roots)

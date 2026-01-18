@@ -66,31 +66,31 @@
 	; Save the entire stack of spaces. This only stores the spaces and
 	; their relationship to one-anothr; it does NOT store the contents,
 	(define storage (RocksStorageNode "rocks:///tmp/frame-demo"))
-	(cog-open storage)
-	(store-frames surface-space)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) surface-space)
 
 	; Splatter some atoms into the various spaces. Place some values on
 	; each, so that later one, we can verify the the restored spaces.
 	(cog-set-atomspace! base-space)
 	(cog-set-value! (Concept "foo") (Predicate "key") (FloatValue 1 0 3))
-	(store-atom (Concept "foo"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
 
 	(cog-set-atomspace! mid1-space)
 	(cog-set-value! (Concept "bar") (Predicate "key") (FloatValue 1 0 4))
-	(store-atom (Concept "bar"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
 
 	(cog-set-atomspace! mid2-space)
 	(cog-set-value! (ListLink (Concept "foo") (Concept "bar"))
 		(Predicate "key") (FloatValue 1 0 5))
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
 
 	; Change the ctv on `foo`. This will hade the earlier value.
 	(cog-set-atomspace! mid3-space)
 	(cog-set-value! (Concept "foo") (Predicate "key") (FloatValue 6 22 42))
-	(store-atom (Concept "foo"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
 
 	; Close storage
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the spaces, start with a clean slate. This is NOT really
 	; needed, as the AtomSpace will disappear, go "poof", once the last
@@ -114,17 +114,17 @@
 
 ; Load everything; the spaces, the atoms, everything.
 (define storage (RocksStorageNode "rocks:///tmp/frame-demo"))
-(cog-open storage)
+(cog-set-value! storage (*-open-*))
 
 ; Calling `load-frames` will return a list of all of the AtomSpaces
 ; at the top of the DAG of frames. In this cae, we had a simple stack,
 ; so there is only one single frame at the top, the top-space.
-(define top-space (car (load-frames)))
+(define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 
 ; Change to this top, and load it's contents, and everything below it.
 (cog-set-atomspace! top-space)
-(load-atomspace)
-(cog-close storage)
+(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+(cog-set-value! storage (*-close-*))
 
 ; Print out the full top-most atomspace. This will print a long,
 ; perhaps confusing string: it is a list of the AtomSpaces names,

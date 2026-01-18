@@ -13,8 +13,8 @@
 (define foo-store (RocksStorageNode "rocks:///tmp/foo.rdb"))
 (define bar-store (RocksStorageNode "rocks:///tmp/bar.rdb"))
 
-(cog-open foo-store)
-(cog-open bar-store)
+(cog-set-value! foo-store (*-open-*))
+(cog-set-value! bar-store (*-open-*))
 
 ; -------------
 ; Storing Atoms
@@ -22,13 +22,13 @@
 (cog-set-value! (Concept "a") (Predicate "a-key") (FloatValue 1 2 3))
 (cog-set-value! (Concept "b") (Predicate "b-key") (FloatValue 4 5 6))
 
-; Save each atom in a distinct AtomSpace
-(store-atom (Concept "a") foo-store)
-(store-atom (Concept "b") bar-store)
+; Save each atom in a distinct database
+(cog-set-value! foo-store (*-store-atom-*) (Concept "a"))
+(cog-set-value! bar-store (*-store-atom-*) (Concept "b"))
 
 ; Close the connections to each.
-(cog-close foo-store)
-(cog-close bar-store)
+(cog-set-value! foo-store (*-close-*))
+(cog-set-value! bar-store (*-close-*))
 
 ; -------------
 ; Erase everything in the AtomSpace. Do this to avoid confusion in
@@ -40,23 +40,23 @@
 ;
 ; The previous AtomSpace clear wiped out everything. Start all over.
 (define foo-store (RocksStorageNode "rocks:///tmp/foo.rdb"))
-(cog-open foo-store)
-(load-atomspace foo-store)
+(cog-set-value! foo-store (*-open-*))
+(cog-set-value! foo-store (*-load-atomspace-*) (cog-atomspace))
 
 ; Verify that only (ConceptNode "a") is in the AtomSpace.
 (cog-get-all-roots)
 
 ; Now open the second database
 (define bar-store (RocksStorageNode "rocks:///tmp/bar.rdb"))
-(cog-open bar-store)
-(load-atomspace bar-store)
+(cog-set-value! bar-store (*-open-*))
+(cog-set-value! bar-store (*-load-atomspace-*) (cog-atomspace))
 
 ; Verify that both (Concept "a") and (Concept "b") are present.
 (cog-get-all-roots)
 
 ; We're done.
-(cog-close foo-store)
-(cog-close bar-store)
+(cog-set-value! foo-store (*-close-*))
+(cog-set-value! bar-store (*-close-*))
 
 ; That's all! Thanks for paying attention!
 ; -------------

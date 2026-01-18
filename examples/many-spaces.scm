@@ -56,7 +56,7 @@
 
 ; Store the various AtmoSpaces. Here, they are stored in one big gulp,
 ; but it doesn't have to be done this way: they can be dribbled in.
-; An initial call to `store-frames` can someties be optional, but is
+; An initial call to `(*-store-frames-*)` can sometimes be optional, but is
 ; strongly recommended to avoid confusion. It effectively tells the
 ; StorageNode to expect multiple AtomSpaces to be stored. Here, it is
 ; optional ONLY because `as-main` was NOT stored first! The StorageNode
@@ -64,13 +64,13 @@
 ; that the StorageNode is declared in, and thus deduces its will need to
 ; work in a multi-space mode.
 (define rsn (RocksStorageNode "rocks:///tmp/bundle-demo"))
-(cog-open rsn)
-; (store-frames as-main)
-(store-atomspace as-one)
-(store-atomspace as-two)
-(store-atomspace as-three)
-(store-atomspace as-main)
-(cog-close rsn)
+(cog-set-value! rsn (*-open-*))
+; (cog-set-value! rsn (*-store-frames-*) as-main)
+(cog-set-value! rsn (*-store-atomspace-*) as-one)
+(cog-set-value! rsn (*-store-atomspace-*) as-two)
+(cog-set-value! rsn (*-store-atomspace-*) as-three)
+(cog-set-value! rsn (*-store-atomspace-*) as-main)
+(cog-set-value! rsn (*-close-*))
 
 ; -------------------------------------------------
 ; Done with the store. Now exist guile completely, and restart. Or,
@@ -90,7 +90,7 @@
 
 ; Define the database location, and open it.
 (define rsn (RocksStorageNode "rocks:///tmp/bundle-demo"))
-(cog-open rsn)
+(cog-set-value! rsn (*-open-*))
 
 ; Print the current main space. It should be nearly empty, but for the
 ; StorageNode declaration, and ObjectNode messages being sent to it.
@@ -101,7 +101,7 @@
 ; you think it should.
 (define as-two (AtomSpace "bar"))
 (cog-set-atomspace! as-two)
-(load-atomspace as-two)
+(cog-set-value! rsn (*-load-atomspace-*) as-two)
 (cog-prt-atomspace)
 
 ; Lets go back to the main space. Make sure there was no leakage.
@@ -113,7 +113,7 @@
 ; print will happen in the main space, and not the loaded space.
 (define as-one (AtomSpace "foo"))
 ;;; (cog-set-atomspace! as-one) ; Skip me!
-(load-atomspace as-one)
+(cog-set-value! rsn (*-load-atomspace-*) as-one)
 (cog-prt-atomspace)
 
 ; Switch spaces and print. Make sure these are what you expect.
@@ -128,7 +128,7 @@
 
 ; Now load the main space. This will have the "indexes" that were
 ; created earlier.
-(load-atomspace as-main)
+(cog-set-value! rsn (*-load-atomspace-*) as-main)
 (cog-prt-atomspace)
 
 ; What about the third space? It's currently empty ...
@@ -136,13 +136,13 @@
 (cog-set-atomspace! as-three)
 (cog-prt-atomspace)
 
-; Load it, and see. When `load-stomspace` is called without an
-; argument, the current AtomSpace is assumed.
-(load-atomspace)
+; Load it, and see. When `(*-load-atomspace-*)` is used, the atomspace
+; to load must be specified.
+(cog-set-value! rsn (*-load-atomspace-*) (cog-atomspace))
 (cog-prt-atomspace)
 
 ; Tidy conclusion.
-(cog-close rsn)
+(cog-set-value! rsn (*-close-*))
 
 ; The End. That's All, Folks!
 ; -------------------------------------------------------------------

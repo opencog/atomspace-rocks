@@ -15,7 +15,7 @@
 (define rsn (RocksStorageNode "rocks:///tmp/foo.rdb"))
 
 ; Open it for I/O
-(cog-open rsn)
+(cog-set-value! rsn (*-open-*))
 
 ; --------------
 ; Storing and Loading Atoms
@@ -28,7 +28,7 @@
 (cog-keys (Concept "a"))
 
 ; Save it:
-(store-atom (Concept "a"))
+(cog-set-value! rsn (*-store-atom-*) (Concept "a"))
 
 ; Delete it from the AtomSpace (but not from RocksDB):
 (cog-extract! (Concept "a"))
@@ -39,7 +39,7 @@
 (cog-get-all-roots)
 
 ; Fetch one of the Values, but not the other:
-(fetch-value (Concept "a") (Predicate "blo"))
+(cog-set-value! rsn (*-fetch-value-*) (Concept "a") (Predicate "blo"))
 
 ; Take a look at it:
 (cog-keys (Concept "a"))
@@ -48,7 +48,7 @@
 (cog-set-value! (Concept "a") (Predicate "blo") (StringValue "a" "b" "c"))
 
 ; Load all key-value pairs on (Concept "a")
-(fetch-atom (Concept "a"))
+(cog-set-value! rsn (*-fetch-atom-*) (Concept "a"))
 
 ; Verify that all of the keys arrived. Notice that the "new" Value
 ; on (Predicate "blo") was clobbered by the one fetched from the
@@ -57,7 +57,7 @@
 
 ; Optionally close the connection.
 ; Not strictly required; cleanup happens anyway, on exit.
-(cog-close rsn)
+(cog-set-value! rsn (*-close-*))
 
 ; p.s. "flo blo" is how they say "flow blue" in Texas.
 ; That's all! Thanks for paying attention!
