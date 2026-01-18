@@ -223,12 +223,7 @@ void MonoBasicSaveUTest::single_atom_save_restore(std::string id)
     atomCompare(l, hl, "Single link save-restore");
     printf("Done fetching single link\n");
 
-    // Close the store and clean up database for next iteration.
-    store->setValue(as->add_node(PREDICATE_NODE, "*-erase-*"), createVoidValue());
-    store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
-    store.reset();
-    hsn = Handle::UNDEFINED;
-    as.reset();
+    store->erase();
 }
 
 // ============================================================
@@ -364,12 +359,7 @@ void MonoBasicSaveUTest::test_fresh_atom(void)
     if (he) printf("Got %s\n", he->to_string().c_str());
     atomCompare(le, he, "Empty Fresh");
 
-    // Close the store and clean up database for next test.
-    store->setValue(as->add_node(PREDICATE_NODE, "*-erase-*"), createVoidValue());
-    store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
-    store.reset();
-    hsn = Handle::UNDEFINED;
-    as.reset();
+    store->erase();
 
     logger().debug("END TEST: %s", __FUNCTION__);
 }
@@ -378,45 +368,46 @@ void MonoBasicSaveUTest::test_table()
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    AtomSpacePtr as1 = createAtomSpace();
-    Handle hsn = as1->add_node(MONO_STORAGE_NODE, std::string(uri));
-    StorageNodePtr store = StorageNodeCast(hsn);
-    store->setValue(as1->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
-    if (!store->connected())
+    size_t num_stored;
+
+    // Use scope block to ensure as1 is destroyed before as2 opens
     {
-        logger().debug("test_table: cannot connect to db");
-        return;
-    }
+        AtomSpacePtr as1 = createAtomSpace();
+        Handle hsn = as1->add_node(MONO_STORAGE_NODE, std::string(uri));
+        StorageNodePtr store = StorageNodeCast(hsn);
+        store->setValue(as1->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
+        if (!store->connected())
+        {
+            logger().debug("test_table: cannot connect to db");
+            return;
+        }
 
-    int idx = 0;
-    add_to_table(idx++, as1.get(), "AA-aa-wow ");
-    add_to_table(idx++, as1.get(), "BB-bb-wow ");
-    add_to_table(idx++, as1.get(), "CC-cc-wow ");
-    add_to_table(idx++, as1.get(), "DD-dd-wow ");
-    add_to_table(idx++, as1.get(), "EE-ee-wow ");
+        int idx = 0;
+        add_to_table(idx++, as1.get(), "AA-aa-wow ");
+        add_to_table(idx++, as1.get(), "BB-bb-wow ");
+        add_to_table(idx++, as1.get(), "CC-cc-wow ");
+        add_to_table(idx++, as1.get(), "DD-dd-wow ");
+        add_to_table(idx++, as1.get(), "EE-ee-wow ");
 
-    store->store_atomspace();
-    // Subtract 2 for the MonoStorageNode and *-open-* PredicateNode
-    size_t num_stored = as1->get_size() - 2;
+        store->store_atomspace();
+        // Subtract 2 for the MonoStorageNode and *-open-* PredicateNode
+        num_stored = as1->get_size() - 2;
 #ifdef DOPRT
-    HandleSeq hset;
-    as1->get_handles_by_type(hset, ATOM, true, false);
-    for (auto h: hset) {
-        printf("Store table has %s\n", h->to_string().c_str());
-    }
+        HandleSeq hset;
+        as1->get_handles_by_type(hset, ATOM, true, false);
+        for (auto h: hset) {
+            printf("Store table has %s\n", h->to_string().c_str());
+        }
 #endif
 
-    // Explicitly close the store before resetting handles.
-    store->setValue(as1->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
-    store.reset();
-    hsn = Handle::UNDEFINED;
-    as1.reset();
-    printf("Done storing table; size=%lu\n", num_stored);
+        printf("Done storing table; size=%lu\n", num_stored);
+    }
+    // as1 goes out of scope here, storage is closed automatically
 
     // Reopen connection, and load the atom table.
     AtomSpacePtr as2 = createAtomSpace();
-    hsn = as2->add_node(MONO_STORAGE_NODE, std::string(uri));
-    store = StorageNodeCast(hsn);
+    Handle hsn = as2->add_node(MONO_STORAGE_NODE, std::string(uri));
+    StorageNodePtr store = StorageNodeCast(hsn);
     store->setValue(as2->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TSM_ASSERT("Not connected to database", store->connected());
 
@@ -430,19 +421,14 @@ void MonoBasicSaveUTest::test_table()
     // and (PredicateNode "*-IsKeyFlag-*")
     TSM_ASSERT("Wrong number of atoms fetched", num_fetched == num_stored+2);
 
-    idx = 0;
+    int idx = 0;
     check_table(idx++, as2.get(), "aaa ");
     check_table(idx++, as2.get(), "bbb ");
     check_table(idx++, as2.get(), "ccc ");
     check_table(idx++, as2.get(), "ddd ");
     check_table(idx++, as2.get(), "eee ");
 
-    // Close the store and clean up database.
-    store->setValue(as2->add_node(PREDICATE_NODE, "*-erase-*"), createVoidValue());
-    store->setValue(as2->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
-    store.reset();
-    hsn = Handle::UNDEFINED;
-    as2.reset();
+    store->erase();
 
     logger().debug("END TEST: %s", __FUNCTION__);
 }
