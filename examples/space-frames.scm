@@ -56,7 +56,7 @@
 
 (define (setup-and-store)
 
-	; Create a stak of five atomspaces.
+	; Create a stack of five atomspaces.
 	(define base-space (cog-atomspace))
 	(define mid1-space (cog-new-atomspace base-space))
 	(define mid2-space (cog-new-atomspace mid1-space))
@@ -64,7 +64,7 @@
 	(define surface-space (cog-new-atomspace mid3-space))
 
 	; Save the entire stack of spaces. This only stores the spaces and
-	; their relationship to one-anothr; it does NOT store the contents,
+	; their relationship to one-another; it does NOT store the contents.
 	(define storage (RocksStorageNode "rocks:///tmp/frame-demo"))
 	(cog-set-value! storage (*-open-*))
 	(cog-set-value! storage (*-store-frames-*) surface-space)
@@ -84,7 +84,7 @@
 		(Predicate "key") (FloatValue 1 0 5))
 	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
 
-	; Change the ctv on `foo`. This will hade the earlier value.
+	; Change the value on `foo`. This will hide the earlier value.
 	(cog-set-atomspace! mid3-space)
 	(cog-set-value! (Concept "foo") (Predicate "key") (FloatValue 6 22 42))
 	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
@@ -117,11 +117,11 @@
 (cog-set-value! storage (*-open-*))
 
 ; Calling `load-frames` will return a list of all of the AtomSpaces
-; at the top of the DAG of frames. In this cae, we had a simple stack,
+; at the top of the DAG of frames. In this case, we had a simple stack,
 ; so there is only one single frame at the top, the top-space.
 (define top-space (cog-value-ref (cog-value storage (*-load-frames-*)) 0))
 
-; Change to this top, and load it's contents, and everything below it.
+; Change to this top, and load its contents, and everything below it.
 (cog-set-atomspace! top-space)
 (cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
 (cog-set-value! storage (*-close-*))

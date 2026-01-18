@@ -1,5 +1,5 @@
 ;
-; many-spaces,scm -- Storing many AtomSpaces into one StorageNode.
+; many-spaces.scm -- Storing many AtomSpaces into one StorageNode.
 ;
 ; A StorageNode can hold more than one AtomSpace at a time. In this
 ; demo, they are all independent of one another. They are disjoint.
