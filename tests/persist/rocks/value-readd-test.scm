@@ -22,7 +22,7 @@
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-readd-test"))
 	(cog-open storage)
-	(store-frames (cog-atomspace))
+	(cog-set-value! storage (*-store-frames-*) (cog-atomspace))
 
 	; Splatter some atoms into the various spaces.
 	(set-cnt! (Concept "foo") (FloatValue 1 0 3))
@@ -33,7 +33,7 @@
 
 	(cog-set-atomspace! mid1-space)
 	(set-cnt! (List (Concept "foo") (Concept "bar")) (FloatValue 1 0 5))
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
 
 	(define mid2-space (AtomSpace mid1-space))
 	(cog-set-atomspace! mid2-space)
@@ -43,18 +43,18 @@
 	(cog-delete-recursive! (Concept "foo"))
 	(cog-extract-recursive! (Concept "foo"))
 	(set-cnt! (Concept "foo") (FloatValue 1 0 6))
-	(store-atom (ListLink (Concept "foo") (Concept "faa")))
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "faa")))
 
 	(define mid3-space (AtomSpace mid2-space))
 	(cog-set-atomspace! mid3-space)
 	(set-cnt! (List (Concept "foo") (Concept "bar")) (FloatValue 1 0 7))
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
 
 	(define surface-space (AtomSpace mid3-space))
 	(cog-set-atomspace! surface-space)
-	(store-frames surface-space)
+	(cog-set-value! storage (*-store-frames-*) surface-space)
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the spaces, start with a clean slate.
 	(cog-atomspace-clear surface-space)
@@ -75,13 +75,13 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-readd-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)

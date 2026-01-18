@@ -44,18 +44,18 @@
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-x-test"))
-	(cog-open storage)
-	(store-frames top1-space)
-	(store-frames top2-space)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) top1-space)
+	(cog-set-value! storage (*-store-frames-*) top2-space)
 	(cog-set-atomspace! top1-space)
-	(store-atom (Concept "bar"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
 	(cog-set-atomspace! top2-space)
-	(store-atom (Concept "bar"))
-	(store-atom (Concept "foo"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
 	(cog-set-atomspace! mid-space)
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
-	(store-atom (Concept "bar"))
-	(cog-close storage)
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
+	(cog-set-value! storage (*-close-*))
 )
 
 ; -------------------------------------------------------------------
@@ -74,21 +74,21 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-x-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load all of the Frames.
-	(define top-spaces (load-frames))
+	(define top-spaces (cog-value->list (cog-value storage (*-load-frames-*))))
 	; (format #t "The top spaces are ~A\n" top-spaces)
 	(define top1-space (first top-spaces))
 	(define top2-space (second top-spaces))
 
 	; Load all of the AtomSpaces.
 	(cog-set-atomspace! top1-space)
-	(load-atomspace)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! top2-space)
-	(load-atomspace)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	(test-assert "exe-top-unequal" (not (equal? top1-space top2-space)))
 

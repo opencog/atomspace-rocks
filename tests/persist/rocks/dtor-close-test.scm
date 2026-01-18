@@ -17,13 +17,13 @@
 (test-begin test-close-open)
 
 (define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-dtor-close-test"))
-(cog-open rsn)
+(cog-set-value! rsn (*-open-*))
 
 ; Create and store some data.
 (List (Concept "A") (Concept "B"))
 (Set (Concept "A") (Concept "B"))
 (Set (Concept "A") (Concept "B") (Concept "C"))
-(store-atomspace)
+(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
 
 ; The user should call (cog-close rsn) right now, but doesn't.
 ; And this is what we're testing, here: some quasi-reasonable
@@ -89,12 +89,12 @@
 (test-equal #f (cog-atom? rsn))
 
 (define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-dtor-close-test"))
-(cog-open rsn)
-(load-atomspace)
+(cog-set-value! rsn (*-open-*))
+(cog-set-value! rsn (*-load-atomspace-*) (cog-atomspace))
 
 (test-equal #t (cog-atom? rsn))
 
-(cog-close rsn)
+(cog-set-value! rsn (*-close-*))
 (test-end test-close-open)
 
 ; ===================================================================

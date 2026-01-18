@@ -31,9 +31,9 @@
 
 	; Store to disk
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-query-storage-test"))
-	(cog-open storage)
-	(store-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Clear and reopen
 	(cog-atomspace-clear)
@@ -49,14 +49,14 @@
 	(setup-and-store)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-query-storage-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Define query to find tail of (List A ?)
 	(define get-tail (Meet (List (Concept "A") (Variable "tail"))))
 	(define results-key (Predicate "results"))
 
 	; Run query
-	(fetch-query get-tail results-key)
+	(cog-set-value! storage (*-fetch-query-*) get-tail results-key)
 	(define result (cog-value get-tail results-key))
 
 	; Verify result contains (Concept "B")
@@ -73,7 +73,7 @@
 	(test-assert "ListLink-not-in-atomspace"
 		(not (member (List (Concept "A") (Concept "B")) roots)))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define basic-meet "test basic-meet")
@@ -91,13 +91,13 @@
 	(setup-and-store)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-query-storage-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	(define get-tail (Meet (List (Concept "A") (Variable "tail"))))
 	(define results-key (Predicate "results"))
 
 	; Initial query - should return B
-	(fetch-query get-tail results-key)
+	(cog-set-value! storage (*-fetch-query-*) get-tail results-key)
 	(define result1 (cog-value get-tail results-key))
 	(test-equal "initial-result-B"
 		(list (Concept "B"))
@@ -105,11 +105,11 @@
 
 	; Add new data and store
 	(List (Concept "A") (Concept "F"))
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-extract-recursive! (Concept "F"))
 
 	; Re-run query - should get cached (stale) result
-	(fetch-query get-tail results-key)
+	(cog-set-value! storage (*-fetch-query-*) get-tail results-key)
 	(define cached-result (cog-value get-tail results-key))
 	(test-equal "cached-result-still-B"
 		(list (Concept "B"))
@@ -117,8 +117,8 @@
 
 	; Clear cache and re-run
 	(cog-set-value! get-tail results-key #f)
-	(store-value get-tail results-key)
-	(fetch-query get-tail results-key)
+	(cog-set-value! storage (*-store-value-*) get-tail results-key)
+	(cog-set-value! storage (*-fetch-query-*) get-tail results-key)
 	(define fresh-result (cog-value get-tail results-key))
 	(define fresh-list (cog-value->list fresh-result))
 
@@ -126,7 +126,7 @@
 	(test-assert "fresh-contains-B" (member (Concept "B") fresh-list))
 	(test-assert "fresh-contains-F" (member (Concept "F") fresh-list))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define query-caching "test query-caching")
@@ -145,21 +145,21 @@
 	(setup-and-store)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-query-storage-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	(define get-tail (Meet (List (Concept "A") (Variable "tail"))))
 	(define results-key (Predicate "results"))
 
 	; Initial query
-	(fetch-query get-tail results-key)
+	(cog-set-value! storage (*-fetch-query-*) get-tail results-key)
 
 	; Add new data
 	(List (Concept "A") (Concept "G"))
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-extract-recursive! (Concept "G"))
 
 	; Stale cache - should NOT have G yet
-	(fetch-query get-tail results-key)
+	(cog-set-value! storage (*-fetch-query-*) get-tail results-key)
 	(define stale-result (cog-value get-tail results-key))
 	(define stale-list (cog-value->list stale-result))
 	(test-assert "stale-missing-G"
@@ -167,14 +167,14 @@
 
 	; Request fresh with metadata
 	(define metadata (Predicate "my metadata"))
-	(fetch-query get-tail results-key metadata #t)
+	(cog-set-value! storage (*-fetch-query-*) (LinkValue (cog-atomspace) get-tail results-key metadata (BoolValue #t)))
 
 	(define fresh-result (cog-value get-tail results-key))
 	(define fresh-list (cog-value->list fresh-result))
 	(test-assert "fresh-contains-G" (member (Concept "G") fresh-list))
 
 	; Check metadata exists and is a timestamp
-	(fetch-value get-tail metadata)
+	(cog-set-value! storage (*-fetch-value-*) get-tail metadata)
 	(define meta-value (cog-value get-tail metadata))
 	(test-assert "metadata-exists" meta-value)
 	(test-assert "metadata-is-float"
@@ -184,7 +184,7 @@
 	(define timestamp (car (cog-value->list meta-value)))
 	(test-assert "timestamp-reasonable" (> timestamp 1577836800))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define query-metadata "test query-metadata")
@@ -202,13 +202,13 @@
 	(setup-and-store)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-query-storage-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	(define results-key (Predicate "results"))
 
 	; Find all structures containing (Concept "B")
 	(define b-holders (MaximalJoin (Concept "B")))
-	(fetch-query b-holders results-key)
+	(cog-set-value! storage (*-fetch-query-*) b-holders results-key)
 	(define result (cog-value b-holders results-key))
 
 	(test-assert "join-result-exists" result)
@@ -229,7 +229,7 @@
 	(test-assert "SetAB-in-atomspace"
 		(member (Set (Concept "A") (Concept "B")) roots))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define join-link "test join-link")
@@ -247,7 +247,7 @@
 	(setup-and-store)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-query-storage-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	(define results-key (Predicate "results"))
 
@@ -258,7 +258,7 @@
 		(OrderedLink (Variable "tail") (Concept "by") (Variable "tail"))
 	))
 
-	(fetch-query tail-by-tail results-key)
+	(cog-set-value! storage (*-fetch-query-*) tail-by-tail results-key)
 	(define result (cog-value tail-by-tail results-key))
 
 	(test-assert "querylink-result-exists" result)
@@ -269,7 +269,7 @@
 		(member (OrderedLink (Concept "B") (Concept "by") (Concept "B"))
 			rewrite-list))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define query-link "test query-link")

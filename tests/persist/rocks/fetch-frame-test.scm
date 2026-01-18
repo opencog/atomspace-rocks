@@ -40,17 +40,17 @@
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
-	(cog-open storage)
-	(store-frames surface-space)
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
-	(store-atom (Concept "bar"))
-	(store-atom (Concept "foo"))
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) surface-space)
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
 	(cog-set-atomspace! mid1-space)
-	(store-atom (Concept "foo"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
 	(cog-set-atomspace! base-space)
-	(store-atom (Concept "foo"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the spaces, start with a clean slate.
 	(cog-atomspace-clear surface-space)
@@ -75,11 +75,11 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(fetch-atom (Concept "foo"))
-	(cog-close storage)
+	(cog-set-value! storage (*-fetch-atom-*) (LinkValue top-space (Concept "foo")))
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)
@@ -126,11 +126,11 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atoms-of-type 'Concept)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atoms-of-type-*) (Type 'Concept))
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)
@@ -181,12 +181,12 @@
 
 	; Load incoming set of just one atom.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-fetch-frame-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(fetch-incoming-set (Concept "foo"))
+	(cog-set-value! storage (*-fetch-incoming-set-*) (LinkValue top-space (Concept "foo")))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)

@@ -54,12 +54,12 @@
 	(cog-set-atomspace! as-main)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-many-spaces-test"))
-	(cog-open storage)
-	(store-atomspace as-one)
-	(store-atomspace as-two)
-	(store-atomspace as-three)
-	(store-atomspace as-main)
-	(cog-close storage)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-atomspace-*) as-one)
+	(cog-set-value! storage (*-store-atomspace-*) as-two)
+	(cog-set-value! storage (*-store-atomspace-*) as-three)
+	(cog-set-value! storage (*-store-atomspace-*) as-main)
+	(cog-set-value! storage (*-close-*))
 
 	; Return the spaces for verification before clear
 	(list as-main as-one as-two as-three)
@@ -80,12 +80,12 @@
 	(cog-set-atomspace! as-main)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-many-spaces-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load and verify space two first (out of order)
 	(define as-two (AtomSpace "bar"))
 	(cog-set-atomspace! as-two)
-	(load-atomspace as-two)
+	(cog-set-value! storage (*-load-atomspace-*) as-two)
 
 	(test-assert "two-has-resident"
 		(cog-node 'Concept "Resident of Two, here!"))
@@ -101,7 +101,7 @@
 	; Load and verify space one
 	(define as-one (AtomSpace "foo"))
 	(cog-set-atomspace! as-one)
-	(load-atomspace as-one)
+	(cog-set-value! storage (*-load-atomspace-*) as-one)
 
 	(test-assert "one-has-content"
 		(cog-node 'Concept "I am in Space One!"))
@@ -115,7 +115,7 @@
 	; Load and verify space three
 	(define as-three (AtomSpace "bing"))
 	(cog-set-atomspace! as-three)
-	(load-atomspace as-three)
+	(cog-set-value! storage (*-load-atomspace-*) as-three)
 
 	(test-assert "three-has-edge"
 		(cog-link 'EdgeLink
@@ -124,7 +124,7 @@
 	(test-assert "three-has-company"
 		(cog-node 'Concept "Three's company"))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define basic-multispace "test basic-multispace")
@@ -148,10 +148,10 @@
 	(cog-set-atomspace! as-main)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-many-spaces-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load main space which contains the index
-	(load-atomspace as-main)
+	(cog-set-value! storage (*-load-atomspace-*) as-main)
 
 	; Verify the bundle index exists
 	(test-assert "bundle-predicate-exists"
@@ -179,7 +179,7 @@
 			(Predicate "bundle")
 			(List (Item "Bundle Beta") as-three)))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define space-index "test space-index")
@@ -203,7 +203,7 @@
 	(cog-set-atomspace! as-main)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-many-spaces-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Create all spaces but only load one
 	(define as-one (AtomSpace "foo"))
@@ -211,7 +211,7 @@
 	(define as-three (AtomSpace "bing"))
 
 	; Load only space one
-	(load-atomspace as-one)
+	(cog-set-value! storage (*-load-atomspace-*) as-one)
 
 	; Verify space two doesn't have space one's content
 	(cog-set-atomspace! as-two)
@@ -224,7 +224,7 @@
 		(not (cog-node 'Concept "I am in Space One!")))
 
 	; Now load space two and verify it has correct content
-	(load-atomspace as-two)
+	(cog-set-value! storage (*-load-atomspace-*) as-two)
 	(cog-set-atomspace! as-two)
 	(test-assert "two-loaded-has-content"
 		(cog-node 'Concept "Resident of Two, here!"))
@@ -236,7 +236,7 @@
 	(test-assert "three-no-two-list"
 		(not (cog-link 'List (Concept "two-a") (Concept "two-b"))))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define no-leakage "test no-leakage")
@@ -260,7 +260,7 @@
 	(cog-set-atomspace! as-main)
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-many-spaces-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Create space three and set it as current
 	(define as-three (AtomSpace "bing"))
@@ -270,7 +270,7 @@
 	(test-equal "three-initially-empty" '() (cog-get-all-roots))
 
 	; Load without argument - should load current space (as-three)
-	(load-atomspace)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
 
 	; Verify content was loaded
 	(test-assert "three-loaded-via-no-arg"
@@ -280,7 +280,7 @@
 			(Predicate "three-ness")
 			(Item "Just an old lump of coal")))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 (define load-current "test load-current")

@@ -29,22 +29,22 @@
 
 	; Store the content. Store only the top-most link.
 	(define mstorage (MonoStorageNode "monospace:///tmp/cog-rocks-promote-test"))
-	(cog-open mstorage)
-	(store-atom (Concept "foo"))
-	(store-atom (Concept "bar"))
-	(store-atom (ListLink (Concept "foo") (List (Concept "bar"))))
-	(cog-close mstorage)
+	(cog-set-value! mstorage (*-open-*))
+	(cog-set-value! mstorage (*-store-atom-*) (Concept "foo"))
+	(cog-set-value! mstorage (*-store-atom-*) (Concept "bar"))
+	(cog-set-value! mstorage (*-store-atom-*) (ListLink (Concept "foo") (List (Concept "bar"))))
+	(cog-set-value! mstorage (*-close-*))
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
-	(cog-open storage)
-	(store-frames (cog-atomspace))
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) (cog-atomspace))
 	(cog-set-atomspace! (AtomSpace (cog-atomspace)))
 	(set-cnt! (Concept "foo") (FloatValue 1 0 7))
-	(store-atom (Concept "foo"))
-	(store-atom (Concept "bar"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
 	(set-cnt! (ListLink (Concept "foo") (List (Concept "bar"))) (FloatValue 1 0 8))
-	(store-atom (ListLink (Concept "foo") (List (Concept "bar"))))
-	(cog-close storage)
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (List (Concept "bar"))))
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the space, start with a clean slate.
 	(cog-atomspace-clear (cog-atomspace))
@@ -61,13 +61,13 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
-	(define top-space (car (load-frames)))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Verify the ListLink is as expected.
 	(define lilly (ListLink (Concept "foo") (List (Concept "bar"))))
@@ -95,12 +95,12 @@
 
 	; Load enough to get started.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
-	(define top-space (car (load-frames)))
-	(delete-frame! top-space)
-	(cog-close storage)
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(cog-set-value! storage (*-delete-frame-*) top-space)
+	(cog-set-value! storage (*-close-*))
 )
 
 ; Verify what's left a the bottom
@@ -111,13 +111,13 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-promote-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
-	(define top-space (car (load-frames)))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Verify the ListLink is as expected.
 	(define lilly (ListLink (Concept "foo") (List (Concept "bar"))))

@@ -40,7 +40,7 @@
 	(cog-set-atomspace! surface-space)
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
-	(store-frames surface-space)
+	(cog-set-value! storage (*-store-frames-*) surface-space)
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
@@ -61,16 +61,16 @@
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
 	(cog-set-atomspace! base-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid1-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid2-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid3-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! surface-space)
-	(store-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Return the surface space
 	surface-space
@@ -93,20 +93,20 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpace Frames.
 	; There are two frames at the top, and we want the newer one.
 	; The second one is the root space; it doesn't have the stack.
 	; This is awkward. I don't entirely like it. For now, it works.
-	(define the-frames (load-frames))
+	(define the-frames (cog-value->list (cog-value storage (*-load-frames-*))))
 	; (format #t "The frames are ~A\n" the-frames)
 	(define top-space (car the-frames))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)
@@ -165,7 +165,7 @@
 
 	(cog-set-atomspace! surface-space)
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
@@ -180,18 +180,18 @@
 	; Store the changed content. Toggle through all the atomspaces,
 	; as otherwise, the TV's on the Concepts aren't stored.
 	; Do NOT store frames a second time! This will mess it up.
-	; (store-frames surface-space)
+	; (cog-set-value! storage (*-store-frames-*) surface-space)
 	(cog-set-atomspace! base-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid1-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid2-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid3-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! surface-space)
-	(store-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 )
 
 (define (test-deep-change DELETE)
@@ -204,15 +204,15 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpace Frames.
-	(define top-space (car (load-frames)))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)
@@ -272,7 +272,7 @@
 	(cog-set-atomspace! surface-space)
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
 	(cog-open storage)
-	(store-frames surface-space)
+	(cog-set-value! storage (*-store-frames-*) surface-space)
 
 	; Repeatedly add and remove the same atom
 	(cog-set-atomspace! base-space)
@@ -294,18 +294,18 @@
 	; Store the changed content. Toggle through all the atomspaces,
 	; as otherwise, the TV's on the Atoms aren't stored.
 	; Do NOT store frames a second time! This will mess it up.
-	; (store-frames surface-space)
+	; (cog-set-value! storage (*-store-frames-*) surface-space)
 	(cog-set-atomspace! base-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid1-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid2-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid3-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! surface-space)
-	(store-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 )
 
 (define (test-deep-link DELETE-REC)
@@ -317,15 +317,15 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-delete-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpace Frames.
-	(define top-space (car (load-frames)))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)

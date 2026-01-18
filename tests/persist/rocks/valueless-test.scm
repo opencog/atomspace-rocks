@@ -27,15 +27,15 @@
 	(define surface-space (AtomSpace mid5-space))
 
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-valueless-test"))
-	(cog-open storage)
-	(store-frames surface-space)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) surface-space)
 
 	; Splatter some atoms into the various spaces.
 	(cog-set-atomspace! base-space)
-	(store-atom (Concept "even"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "even"))
 
 	(cog-set-atomspace! mid1-space)
-	(store-atom (Concept "odd"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "odd"))
 
 	(cog-set-atomspace! mid2-space)
 	(cog-delete! (Concept "even"))
@@ -46,12 +46,12 @@
 	(cog-extract! (Concept "odd"))
 
 	(cog-set-atomspace! mid4-space)
-	(store-atom (Concept "even"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "even"))
 
 	(cog-set-atomspace! mid5-space)
-	(store-atom (Concept "odd"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "odd"))
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the spaces, start with a clean slate.
 	(cog-atomspace-clear surface-space)
@@ -79,11 +79,11 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-valueless-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)

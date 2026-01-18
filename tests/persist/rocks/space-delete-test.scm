@@ -38,12 +38,12 @@
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-delete-test"))
-	(cog-open storage)
-	(store-frames surface-space)
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
-	(store-atom (Concept "foo"))
-	(store-atom (Concept "bar"))
-	(cog-close storage)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) surface-space)
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the spaces, start with a clean slate.
 	(cog-atomspace-clear surface-space)
@@ -62,12 +62,12 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-delete-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 	; (cog-rocks-print storage "")
 
-	(define top-space (car (load-frames)))
-	(delete-frame! top-space)
-	(cog-close storage)
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
+	(cog-set-value! storage (*-delete-frame-*) top-space)
+	(cog-set-value! storage (*-close-*))
 )
 
 ; -------------------------------------------------------------------
@@ -101,11 +101,11 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-delete-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	(test-equal "top-depth" 4 (count-depth top-space 1))
 
@@ -113,11 +113,11 @@
 
 	; Load everything. Again.
 	(cog-set-atomspace! (AtomSpace))
-	(cog-open storage)
-	(set! top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(set! top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	(test-equal "top-depth" 3 (count-depth top-space 1))
 
@@ -125,11 +125,11 @@
 
 	; Load everything. Again.
 	(cog-set-atomspace! (AtomSpace))
-	(cog-open storage)
-	(set! top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(set! top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	(test-equal "top-depth" 2 (count-depth top-space 1))
 

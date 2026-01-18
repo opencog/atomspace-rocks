@@ -168,7 +168,7 @@
 (define (check-equal MSG A B)
 	(format #t "For ~A, expecting: ~A-- Got: ~A\n" MSG A B))
 
-(define (get-val ATM) (cog-vale ATM (Predicate "key")))
+(define (get-val ATM) (cog-value ATM (Predicate "key")))
 
 ; Lets take a look at the TV on `foo` in the base space.
 (cog-set-atomspace! base-space)

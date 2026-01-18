@@ -24,18 +24,18 @@
 
 	; Store it
 	(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-space-link-test"))
-	(cog-open rsn)
-	(store-atomspace)
-	(cog-close rsn)
+	(cog-set-value! rsn (*-open-*))
+	(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
+	(cog-set-value! rsn (*-close-*))
 
 	; Start fresh
 	(cog-atomspace-clear)
 
 	; Load
 	(set! rsn (RocksStorageNode "rocks:///tmp/cog-rocks-space-link-test"))
-	(cog-open rsn)
-	(load-atomspace)
-	(cog-close rsn)
+	(cog-set-value! rsn (*-open-*))
+	(cog-set-value! rsn (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! rsn (*-close-*))
 	(cog-prt-atomspace)
 
 	; Was the Item loaded?

@@ -42,10 +42,10 @@
 
 	; Store only the top link, nothing else.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-frame-test"))
-	(cog-open storage)
-	(store-frames surface-space)
-	(store-atom (ListLink (Concept "foo") (List (Concept "bar"))))
-	(cog-close storage)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) surface-space)
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (List (Concept "bar"))))
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the spaces, start with a clean slate.
 	(cog-atomspace-clear surface-space)
@@ -66,13 +66,13 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-value-frame-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
 	; (cog-rocks-stats storage)
 	; (cog-rocks-print storage "")
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)

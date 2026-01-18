@@ -27,9 +27,9 @@
 
 	; Store the content. Store only the top-most link.
 	(define storage (MonoStorageNode "monospace:///tmp/cog-mono-value-store-test"))
-	(cog-open storage)
-	(store-atom (ListLink (Concept "foo") (List (Concept "bar"))))
-	(cog-close storage)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (List (Concept "bar"))))
+	(cog-set-value! storage (*-close-*))
 
 	; Clear out the space, start with a clean slate.
 	(cog-atomspace-clear (cog-atomspace))
@@ -46,11 +46,11 @@
 
 	; Load everything.
 	(define storage (MonoStorageNode "monospace:///tmp/cog-mono-value-store-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 	; (cog-mono-stats storage)
 	; (cog-mono-print storage "")
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Verify the ListLink is as expected.
 	(define lilly (ListLink (Concept "foo") (List (Concept "bar"))))

@@ -69,11 +69,11 @@
 
 ; Dump all three AtomSpaces to the same file.
 (define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-space-episodic-test"))
-(cog-open rsn)
-(store-atomspace)
-(store-atomspace (AtomSpace "happy thoughts"))
-(store-atomspace (AtomSpace "crushing defeat"))
-(cog-close rsn)
+(cog-set-value! rsn (*-open-*))
+(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
+(cog-set-value! rsn (*-store-atomspace-*) (AtomSpace "happy thoughts"))
+(cog-set-value! rsn (*-store-atomspace-*) (AtomSpace "crushing defeat"))
+(cog-set-value! rsn (*-close-*))
 
 ; Verify that the contents are as expected
 (cog-prt-atomspace)
@@ -92,8 +92,8 @@
 
 (define gsn (RocksStorageNode "rocks:///tmp/cog-rocks-space-episodic-test"))
 
-(cog-open gsn)
-(load-atomspace)
+(cog-set-value! gsn (*-open-*))
+(cog-set-value! gsn (*-load-atomspace-*) (cog-atomspace))
 (format #t "Loaded Atom counts ~A ~A ~A\n"
 	(count-all)
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))
@@ -112,9 +112,9 @@
 	(count-all (cog-value (ConceptNode "foo") (Predicate "repressed mem")))))
 
 ; Now, restore the two batches of episodic memories.
-(load-atomspace (AtomSpace "happy thoughts"))
-(load-atomspace (AtomSpace "crushing defeat"))
-(cog-close gsn)
+(cog-set-value! gsn (*-load-atomspace-*) (AtomSpace "happy thoughts"))
+(cog-set-value! gsn (*-load-atomspace-*) (AtomSpace "crushing defeat"))
+(cog-set-value! gsn (*-close-*))
 
 ; +1 for (Predicate "*-IsKeyFlag-*")
 (test-assert "base-count" (equal? 19 (count-all)))

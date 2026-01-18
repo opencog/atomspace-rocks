@@ -57,23 +57,23 @@
 
 	; Store all content.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-links-test"))
-	(cog-open storage)
-	(store-frames surface-space)
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) surface-space)
 	(cog-set-atomspace! base-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid1-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid2-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid3-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid4-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! mid5-space)
-	(store-atomspace)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
 	(cog-set-atomspace! surface-space)
-	(store-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-store-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 )
 
 ; -------------------------------------------------------------------
@@ -92,11 +92,11 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-links-test"))
-	(cog-open storage)
-	(define top-space (car (load-frames)))
+	(cog-set-value! storage (*-open-*))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Grab references into the inheritance hierarchy
 	(define surface-space top-space)

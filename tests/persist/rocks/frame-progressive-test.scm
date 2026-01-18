@@ -26,33 +26,33 @@
 ;; These atoms are in COW spaces, and thus, in order for the store
 ;; to work correctly, we must store the COW atom, returned by the
 ;; value setter.  This is unintuitive to the casual user!
-(define (store-stuff N)
+(define (store-stuff storage N)
 	(define x (Concept "foo"))
 	(define x1 (cog-set-value! x (Predicate "gee") (FloatValue 1 0 N)))
-	(store-atom x1)
+	(cog-set-value! storage (*-store-atom-*) x1)
 
 	(define y (Concept "bar"))
 	(define y1 (cog-set-value! y (Predicate "gosh") (FloatValue 1 0 (+ 1 N))))
-	(store-atom y1)
+	(cog-set-value! storage (*-store-atom-*) y1)
 
 	(define z (List x y))
 	(define z1 (cog-set-value! z (Predicate "bang") (FloatValue 1 0 (+ 2 N))))
-	(store-atom z1)
+	(cog-set-value! storage (*-store-atom-*) z1)
 
 	(define w (List z x))
 	(define w1 (cog-set-value! w (Predicate "bash") (FloatValue 1 0 (+ 3 N))))
-	(store-atom w1)
+	(cog-set-value! storage (*-store-atom-*) w1)
 )
 
 ; Recursive calls to above
-(define (recompute N NLOOP)
+(define (recompute storage N NLOOP)
 	(when (< 0 NLOOP)
-		(store-stuff N)
+		(store-stuff storage N)
 		(cog-set-atomspace! (AtomSpace (cog-atomspace)))
 		(cog-delete-recursive! (Concept "bar"))
 		(cog-extract-recursive! (Concept "bar"))
 		(cog-set-atomspace! (AtomSpace (cog-atomspace)))
-		(recompute (+ N 3) (- NLOOP 1)))
+		(recompute storage (+ N 3) (- NLOOP 1)))
 )
 
 (define (progressive-store N)
@@ -67,12 +67,12 @@
 	; We plan to store multiple atomspaces.
 	; Let this be stated in advance.
 	(cog-atomspace-cow! #t)
-	(store-frames base-space)
+	(cog-set-value! storage (*-store-frames-*) base-space)
 
 	; Repeatedly add and remove the same atom
-	(recompute 1 N)
+	(recompute storage 1 N)
 
-	(cog-close storage)
+	(cog-set-value! storage (*-close-*))
 )
 
 ; Verify expected contents
@@ -143,15 +143,15 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-frame-progressive-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpace Frames.
-	(define top-space (car (load-frames)))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 
 	; Load all atoms in all frames
 	(cog-set-atomspace! top-space)
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Check the rest of them, recursing downwards.
 	(progressive-check (- STACK-DEPTH 1))

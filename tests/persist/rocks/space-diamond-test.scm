@@ -40,18 +40,18 @@
 	; Store the content. Store the Concepts as well as the link,
 	; as otherwise, the TV's on the Concepts aren't stored.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-diamond-test"))
-	(cog-open storage)
-	(store-frames top-space)
-	(store-atom (ListLink (Concept "foo") (Concept "bar")))
-	(store-atom (Concept "foo"))
+	(cog-set-value! storage (*-open-*))
+	(cog-set-value! storage (*-store-frames-*) top-space)
+	(cog-set-value! storage (*-store-atom-*) (ListLink (Concept "foo") (Concept "bar")))
+	(cog-set-value! storage (*-store-atom-*) (Concept "foo"))
 
 	; Store the two variants, with the explicit spaces in which
 	; they come from.
 	(cog-set-atomspace! left-space)
-	(store-atom (Concept "bar"))
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
 	(cog-set-atomspace! right-space)
-	(store-atom (Concept "bar"))
-	(cog-close storage)
+	(cog-set-value! storage (*-store-atom-*) (Concept "bar"))
+	(cog-set-value! storage (*-close-*))
 )
 
 ; -------------------------------------------------------------------
@@ -65,15 +65,15 @@
 
 	; Load everything.
 	(define storage (RocksStorageNode "rocks:///tmp/cog-rocks-space-diamond-test"))
-	(cog-open storage)
+	(cog-set-value! storage (*-open-*))
 
 	; Load all of the AtomSpaces.
-	(define top-space (car (load-frames)))
+	(define top-space (car (cog-value->list (cog-value storage (*-load-frames-*)))))
 	(cog-set-atomspace! top-space)
 
 	; Now load the AtomSpace itself
-	(load-atomspace)
-	(cog-close storage)
+	(cog-set-value! storage (*-load-atomspace-*) (cog-atomspace))
+	(cog-set-value! storage (*-close-*))
 
 	; Verify that a diamond pattern was created.
 	(define left-space (cog-outgoing-atom top-space 0))

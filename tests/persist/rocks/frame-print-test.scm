@@ -38,11 +38,11 @@
 
 	(cog-set-atomspace! c)
 	(define rsn (RocksStorageNode "rocks:///tmp/cog-rocks-frame-print-test"))
-	(cog-open rsn)
-	(store-atomspace)
+	(cog-set-value! rsn (*-open-*))
+	(cog-set-value! rsn (*-store-atomspace-*) (cog-atomspace))
 	(cog-prt-atomspace)
 
-	(cog-close rsn)
+	(cog-set-value! rsn (*-close-*))
 )
 
 (define test-name "test print")
