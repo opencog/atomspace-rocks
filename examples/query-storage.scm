@@ -157,8 +157,8 @@
 (cog-value->list (cog-value get-tail metadata))
 
 ; Print the time-string... a bit verbose, but whatever.
-(strftime "%c" (localtime  (inexact->exact (car
-	(cog-value->list (cog-value get-tail metadata))))))
+(strftime "%c" (localtime  (inexact->exact
+	(cog-value-ref get-tail metadata 0))))
 
 ; Again, the format of the metadata is subject to change.
 
