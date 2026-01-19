@@ -34,6 +34,7 @@
 #include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
@@ -126,7 +127,7 @@ void QueryPersistUTest::setup_data(void)
 
 	Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Populate the Storage with stuff that we will later query. */
@@ -173,7 +174,7 @@ void QueryPersistUTest::test_meet(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Create a query to find all things that have wheels.
@@ -234,7 +235,7 @@ void QueryPersistUTest::test_join(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Create a join to find all vehicles.

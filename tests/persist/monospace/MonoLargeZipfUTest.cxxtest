@@ -34,6 +34,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/monospace/MonoStorage.h>
 
 #include <opencog/util/Logger.h>
@@ -43,7 +44,7 @@ using namespace opencog;
 class LargeZipfUTest :  public CxxTest::TestSuite
 {
 	private:
-		AtomSpace *_as;
+		AtomSpacePtr _as;
 
 #define NWORDS 35000
 		Handle hword[NWORDS];
@@ -92,12 +93,12 @@ LargeZipfUTest::~LargeZipfUTest()
  */
 void LargeZipfUTest::setUp(void)
 {
-	_as = new AtomSpace();
+	_as = createAtomSpace();
 }
 
 void LargeZipfUTest::tearDown(void)
 {
-	delete _as;
+	_as = nullptr;
 	kill_data();
 }
 
@@ -289,14 +290,14 @@ void LargeZipfUTest::test_atomspace(void)
 
 	Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-large-zipf-utest");
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Create a large number of atoms */
-	filler_up(_as);
+	filler_up(_as.get());
 
 	/* Verify that the atoms were added */
-	check_space(_as, "verify-add");
+	check_space(_as.get(), "verify-add");
 
 	/* Push all atoms out to the SQL DB */
 	store->store_atomspace();
@@ -312,13 +313,13 @@ void LargeZipfUTest::test_atomspace(void)
 	/* The clear above nuked the storage, so restart */
 	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-large-zipf-utest");
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Verify that the atoms can still be fetched from storage. */
-	fetch_space(_as, store);
+	fetch_space(_as.get(), store);
 	store->barrier();
-	check_space(_as, "verify-fetch");
+	check_space(_as.get(), "verify-fetch");
 
 	/* Do it again, for good luck.  */
 	_as->clear();
@@ -327,20 +328,20 @@ void LargeZipfUTest::test_atomspace(void)
 	/* The clear above nuked the storage, so restart */
 	hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-large-zipf-utest");
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Verify that the atoms can still be fetched from storage. */
-	fetch_space(_as, store);
+	fetch_space(_as.get(), store);
 	store->barrier();
-	check_space(_as, "ver-again");
+	check_space(_as.get(), "ver-again");
 
 	/* Kill data for good */
 	_as->clear();
 	TSM_ASSERT("Non-empty atomspace", 0 == _as->get_size());
 
 	/* Verify that the atoms are no longer being found. */
-	check_empty(_as);
+	check_empty(_as.get());
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
