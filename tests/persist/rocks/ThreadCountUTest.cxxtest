@@ -32,6 +32,7 @@
 
 #include <opencog/atoms/base/Atom.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/guile/SchemeEval.h>
 
@@ -242,7 +243,7 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 	hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	store->load_atomspace();
@@ -252,7 +253,7 @@ void ThreadCountUTest::harness(int n_loops, const char* cmd)
 	check(n_threads * n_loops, relo.c_str());
 
 	store->erase();
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	store = nullptr;
 }
 

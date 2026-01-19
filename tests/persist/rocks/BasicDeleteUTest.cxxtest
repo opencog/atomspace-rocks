@@ -117,8 +117,8 @@ void BasicDeleteUTest::test_duplicates(void)
 	store->store_atom(li);
 	store->barrier();
 
-	// Verify the atomspace size
-	TS_ASSERT_EQUALS(as->get_size(), 4);
+	// Verify the atomspace size: 2 concepts + 1 link + 1 storage node + 1 *-open-*
+	TS_ASSERT_EQUALS(as->get_size(), 5);
 
 	// Remove the link. Since the link has duplicate atoms
 	// in it, this can cause trouble, depending on how the
