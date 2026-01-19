@@ -33,6 +33,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/persist/rocks/RocksStorage.h>
@@ -44,7 +45,7 @@ using namespace opencog;
 class DeleteUTest :  public CxxTest::TestSuite
 {
     private:
-        AtomSpace* _as;
+        AtomSpacePtr _as;
         std::string uri;
 
         NodePtr n1[10];
@@ -113,12 +114,12 @@ DeleteUTest:: DeleteUTest(void)
  */
 void DeleteUTest::setUp(void)
 {
-    _as = new AtomSpace();
+    _as = createAtomSpace();
 }
 
 void DeleteUTest::tearDown(void)
 {
-    delete _as;
+    _as = nullptr;
 }
 
 // ============================================================
@@ -424,32 +425,33 @@ void DeleteUTest::test_remove(void)
 
     Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
     StorageNodePtr store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(store->connected())
 
     int idx = 0;
-    add_to_space(idx++, _as, "AA-aa-wow ");
-    add_to_space(idx++, _as, "BB-bb-wow ");
-    add_to_space(idx++, _as, "CC-cc-wow ");
-    add_to_space(idx++, _as, "DD-dd-wow ");
-    add_to_space(idx++, _as, "EE-ee-wow ");
+    add_to_space(idx++, _as.get(), "AA-aa-wow ");
+    add_to_space(idx++, _as.get(), "BB-bb-wow ");
+    add_to_space(idx++, _as.get(), "CC-cc-wow ");
+    add_to_space(idx++, _as.get(), "DD-dd-wow ");
+    add_to_space(idx++, _as.get(), "EE-ee-wow ");
 
     /* Make sure UTF-8 works fine. */
-    add_to_space(idx++, _as, "Попытка выбраться вызвала слабый стон ");
-    add_to_space(idx++, _as, "はにがうりだそうであってるのかはち ");
-    add_to_space(idx++, _as, "係拉丁字母");
+    add_to_space(idx++, _as.get(), "Попытка выбраться вызвала слабый стон ");
+    add_to_space(idx++, _as.get(), "はにがうりだそうであってるのかはち ");
+    add_to_space(idx++, _as.get(), "係拉丁字母");
 
     /* Verify that the atoms were added */
     int i;
     for (i=0; i<idx; i++)
-        check_space(i, _as, "verify-add");
+        check_space(i, _as.get(), "verify-add");
 
     /* Push all atoms out to storage */
     store->store_atomspace();
 
-    printf("Initial Atomspace size=%lu expect=%d\n", _as->get_size(), 7*idx+1);
+    // +2 for *-open-* predicate and storage node
+    printf("Initial Atomspace size=%lu expect=%d\n", _as->get_size(), 7*idx+2);
     TSM_ASSERT("Initial unexpected atomspace size",
-          ((unsigned)(7*idx+1)) == _as->get_size());
+          ((unsigned)(7*idx+2)) == _as->get_size());
     /* Delete some atoms with non-empty incoming sets.
      * This should result in their being removed from the atomspace,
      * but NOT fom the backend!
@@ -457,36 +459,37 @@ void DeleteUTest::test_remove(void)
     store->barrier();
 
     for (i=0; i<idx; i++)
-        extract_links(i, _as);
+        extract_links(i, _as.get());
 
-    printf("Atomspace size=%lu expect=%d\n", _as->get_size(), 4*idx+1);
-    TSM_ASSERT("Post-extract unexpected atomspace size", ((unsigned)(4*idx+1)) == _as->get_size());
+    // +2 for *-open-* predicate and storage node
+    printf("Atomspace size=%lu expect=%d\n", _as->get_size(), 4*idx+2);
+    TSM_ASSERT("Post-extract unexpected atomspace size", ((unsigned)(4*idx+2)) == _as->get_size());
 
     /* Verify that the atoms can still be fetched from storage. */
     for (i=0; i<idx; i++) {
         fetch_space(i, store);
-        check_space(i, _as, "verify-fetch");
+        check_space(i, _as.get(), "verify-fetch");
     }
 
     /* This time, kill them in the backend too.  */
     for (i=0; i<idx; i++)
         delete_links(i, store);
 
-    // +2 for *-TruthValueKey-* and *-IsKeyFlag-*
-    printf("Post-remove size=%lu expect=%d\n", _as->get_size(), 4*idx+3);
+    // +2 for *-TruthValueKey-* and *-IsKeyFlag-*, +1 for *-open-*
+    printf("Post-remove size=%lu expect=%d\n", _as->get_size(), 4*idx+4);
     TSM_ASSERT("Post-remove unexpected atomspace size",
-        ((unsigned)(4*idx+3)) == _as->get_size());
+        ((unsigned)(4*idx+4)) == _as->get_size());
 
     /* Verify that the atoms are really gone from storage. */
     for (i=0; i<idx; i++) {
         fetch_space(i, store);
-        check_remove(i, _as, "verify-gone");
+        check_remove(i, _as.get(), "verify-gone");
     }
 
-    // +2 for *-TruthValueKey-* and *-IsKeyFlag-*
-    printf("Post-referesh size=%lu expect=%d\n", _as->get_size(), 7*idx+3);
+    // +2 for *-TruthValueKey-* and *-IsKeyFlag-*, +1 for *-open-*
+    printf("Post-referesh size=%lu expect=%d\n", _as->get_size(), 7*idx+4);
     TSM_ASSERT("Post-refetch unexpected atomspace size",
-        ((unsigned)(7*idx+3)) == _as->get_size());
+        ((unsigned)(7*idx+4)) == _as->get_size());
 
     /* Kill data for good */
     _as->clear();
@@ -494,7 +497,7 @@ void DeleteUTest::test_remove(void)
 
     /* Verify that the atoms are no longer being found. */
     for (i=0; i<idx; i++)
-        check_empty(i, _as);
+        check_empty(i, _as.get());
 
     logger().debug("END TEST: %s", __FUNCTION__);
 }
@@ -507,26 +510,26 @@ void DeleteUTest::test_recurse(void)
 
     Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
     StorageNodePtr store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 
     TS_ASSERT(store->connected())
 
     int idx = 0;
-    add_to_space(idx++, _as, "AA-aa-wow ");
-    add_to_space(idx++, _as, "BB-bb-wow ");
-    add_to_space(idx++, _as, "CC-cc-wow ");
-    add_to_space(idx++, _as, "DD-dd-wow ");
-    add_to_space(idx++, _as, "EE-ee-wow ");
+    add_to_space(idx++, _as.get(), "AA-aa-wow ");
+    add_to_space(idx++, _as.get(), "BB-bb-wow ");
+    add_to_space(idx++, _as.get(), "CC-cc-wow ");
+    add_to_space(idx++, _as.get(), "DD-dd-wow ");
+    add_to_space(idx++, _as.get(), "EE-ee-wow ");
 
     /* Make sure UTF-8 works fine. */
-    add_to_space(idx++, _as, "Попытка выбраться вызвала слабый стон ");
-    add_to_space(idx++, _as, "はにがうりだそうであってるのかはち ");
-    add_to_space(idx++, _as, "係拉丁字母");
+    add_to_space(idx++, _as.get(), "Попытка выбраться вызвала слабый стон ");
+    add_to_space(idx++, _as.get(), "はにがうりだそうであってるのかはち ");
+    add_to_space(idx++, _as.get(), "係拉丁字母");
 
     /* Verify that the atoms were added */
     int i;
     for (i=0; i<idx; i++)
-        check_space(i, _as, "verify-add");
+        check_space(i, _as.get(), "verify-add");
 
     /* Push all atoms out to the SQL DB */
     store->store_atomspace();
@@ -539,9 +542,10 @@ void DeleteUTest::test_recurse(void)
 
     int zap = 4;
     for (i=0; i<zap; i++)
-        extract_nodes(i, _as);
+        extract_nodes(i, _as.get());
 
-    size_t expsz = 7*(idx-zap) + 3*zap + 1;
+    // +1 for *-open-*
+    size_t expsz = 7*(idx-zap) + 3*zap + 2;
     printf("Atomspace size=%lu expect=%lu\n",
          _as->get_size(), expsz);
     TSM_ASSERT("Unexpected atomspace size", expsz == _as->get_size());
@@ -549,14 +553,14 @@ void DeleteUTest::test_recurse(void)
     /* Verify that the atoms can still be fetched from storage. */
     for (i=0; i<idx; i++) {
         fetch_space(i, store);
-        check_space(i, _as, "verify-fetch");
+        check_space(i, _as.get(), "verify-fetch");
     }
 
     /* This time, kill them in the backend too.  */
     for (i=0; i<zap; i++)
         delete_nodes(i, store);
 
-    // +1 for *-IsKeyFlag-*
+    // +1 for *-IsKeyFlag-*, expsz already has +1 for *-open-*
     printf("Post-remove size=%lu expect=%lu\n",
          _as->get_size(), expsz+2);
     TSM_ASSERT("Unexpected atomspace size", expsz+2 == _as->get_size());
@@ -568,20 +572,20 @@ void DeleteUTest::test_recurse(void)
         fetch_space(i, store);
     }
 
-    // +2 for *-TruthValueKey-* and *-IsKeyFlag-*
+    // +2 for *-TruthValueKey-* and *-IsKeyFlag-*, +1 for *-open-*
     printf("Post-refetch size=%lu expect=%d\n",
-         _as->get_size(), 7*idx+3);
+         _as->get_size(), 7*idx+4);
     TSM_ASSERT("Unexpected atomspace size",
-         ((unsigned) 7*idx+3) == _as->get_size());
+         ((unsigned) 7*idx+4) == _as->get_size());
 
     /* Check that the removed atoms really got zapped. */
     for (i=0; i<zap; i++) {
-        check_remove(i, _as, "verify-zapped");
+        check_remove(i, _as.get(), "verify-zapped");
     }
 
     /* However, others should still be there. */
     for (i=zap; i<idx; i++) {
-        check_space(i, _as, "verify-zap");
+        check_space(i, _as.get(), "verify-zap");
     }
 
     /* Kill data for good */
@@ -590,7 +594,7 @@ void DeleteUTest::test_recurse(void)
 
     /* Verify that the atoms are no longer being found. */
     for (i=0; i<idx; i++)
-        check_empty(i, _as);
+        check_empty(i, _as.get());
 
     logger().debug("END TEST: %s", __FUNCTION__);
 }

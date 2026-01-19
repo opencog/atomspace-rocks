@@ -34,8 +34,10 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/atom_types/atom_types.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks/RocksStorage.h>
+#include <opencog/persist/rocks-types/atom_types.h>
 
 #include <opencog/util/Logger.h>
 
@@ -169,9 +171,11 @@ static void atomCompare(Handle a, Handle b, const char* where)
  */
 void BasicSaveUTest::single_atom_save_restore(std::string id)
 {
-    RocksStorageNodePtr store = createRocksStorageNode(std::string(uri));
+    AtomSpacePtr as = createAtomSpace();
+    Handle hsn = as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+    RocksStorageNodePtr store = RocksStorageNodeCast(hsn);
     logger().debug("single_atom_save_restore: create %p", store.get());
-    store->open();
+    store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     logger().debug("single_atom_save_restore: opened");
     if (!store->connected())
     {
@@ -234,7 +238,7 @@ void BasicSaveUTest::single_atom_save_restore(std::string id)
     fflush(stdout);
 
     store->kill_data();
-    store->close();
+    store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 }
 
 // ============================================================
