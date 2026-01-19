@@ -32,9 +32,11 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 
 #include <opencog/atomspace/AtomSpace.h>
 
+#include <opencog/persist/api/StorageNode.h>
 #include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/persist/monospace/MonoStorage.h>
 
@@ -45,7 +47,7 @@ using namespace opencog;
 class PersistUTest :  public CxxTest::TestSuite
 {
     private:
-        AtomSpace *_as;
+        AtomSpacePtr _as;
 
         NodePtr n1[10];
         NodePtr n2[10];
@@ -100,12 +102,12 @@ PersistUTest:: PersistUTest(void)
  */
 void PersistUTest::setUp(void)
 {
-    _as = new AtomSpace();
+    _as = createAtomSpace();
 }
 
 void PersistUTest::tearDown(void)
 {
-    delete _as;
+    _as = nullptr;
 }
 
 // ============================================================
@@ -317,25 +319,25 @@ void PersistUTest::test_atomspace(void)
 
     Handle hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-persist-utest");
     StorageNodePtr store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(store->connected())
 
     int idx = 0;
-    add_to_space(idx++, _as, "AA-aa-wow ");
-    add_to_space(idx++, _as, "BB-bb-wow ");
-    add_to_space(idx++, _as, "CC-cc-wow ");
-    add_to_space(idx++, _as, "DD-dd-wow ");
-    add_to_space(idx++, _as, "EE-ee-wow ");
+    add_to_space(idx++, _as.get(), "AA-aa-wow ");
+    add_to_space(idx++, _as.get(), "BB-bb-wow ");
+    add_to_space(idx++, _as.get(), "CC-cc-wow ");
+    add_to_space(idx++, _as.get(), "DD-dd-wow ");
+    add_to_space(idx++, _as.get(), "EE-ee-wow ");
 
     /* Make sure UTF-8 works fine. */
-    add_to_space(idx++, _as, "Попытка выбраться вызвала слабый стон ");
-    add_to_space(idx++, _as, "はにがうりだそうであってるのかはち ");
-    add_to_space(idx++, _as, "係拉丁字母");
+    add_to_space(idx++, _as.get(), "Попытка выбраться вызвала слабый стон ");
+    add_to_space(idx++, _as.get(), "はにがうりだそうであってるのかはち ");
+    add_to_space(idx++, _as.get(), "係拉丁字母");
 
     /* Verify that the atoms were added */
     int i;
     for (i=0; i<idx; i++)
-        check_space(i, _as, "verify-add");
+        check_space(i, _as.get(), "verify-add");
 
     /* Push all atoms out to the Cogserver */
     store->store_atomspace();
@@ -351,12 +353,12 @@ void PersistUTest::test_atomspace(void)
     /* The above clear wiped out the storage node; recreate it. */
     hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-persist-utest");
     store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 
     /* Verify that the atoms can still be fetched from storage. */
     for (i=0; i<idx; i++) {
         fetch_space(i, store);
-        check_space(i, _as, "verify-fetch");
+        check_space(i, _as.get(), "verify-fetch");
     }
 
     /* Do it again, for good luck.  */
@@ -366,12 +368,12 @@ void PersistUTest::test_atomspace(void)
     /* The above clear wiped out the storage node; recreate it. */
     hsn = _as->add_node(MONO_STORAGE_NODE, "monospace:///tmp/cog-mono-persist-utest");
     store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 
     /* Verify that the atoms can still be fetched from storage. */
     for (i=0; i<idx; i++) {
         fetch_space(i, store);
-        check_space(i, _as, "ver-again");
+        check_space(i, _as.get(), "ver-again");
     }
 
     /* Kill data for good */
@@ -380,7 +382,7 @@ void PersistUTest::test_atomspace(void)
 
     /* Verify that the atoms are no longer being found. */
     for (i=0; i<idx; i++)
-        check_empty(i, _as);
+        check_empty(i, _as.get());
 
     logger().debug("END TEST: %s", __FUNCTION__);
 }

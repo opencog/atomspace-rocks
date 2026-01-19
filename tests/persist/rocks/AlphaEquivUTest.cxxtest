@@ -31,7 +31,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/value/FloatValue.h>
-#include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks-types/atom_types.h>
 #include <opencog/persist/rocks/RocksStorage.h>
@@ -43,7 +43,7 @@ using namespace opencog;
 class AlphaEquivUTest :  public CxxTest::TestSuite
 {
 	private:
-		AtomSpace* _as;
+		AtomSpacePtr _as;
 		std::string uri;
 
 	public:
@@ -123,11 +123,11 @@ void AlphaEquivUTest::setup_data(void)
 {
 	kill_data();
 
-	_as = new AtomSpace();
+	_as = createAtomSpace();
 
 	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Populate the Storage with stuff that we will later query. */
@@ -140,7 +140,7 @@ void AlphaEquivUTest::setup_data(void)
 	store->store_atomspace();
 	store->barrier();
 
-	delete _as;
+	_as = nullptr;
 }
 
 // ============================================================
@@ -152,10 +152,10 @@ void AlphaEquivUTest::test_fetch(void)
 
 	setup_data();
 
-	_as = new AtomSpace();
+	_as = createAtomSpace();
 	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Fetch an alpha-equivalent lambda link.
@@ -183,7 +183,7 @@ void AlphaEquivUTest::test_fetch(void)
 	FloatValuePtr fvp = FloatValueCast(fu);
 	TSM_ASSERT_EQUALS("Expecting three floats", fvp->size(), 3);
 
-	delete _as;
+	_as = nullptr;
 
 	logger().info("END TEST: %s", __FUNCTION__);
 }
@@ -197,15 +197,15 @@ void AlphaEquivUTest::test_remove(void)
 
 	setup_data();
 
-	_as = new AtomSpace();
+	_as = createAtomSpace();
 	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Remove the alpha-equivalent lambda link.
 	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
-	store->remove_atom(_as, ly);
+	store->remove_atom(_as.get(), ly);
 	store->barrier();
 	ly = Handle::UNDEFINED;
 
@@ -221,7 +221,7 @@ void AlphaEquivUTest::test_remove(void)
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
 	TSM_ASSERT("Expecting null value", nullptr == fu);
 
-	delete _as;
+	_as = nullptr;
 
 	logger().info("END TEST: %s", __FUNCTION__);
 }
@@ -235,15 +235,15 @@ void AlphaEquivUTest::test_recursive_remove(void)
 
 	setup_data();
 
-	_as = new AtomSpace();
+	_as = createAtomSpace();
 	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Recursive remove Concept "A".
 	Handle ca = an(CONCEPT, "A");
-	store->remove_atom(_as, ca, true);
+	store->remove_atom(_as.get(), ca, true);
 	store->barrier();
 
 	// What happens if we look for the original?
@@ -258,7 +258,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
 	TSM_ASSERT("Expecting null value", nullptr == fu);
 
-	delete _as;
+	_as = nullptr;
 
 	logger().info("END TEST: %s", __FUNCTION__);
 }

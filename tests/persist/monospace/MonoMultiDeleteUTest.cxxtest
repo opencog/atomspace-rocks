@@ -34,6 +34,7 @@
 #include <opencog/atoms/atom_types/atom_types.h>
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/persist/rocks-types/atom_types.h>
 
@@ -127,7 +128,7 @@ void MultiDeleteUTest::worker(int thread_id)
 			if (nullptr == li) continue;
 
 			// Remove the link.
-			store->remove_atom(as, li);
+			store->remove_atom(as.get(), li);
 		}
 	}
 
@@ -151,7 +152,7 @@ void MultiDeleteUTest::test_add_delete(void)
 	Handle hsn = as->add_node(MONO_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Clear out left-over junk, just in case.
@@ -174,13 +175,14 @@ void MultiDeleteUTest::test_add_delete(void)
 	// Verify the local AtomSpace size. Should be 34:
 	// The StorageNode itself, the (Concept "aaaa") and
 	// 16 Concept and Lists from thread-id modulo 16
-	TS_ASSERT_EQUALS(as->get_size(), 2 + 2*(n_threads+6));
+	// +1 for (Predicate "*-open-*")
+	TS_ASSERT_EQUALS(as->get_size(), 3 + 2*(n_threads+6));
 
 	// Verify the DB contents: pull everything from the DB,
 	// back to here. Do this "independently", by closing and
 	// reopening; this forces the Storagenode through assorted
 	// flush and close code, potentially exposing bugs.
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	HandleSeq hs;
 	as->get_handles_by_type(hs, CONCEPT_NODE);
@@ -188,9 +190,10 @@ void MultiDeleteUTest::test_add_delete(void)
 		as->extract_atom(h, true);
 	hs.clear();
 	printf("AtomSpace contents =\n%s\n", as->to_string().c_str());
-	TS_ASSERT_EQUALS(as->get_size(), 1);
+	// +1 for (Predicate "*-open-*"), +1 for (Predicate "*-close-*")
+	TS_ASSERT_EQUALS(as->get_size(), 3);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	store->load_atomspace();
@@ -198,7 +201,8 @@ void MultiDeleteUTest::test_add_delete(void)
 
 	// Size should be 19: the 18 from before plus that annoying
 	// (Predicate "*-TruthValueKey-*")
-	size_t expected_size = 3 + n_threads + 6;
+	// +1 for (Predicate "*-open-*"), +1 for (Predicate "*-close-*")
+	size_t expected_size = 5 + n_threads + 6;
 	if (as->get_size() != expected_size)
 		printf("Error: Bad size! AtomSpace contents =\n%s\n",
 			as->to_string().c_str());
@@ -206,8 +210,8 @@ void MultiDeleteUTest::test_add_delete(void)
 	TS_ASSERT_EQUALS(as->get_size(), expected_size);
 
 	store->erase();
-	store->close();
 	store = nullptr;
+	as = nullptr;
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
