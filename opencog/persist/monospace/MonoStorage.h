@@ -64,9 +64,6 @@ class MonoStorage : public StorageNode
 		std::string aidtostr(uint64_t) const;
 		void write_aid(void);
 
-		// Special case (PredicateNode "*-TruthValueKey-*")
-		std::string tv_pred_sid;
-
 		// Issue of sid needs to be atomic.
 		std::mutex _mtx_sid;
 

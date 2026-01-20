@@ -389,10 +389,6 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 			_rfile->Delete(rocksdb::WriteOptions(), marker);
 	}
 
-	// Always clobber the TV, set it back to default.
-	// The below will revise as needed.
-	_rfile->Delete(rocksdb::WriteOptions(), cid + tv_pred_sid);
-
 	// Store all the keys on the atom ...
 	for (const Handle& key : h->getKeys())
 		storeValue(cid + writeAtom(key), h->getValue(key));
@@ -404,10 +400,6 @@ void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 
 	// Separator for keys
 	std::string skid = "k@" + sid + ":" + writeFrame(as) + ":";
-
-	// Always clobber the TV, set it back to default.
-	// The below will revise as needed.
-	_rfile->Delete(rocksdb::WriteOptions(), skid + tv_pred_sid);
 
 	// If there is a previous marker, erase it!
 	std::string marker = skid + "+1";
@@ -589,19 +581,7 @@ void RocksStorage::getKeysMonospace(AtomSpace* as,
 		}
 
 		// read-only Atomspaces will refuse insertion of keys.
-		// However, we have to special-case the truth values.
-		// Mostly because (PredicateNode "*-TruthValueKey-*")
-		// is not in the AtomSpace. Argh! That's an old design flaw.
-		if (nullptr == key)
-		{
-			if (0 == tv_pred_sid.compare(rks.substr(kidoff)))
-			{
-				size_t junk = 0;
-				ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);
-				h->setValue(truth_key(), vp);
-			}
-			continue;
-		}
+		if (nullptr == key) continue;
 
 		size_t junk = 0;
 		ValuePtr vp = Sexpr::decode_value(it->value().ToString(), junk);

@@ -96,9 +96,6 @@ class RocksStorage : public StorageNode
 		void write_aid(void);
 		std::string get_new_aid(void);
 
-		// Special case (PredicateNode "*-TruthValueKey-*")
-		std::string tv_pred_sid;
-
 		// Issue of sid needs to be atomic.
 		std::mutex _mtx_sid;
 

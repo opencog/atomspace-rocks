@@ -163,13 +163,6 @@ void MonoStorage::init(const char * uri, bool read_only)
 printf("Mono: opened=%s%s\n", file.c_str(), read_only ? " (read-only)" : "");
 printf("Mono: initial aid=%lu\n", _next_aid.load());
 
-	if (read_only) return;
-
-	// Set up a SID for the TV predicate key.
-	// This must match what the AtomSpace is using.
-	// Tack on a leading colon, for convenience.
-	Handle h = createNode(PREDICATE_NODE, "*-TruthValueKey-*");
-	tv_pred_sid = writeAtom(h);
 }
 
 void MonoStorage::open()
