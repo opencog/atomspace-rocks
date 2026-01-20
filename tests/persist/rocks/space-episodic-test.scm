@@ -99,13 +99,13 @@
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))
 	(count-all (cog-value (ConceptNode "foo") (Predicate "repressed mem"))))
 
-; 11 loaded plus one RocksStorageNode plus (Predicate "*-TruthValueKey-*")
-; Plus two more: (Predicate "*-store-atomspace-*")
+; 11 loaded plus one RocksStorageNode
+; Plus: (Predicate "*-store-atomspace-*")
 ; and (Predicate "*-load-atomspace-*") and *-open-* and *-close-*
 ; and (Predicate "kayfabe") from test-utils.
 ; +1 for (Predicate "*-IsKeyFlag-*")
 
-(test-assert "base-count" (equal? 18 (count-all)))
+(test-assert "base-count" (equal? 17 (count-all)))
 (test-assert "space1-count" (equal? 0
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 0
@@ -117,7 +117,7 @@
 (cog-set-value! gsn (*-close-*))
 
 ; +1 for (Predicate "*-IsKeyFlag-*")
-(test-assert "base-count" (equal? 19 (count-all)))
+(test-assert "base-count" (equal? 18 (count-all)))
 (test-assert "space1-count" (equal? 8
 	(count-all (cog-value (ConceptNode "foo") (Predicate "real life")))))
 (test-assert "space2-count" (equal? 6

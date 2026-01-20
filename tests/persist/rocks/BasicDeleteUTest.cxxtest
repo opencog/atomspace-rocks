@@ -133,7 +133,7 @@ void BasicDeleteUTest::test_duplicates(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 6);
+	TS_ASSERT_EQUALS(as->get_size(), 5);
 
 	store->erase();
 	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
@@ -192,7 +192,7 @@ void BasicDeleteUTest::test_recursive(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
 
 	// --------------------------------------
 	// Do it again, but with a different order.
@@ -206,7 +206,7 @@ void BasicDeleteUTest::test_recursive(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 8);
+	TS_ASSERT_EQUALS(as->get_size(), 7);
 
 	store->remove_atom(as.get(), ha, true);
 	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
@@ -214,7 +214,7 @@ void BasicDeleteUTest::test_recursive(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
 
 	// --------------------------------------
 	// Do it again, but with a complex order.
@@ -228,7 +228,7 @@ void BasicDeleteUTest::test_recursive(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 8);
+	TS_ASSERT_EQUALS(as->get_size(), 7);
 
 	store->remove_atom(as.get(), ha, true);
 	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
@@ -236,7 +236,7 @@ void BasicDeleteUTest::test_recursive(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
 
 	// --------------------------------------
 	// Do it again, but more deeply.
@@ -251,7 +251,7 @@ void BasicDeleteUTest::test_recursive(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 9);
+	TS_ASSERT_EQUALS(as->get_size(), 8);
 
 	store->remove_atom(as.get(), ha, true);
 	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
@@ -259,7 +259,7 @@ void BasicDeleteUTest::test_recursive(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 4);
 
 	// --------------------------------------
 	store->erase();
@@ -348,10 +348,10 @@ void BasicDeleteUTest::test_key_deletion(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
-	// We expect 8 atoms (+1 for *-IsKeyFlag-*, +1 for *-open-*)
+	// We expect 7 atoms (+1 for *-IsKeyFlag-*, +1 for *-open-*)
 	printf("Loading the atomspace ...\n");
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 8);
+	TS_ASSERT_EQUALS(as->get_size(), 7);
 	printf("AtomSpace contents=\n%s\n", as->to_string().c_str());
 
 	// Verify that there are only three keys
@@ -443,9 +443,9 @@ void BasicDeleteUTest::test_key_corruption(void)
 	for (const Handle& h: hset)
 		printf("Atomspace contains h=%s\n", h->to_short_string().c_str());
 
-	// Size is 7 because (Concept "x") cannot be deleted.
+	// Size is 6 because (Concept "x") cannot be deleted.
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*
-	TS_ASSERT_EQUALS(as->get_size(), 7);
+	TS_ASSERT_EQUALS(as->get_size(), 6);
 
 	hb = as->add_node(CONCEPT_NODE, "b");
 	hx = as->add_node(CONCEPT_NODE, "x");
@@ -459,19 +459,19 @@ void BasicDeleteUTest::test_key_corruption(void)
 	store->barrier();
 
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*
-	TS_ASSERT_EQUALS(as->get_size(), 9);
+	TS_ASSERT_EQUALS(as->get_size(), 8);
 
 	// Remove the value .. again
 	store->remove_atom(as.get(), hx);
 	as->extract_atom(hx);
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*
-	TS_ASSERT_EQUALS(as->get_size(), 8);
+	TS_ASSERT_EQUALS(as->get_size(), 7);
 	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	// Size is 10 because (Concept "x") cannot be deleted.
+	// Size is 9 because (Concept "x") cannot be deleted.
 	// +1 for *-IsKeyFlag-*, +1 for *-open-*, +1 for *-close-*
-	TS_ASSERT_EQUALS(as->get_size(), 10);
+	TS_ASSERT_EQUALS(as->get_size(), 9);
 
 	// We are done.
 	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
@@ -489,10 +489,10 @@ void BasicDeleteUTest::test_key_corruption(void)
 	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
-	// We expect 9 atoms (+1 for *-IsKeyFlag-*, +1 for *-open-*)
+	// We expect 8 atoms (+1 for *-IsKeyFlag-*, +1 for *-open-*)
 	printf("Loading the atomspace ...\n");
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 9);
+	TS_ASSERT_EQUALS(as->get_size(), 8);
 
 	// Verify that there are two keys
 	hb = as->add_node(CONCEPT_NODE, "b");

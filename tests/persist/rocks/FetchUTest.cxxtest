@@ -215,11 +215,13 @@ void FetchUTest::test_stuff(void)
 	printf("Expecting %s\n", etv->to_string().c_str());
 	printf("Got %s\n", tv->to_string().c_str());
 
-	// BBB should have been clobbered.
+	// BBB should retain its original value (TVs persist in storage).
 	eval->eval(R"((fetch-atom (Concept "BBB")))");
 	eval->eval("(barrier)");
 	tv = eval->eval_v(R"((cog-value (Concept "BBB") tvkey))");
-	TS_ASSERT(tv == nullptr);
+	etv = createFloatValue(std::vector<double>({0.2, 0.22}));
+	TS_ASSERT(tv != nullptr);
+	TS_ASSERT((*tv) == (*etv));
 
 	eval->eval("(cog-close)");
 	logger().debug("END TEST: %s", __FUNCTION__);
