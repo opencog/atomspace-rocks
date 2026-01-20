@@ -48,7 +48,7 @@ namespace opencog
 class RocksStorage : public StorageNode
 {
 	private:
-		void init(const char *);
+		void init(const char *, bool read_only = false);
 		std::string _uri;
 		rocksdb::DB* _rfile;
 
@@ -57,6 +57,9 @@ class RocksStorage : public StorageNode
 
 		// True if file contains more than one atomspace.
 		bool _multi_space;
+
+		// True if opened in read-only mode.
+		bool _read_only;
 
 		// Exception due to unknown Atom type.
 		bool _unknown_type;
@@ -140,6 +143,7 @@ class RocksStorage : public StorageNode
 		virtual ~RocksStorage();
 
 		void open(void);
+		void open_read_only(void);
 		void close(void);
 		bool connected(void); // connection to DB is alive
 

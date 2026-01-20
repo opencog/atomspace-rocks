@@ -51,9 +51,12 @@ class MonoStorage : public StorageNode
 	friend class MonoSatisfyingSet;
 	friend class MonoJoinCallback;
 	private:
-		void init(const char *);
+		void init(const char *, bool read_only = false);
 		std::string _uri;
 		rocksdb::DB* _rfile;
+
+		// True if opened in read-only mode.
+		bool _read_only;
 
 		// unique ID's
 		std::atomic_uint64_t _next_aid;
@@ -104,6 +107,7 @@ class MonoStorage : public StorageNode
 		virtual ~MonoStorage();
 
 		void open(void);
+		void open_read_only(void);
 		void close(void);
 		bool connected(void); // connection to DB is alive
 

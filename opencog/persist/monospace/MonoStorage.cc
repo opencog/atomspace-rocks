@@ -50,7 +50,7 @@ static const char* version_key = "*-Version-*";
 /* ================================================================ */
 // Constructors
 
-void MonoStorage::init(const char * uri)
+void MonoStorage::init(const char * uri, bool read_only)
 {
 #define URIX_LEN (sizeof("monospace://") - 1)  // Should be 12
 	// We expect the URI to be for the form (note: three slashes)
@@ -64,8 +64,8 @@ void MonoStorage::init(const char * uri)
 	// Prefix for bloom filter -- first 2 chars.
 	// options.prefix_extractor.reset(rocksdb::NewFixedPrefixTransform(2));
 
-	// Create the file if it doesn't exist yet.
-	options.create_if_missing = true;
+	// Create the file if it doesn't exist yet (not in read-only mode).
+	options.create_if_missing = not read_only;
 
 	// The primary consumer of disk and RAM in RocksDB are the `*.sst`
 	// files: each one is opened and memory-mapped. RocksDB does NOT
@@ -105,11 +105,17 @@ void MonoStorage::init(const char * uri)
 #endif
 
 	// Open the file.
-	rocksdb::Status s = rocksdb::DB::Open(options, file, &_rfile);
+	rocksdb::Status s;
+	if (read_only)
+		s = rocksdb::DB::OpenForReadOnly(options, file, &_rfile);
+	else
+		s = rocksdb::DB::Open(options, file, &_rfile);
 
 	if (not s.ok())
 		throw IOException(TRACE_INFO, "Can't open file: %s",
 			s.ToString().c_str());
+
+	_read_only = read_only;
 
 	// Verify the version number. Version numbers are not currently used;
 	// this is for future-proofing future versions.
@@ -117,6 +123,9 @@ void MonoStorage::init(const char * uri)
 	s = _rfile->Get(rocksdb::ReadOptions(), version_key, &version);
 	if (not s.ok())
 	{
+		if (read_only)
+			throw IOException(TRACE_INFO,
+				"Cannot open read-only: DB has no version (not initialized)");
 		s = _rfile->Put(rocksdb::WriteOptions(), version_key, "1");
 	}
 	else
@@ -130,6 +139,9 @@ void MonoStorage::init(const char * uri)
 	s = _rfile->Get(rocksdb::ReadOptions(), aid_key, &sid);
 	if (not s.ok())
 	{
+		if (read_only)
+			throw IOException(TRACE_INFO,
+				"Cannot open read-only: DB has no aid (not initialized)");
 		_next_aid = 1;
 		sid = aidtostr(1);
 		s = _rfile->Put(rocksdb::WriteOptions(), aid_key, sid);
@@ -148,8 +160,10 @@ void MonoStorage::init(const char * uri)
 		throw IOException(TRACE_INFO,
 			"Cannot use MonoStorageNode to open multi-space storage '%s'\n", uri);
 
-printf("Mono: opened=%s\n", file.c_str());
+printf("Mono: opened=%s%s\n", file.c_str(), read_only ? " (read-only)" : "");
 printf("Mono: initial aid=%lu\n", _next_aid.load());
+
+	if (read_only) return;
 
 	// Set up a SID for the TV predicate key.
 	// This must match what the AtomSpace is using.
@@ -162,12 +176,20 @@ void MonoStorage::open()
 {
 	// User might call us twice. If so, ignore the second call.
 	if (_rfile) return;
-	init(_name.c_str());
+	init(_name.c_str(), false);
+}
+
+void MonoStorage::open_read_only()
+{
+	// User might call us twice. If so, ignore the second call.
+	if (_rfile) return;
+	init(_name.c_str(), true);
 }
 
 MonoStorage::MonoStorage(std::string uri) :
 	StorageNode(MONO_STORAGE_NODE, std::move(uri)),
 	_rfile(nullptr),
+	_read_only(false),
 	_next_aid(0),
 	_unknown_type(false)
 {
@@ -198,11 +220,15 @@ void MonoStorage::close()
 {
 	if (nullptr == _rfile) return;
 
-	logger().debug("Mono: storing final aid=%lu\n", _next_aid.load());
-	write_aid();
+	if (not _read_only)
+	{
+		logger().debug("Mono: storing final aid=%lu\n", _next_aid.load());
+		write_aid();
+	}
 	delete _rfile;
 	_rfile = nullptr;
 	_next_aid = 0;
+	_read_only = false;
 }
 
 void MonoStorage::write_aid(void)
@@ -228,6 +254,7 @@ bool MonoStorage::connected(void)
 ///
 void MonoStorage::barrier()
 {
+	if (_read_only) return;
 	// belt and suspenders.
 	write_aid();
 }
