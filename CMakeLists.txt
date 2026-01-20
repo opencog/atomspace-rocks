@@ -23,7 +23,7 @@ IF(CMAKE_VERSION VERSION_GREATER 3.31)
 	CMAKE_POLICY(SET CMP0177 NEW)
 ENDIF(CMAKE_VERSION VERSION_GREATER 3.31)
 
-PROJECT(atomspace-rocks VERSION 1.6.0)
+PROJECT(atomspace-rocks VERSION 1.6.1)
 
 # ----------------------------------------------------------
 # User-modifiable options. Feel free to change these!

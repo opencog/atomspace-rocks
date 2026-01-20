@@ -63,7 +63,7 @@ distributed and/or decentralized AtomSpaces can be built.
 
 Status
 ------
-This is ***Version 1.6.0***.  All unit tests pass.  It has been used in
+This is ***Version 1.6.1***.  All unit tests pass.  It has been used in
 at least one major project, to process tens of millions of Atoms.
 
 The list of changes since January 2024 is long and fairly boring;
@@ -85,6 +85,7 @@ The following changes are notable:
   See the wiki pages for
   [StorageNode](https://wiki.opencog.org/w/StorageNode) and
   [ObjectNode](https://wiki.opencog.org/w/ObjectNode).
+* The `*open-ro-*` message is now supported, for read-only access.
 
 
 Building and Installing
