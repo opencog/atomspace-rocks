@@ -1139,7 +1139,9 @@ void RocksStorage::loadAtoms(AtomSpace* as)
 	for (it->Seek("a@"); it->Valid() and it->key().starts_with("a@"); it->Next())
 	{
 		try {
-			Handle h = Sexpr::decode_atom(it->value().ToString());
+			std::string satom = it->value().ToString();
+			size_t pos = satom.find('('); // skip over hash, if present
+			Handle h = Sexpr::decode_atom(satom, pos);
 			h = add_nocheck(as, h);
 			// There's a trailing colon. Drop it.
 			const std::string& sidcolon = it->key().ToString().substr(2);
@@ -1215,7 +1217,8 @@ size_t RocksStorage::loadAtomsHeight(
 			// Get the matching satom string.
 			std::string satom;
 			_rfile->Get(rocksdb::ReadOptions(), "a@" + sid + ":", &satom);
-			Handle h = Sexpr::decode_atom(satom);
+			size_t pos = satom.find('('); // skip over hash, if present
+			Handle h = Sexpr::decode_atom(satom, pos);
 
 			// Load the values, in frame-DAG order.
 			for (const auto& frit: frame_order)
