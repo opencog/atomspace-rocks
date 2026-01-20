@@ -68,6 +68,7 @@ class AlphaEquivUTest :  public CxxTest::TestSuite
 
 		void setup_data(void);
 		void test_fetch(void);
+		void test_bulk_load(void);
 		void test_remove(void);
 		void test_recursive_remove(void);
 };
@@ -182,6 +183,64 @@ void AlphaEquivUTest::test_fetch(void)
 
 	FloatValuePtr fvp = FloatValueCast(fu);
 	TSM_ASSERT_EQUALS("Expecting three floats", fvp->size(), 3);
+
+	_as = nullptr;
+
+	logger().info("END TEST: %s", __FUNCTION__);
+}
+
+// ============================================================
+
+// Test bulk loading of alpha-convertible atoms via load_atomspace().
+// This is a regression test for a bug where the h@hash prefix stored
+// with alpha-convertible atoms was not stripped during bulk load,
+// causing parse errors. Individual fetch_atom() worked correctly
+// because getAtom() handled the prefix, but loadAtoms() did not.
+void AlphaEquivUTest::test_bulk_load(void)
+{
+	logger().info("BEGIN TEST: %s", __FUNCTION__);
+
+	setup_data();
+
+	_as = createAtomSpace();
+	Handle hsn = _as->add_node(ROCKS_STORAGE_NODE, std::string(uri));
+	StorageNodePtr store = StorageNodeCast(hsn);
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
+	TS_ASSERT(store->connected())
+
+	// Bulk load the entire AtomSpace (this was failing before the fix)
+	store->load_atomspace();
+	store->barrier();
+
+	// Find the alpha-equivalent lambda link that was loaded
+	Handle ly = al(LAMBDA_LINK, an(VARIABLE, "Y"), an(CONCEPT, "A"));
+
+	// Verify that the correct TV was loaded
+	ValuePtr tvp = ly->getValue(truth_key());
+	TSM_ASSERT("Expecting non-null TV after bulk load", tvp != nullptr);
+
+	if (tvp)
+	{
+		printf("Got TV: %s\n", tvp->to_string().c_str());
+		FloatValuePtr fv = FloatValueCast(tvp);
+		TSM_ASSERT("Expecting (stv 0.11 100)",
+			0.1 < fv->value()[0] and fv->value()[0] < 0.12 and
+			99 < fv->value()[1] and fv->value()[1] < 101);
+	}
+
+	// Verify that other values are there too
+	ValuePtr fu = ly->getValue(an(PREDICATE, "foo"));
+	TSM_ASSERT("Expecting non-null value after bulk load", fu != nullptr);
+
+	if (fu)
+	{
+		printf("Got Value: %s\n", fu->to_string().c_str());
+		TSM_ASSERT("Expecting a FloatValue",
+			nameserver().isA(fu->get_type(), FLOAT_VALUE));
+
+		FloatValuePtr fvp = FloatValueCast(fu);
+		TSM_ASSERT_EQUALS("Expecting three floats", fvp->size(), 3);
+	}
 
 	_as = nullptr;
 
