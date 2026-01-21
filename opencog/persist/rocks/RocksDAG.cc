@@ -159,7 +159,24 @@ Handle RocksStorage::decodeFrame(const std::string& senc)
 	AtomSpacePtr asp = createAtomSpace(oset);
 	asp->set_name(name);
 	asp->set_copy_on_write();
-	return HandleCast(asp);
+
+	// Ugh. This feels slightly awkward, but I think it is correct.
+	// Add the current asp to the first parent; this will trigger a
+	// snowball that will install all the others too. It works this
+	// way because not all of the "parents" are actually AtomSpaces;
+	// they might be executable Atoms that return AtomSpaces. This
+	// is all handled in AtomSpace::install().
+	Handle hasp = HandleCast(asp);
+	for (const Handle& parent : oset)
+	{
+		if (ATOM_SPACE == parent->get_type())
+		{
+			AtomSpaceCast(parent)->add_atom(hasp);
+			break;
+		}
+	}
+
+	return hasp;
 }
 
 /// Return the AtomSpacePtr corresponding to fid.
