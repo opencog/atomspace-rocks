@@ -394,7 +394,7 @@ void RocksStorage::storeAtom(const Handle& h, bool synchronous)
 		storeValue(cid + writeAtom(key), h->getValue(key));
 }
 
-void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
+void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h, bool tmpMarker)
 {
 	std::string sid = writeAtom(h, false);
 
@@ -406,7 +406,8 @@ void RocksStorage::storeMissingAtom(AtomSpace* as, const Handle& h)
 	_rfile->Delete(rocksdb::WriteOptions(), marker);
 
 	// Store an intentionally invalid key.
-	_rfile->Put(rocksdb::WriteOptions(), skid + "-1", "");
+	marker = skid + (tmpMarker ? "-2" : "-1");
+	_rfile->Put(rocksdb::WriteOptions(), marker, "");
 }
 
 void RocksStorage::storeValue(const std::string& skid,
@@ -825,7 +826,7 @@ void RocksStorage::removeAtom(AtomSpace* frame, const Handle& h, bool recursive)
 	}
 
 	// Multi-space Atom remove is done via hiding...
-	storeMissingAtom(frame, h);
+	storeMissingAtom(frame, h, true);
 }
 
 void RocksStorage::doRemoveAtom(const Handle& h, bool recursive)
@@ -1046,6 +1047,68 @@ void RocksStorage::removeSatom(const std::string& satom,
 	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next())
 		_rfile->Delete(rocksdb::WriteOptions(), it->key());
 	delete it;
+}
+
+// under construction...
+void RocksStorage::postRemoveAtom(AtomSpace* as, const Handle& h, 
+					bool recursive, bool extracted)
+{
+	std::string pfx = "k@";
+	std::string sfx = "-2";
+	
+	auto it = _rfile->NewIterator(rocksdb::ReadOptions());
+
+	for (it->Seek(pfx); it->Valid() and it->key().starts_with(pfx); it->Next()){
+		if (not it->key().ends_with(sfx))
+			continue;
+
+		std::string akey = it->key().ToString();
+		akey[0] = 'a';
+		akey.resize(akey.find(':') + 1);
+		
+		std::string satom;
+		rocksdb::Status s = _rfile->Get(rocksdb::ReadOptions(), akey,  &satom);
+		if (not s.ok())
+			throw IOException(TRACE_INFO, "Internal Error!");
+		
+		// don't know if this is enough to get the atom from the correct frame
+		// it looks like in decode_atom a function decode_frame is called
+		// but atm this is a wild guess ()
+		Handle h = Sexpr::decode_atom(satom);
+
+		// Atom::isAbsent is private atm, is this a problem ...?
+		// also if extracted is false (some error in As extract function),
+		// we also set back to -1 in DB (as it was before)
+		if (not extracted or isAtomAbsent(h)){
+			std::string newkey = it->key().ToString();			
+			// replace "-2" with "-1"			
+			newkey = newkey.substr(newkey.size() - 2) + "-1";			
+			_rfile->Delete(rocksdb::WriteOptions(), it->key());
+			_rfile->Put(rocksdb::WriteOptions(), newkey, "");
+		} else {
+			// First: try if it we can use the function for the
+			// single frame case
+			// just look what happens with the samples
+			// do we call "removeSatom" or its calling function "doRemoveAtom"  ?: 
+			// removeSatom(satom, akey, h->is_node(), recursive);
+
+			// alternative: 
+			// 1. find the "a@ record and delete" (see lines 1009-1019)
+			// do we have to worry also about "n@" : "l@" ?
+			// yes, I think we should delete "n@", they are the same as "a@" with rev. order!
+			// do we need do check if this exists ?
+			// or maybe use "removeSatom" ?
+			// also maybe hash has to be removed
+			// _rfile->Delete(rocksdb::WriteOptions(), akey);
+			std::string nlpfx = h->is_node() ? "n@" : "l@";
+			_rfile->Delete(rocksdb::WriteOptions(), nlpfx + satom);
+			_rfile->Delete(rocksdb::WriteOptions(), akey);
+
+			// 2. delete the "k@" record
+			// have to be careful, we have to delete the DB entry our loop is sitting on ....!
+			_rfile->Delete(rocksdb::WriteOptions(), it->key());
+		}
+	}
 }
 
 // =========================================================
