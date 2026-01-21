@@ -160,12 +160,18 @@ Handle RocksStorage::decodeFrame(const std::string& senc)
 	asp->set_name(name);
 	asp->set_copy_on_write();
 
-	// Ugh. This feels slightly awkward, but I think it is correct.
-	// Add the current asp to the first parent; this will trigger a
-	// snowball that will install all the others too. It works this
-	// way because not all of the "parents" are actually AtomSpaces;
-	// they might be executable Atoms that return AtomSpaces. This
-	// is all handled in AtomSpace::install().
+	// The list of parents in oset is copied to the AtomSpaces copy
+	// of the parents, held in the _environ vector, only when this
+	// AtomSpace is explicity inserted into some parent, any parent.
+	// This delayed initilaization serves two purposes. First, not
+	// all of the "parents" need be actual AtomSpaces; they might be
+	// executable Atoms that return AtomSpaces. Execution has to be
+	// defered until that time when parentage is known. This is
+	// performed in `AtomSpace::install()`.
+	//
+	// XXX FIXME Actually this handling is broken in RocksStorage.
+	// If you are reading this, then you probably already know.
+	// I'm not sure what the right fix is. For now, its good enough.
 	Handle hasp = HandleCast(asp);
 	for (const Handle& parent : oset)
 	{
